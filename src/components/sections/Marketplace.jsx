@@ -139,7 +139,6 @@ export default function Marketplace() {
 
           {/* Colonne de droite : "vidéo" de 15s illustrant l'étape active */}
           <div className="relative aspect-[4/3] md:aspect-[16/11] md:min-h-[560px] rounded-3xl bg-ink-fixed overflow-hidden shadow-2xl">
-            <div className="absolute inset-0"><StepVideo step={active} /></div>
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
@@ -149,7 +148,7 @@ export default function Marketplace() {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="absolute inset-0"
               >
-                
+                <StepVideo step={active} />
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
                   <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-coffee-light">
                     {(() => {

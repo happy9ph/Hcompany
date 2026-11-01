@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bus, BedDouble, UtensilsCrossed, Mountain, ShoppingBag, GraduationCap, Search, Check, ShieldCheck, Box, Bell, Star } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext.jsx";
@@ -113,39 +113,52 @@ const L = {
   en: { requestSent: "Request sent with all details", matched: "Matched", verified: "Verified partner", summary: "Summary", confirm: "Confirm", confirmed: "Confirmed", secure: "Payment and data protected", notif: "Notification sent to the customer", example: "Illustrative example", sent: "Request" },
 };
 
-const STEP_S = 3.2; // durée d'une étape (même cadence que le cycle automatique de Marketplace)
+const INK = "#2A1A11", CREAM = "#FAF7F2", SAND = "#E4D2BC", MUTED = "#8A7560", GREEN = "#2E9E6B", DEEP = "#241812";
+const FLAME_D = "M256 496C190 452 92 392 92 296C92 224 124 168 178 116C168 148 176 184 204 182C236 180 238 126 258 80C268 54 280 36 288 20C280 78 302 140 346 204C342 152 346 82 362 24C404 84 424 156 420 222C418 262 408 292 396 316C386 340 330 438 256 496Z";
+const Flame = ({ h = 24, color = GOLD }) => (
+  <svg viewBox="88 16 340 484" height={h} width={h * 0.7} aria-hidden="true"><path d={FLAME_D} fill={color} /></svg>
+);
 
-/** Cadre commun : l'horloge suit le parcours (1 service = 4 étapes), `local` = progression dans l'étape courante. */
-function Chrome({ children, journey, step, stepStart }) {
+/** Cadre : fond chocolat, rail des 6 services en haut, progression par service en bas. */
+function Chrome({ children }) {
   const { lang } = useLanguage();
-  const [sl, setSl] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
-    const timer = setInterval(() => setSl((((Date.now() - stepStart.current) / 1000) / STEP_S) % 1), 80);
+    const start = Date.now();
+    const timer = setInterval(() => setElapsed(((Date.now() - start) / 1000) % DURATION), 80);
     return () => clearInterval(timer);
-  }, [stepStart]);
-  const idx = journey % 6, local = sl;
-  const overall = (idx * 4 + step + sl) / 24; // 0 → 1 sur les six services
-  const ss = String(Math.min(DURATION - 1, Math.floor(overall * DURATION))).padStart(2, "0");
+  }, []);
+  const idx = Math.min(5, Math.floor(elapsed / SLOT));
+  const local = (elapsed - idx * SLOT) / SLOT; // 0 → 1 dans le service courant
+  const ss = String(Math.floor(elapsed)).padStart(2, "0");
+  const lg = lang === "en" ? "en" : "fr";
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-hidden" style={{ background: "radial-gradient(60% 50% at 72% 16%, rgba(200,154,61,.26), transparent 70%), radial-gradient(50% 50% at 6% 94%, rgba(196,154,108,.2), transparent 70%), linear-gradient(135deg, #2A1A11, #1E1A17)" }}>
+      <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
       {children({ idx, local })}
-      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 0 90px 20px rgba(0,0,0,0.3)" }} />
-      <div className="absolute top-4 inset-x-0 flex items-center justify-center gap-1.5 pointer-events-none">
-        <motion.span className="w-1.5 h-1.5 rounded-full" style={{ background: GOLD }} animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.6, repeat: Infinity }} />
-        <span className="text-[0.6rem] font-medium tracking-wider text-white/55 uppercase">H-Company</span>
+      <div className="absolute top-4 inset-x-0 flex justify-center pointer-events-none">
+        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur px-3 py-1.5 ring-1 ring-white/10">
+          <Flame h={14} />
+          <span className="text-[0.62rem] font-semibold tracking-[0.18em] text-white/80 uppercase">H-Company</span>
+        </div>
       </div>
-      <div className="absolute bottom-0 inset-x-0 px-4 pb-3 pt-8 bg-gradient-to-t from-black/60 to-transparent">
-        <div className="flex gap-1 mb-2" aria-hidden="true">
+      <div className="absolute top-16 inset-x-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden="true">
+        {SVC.map((s, i) => (
+          <div key={s.key} className="flex items-center gap-1.5 rounded-xl h-8 px-2 transition-all duration-300" style={i === idx ? { background: GOLD, color: INK } : { background: "rgba(255,255,255,.08)", color: "rgba(255,255,255,.5)" }}>
+            <s.Icon size={15} />{i === idx && <span className="text-[0.7rem] font-semibold pr-1">{s[lg].label}</span>}
+          </div>
+        ))}
+      </div>
+      <div className="absolute bottom-0 inset-x-0 px-6 pb-4 pointer-events-none">
+        <div className="flex gap-1.5 mb-2" aria-hidden="true">
           {SVC.map((s, i) => (
-            <div key={s.key} className="h-1 flex-1 rounded-full bg-white/20 overflow-hidden">
-              <div className="h-full" style={{ background: GOLD, width: i < idx ? "100%" : i === idx ? `${((step + sl) / 4) * 100}%` : "0%" }} />
+            <div key={s.key} className="h-1 flex-1 rounded-full bg-white/15 overflow-hidden">
+              <div className="h-full" style={{ background: GOLD, width: i < idx ? "100%" : i === idx ? `${local * 100}%` : "0%" }} />
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between text-[0.65rem] text-white/70 font-mono">
-          <span>0:{ss}</span>
-          <span className="text-white/45">{L[lang === "en" ? "en" : "fr"].example}</span>
-          <span>0:{DURATION}</span>
+        <div className="flex items-center justify-between text-[0.68rem] text-white/55 font-mono">
+          <span>0:{ss}</span><span className="text-white/40">{L[lg].example}</span><span>0:{DURATION}</span>
         </div>
       </div>
     </div>
@@ -155,118 +168,121 @@ function Chrome({ children, journey, step, stepStart }) {
 function Pill({ svc, text }) {
   const { Icon } = svc;
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[0.68rem] text-white/85">
-      <Icon size={12} style={{ color: GOLD }} />{text}
-    </div>
+    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.72rem] font-semibold" style={{ background: INK, color: CREAM }}>
+      <Icon size={13} style={{ color: GOLD }} />{text}
+    </span>
   );
 }
 
-const Frame = ({ children, k }) => (
-  <motion.div key={k} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full max-w-[330px]">
+/** Feuille crème posée sur le fond chocolat. */
+const Sheet = ({ k, children, className = "" }) => (
+  <motion.div key={k} initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    className={`w-full max-w-[540px] rounded-[26px] p-5 md:p-6 ${className}`}
+    style={{ background: CREAM, color: INK, boxShadow: "0 40px 80px -30px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.6)" }}>
     {children}
   </motion.div>
 );
+const card = (hi) => (hi ? { background: "#F3EBE0", boxShadow: `inset 0 0 0 1.5px ${GOLD}` } : { background: "#fff", boxShadow: `inset 0 0 0 1px ${SAND}` });
 
 function SearchStep({ idx, local, lang }) {
   const s = SVC[idx], d = s[lang];
   const chars = Math.min(d.q.length, Math.floor((local / 0.34) * d.q.length));
-  const showResults = local > 0.4;
   return (
-    <Frame k={idx}>
-      <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3.5 py-2.5 mb-3 ring-1 ring-white/10">
-        <Search size={14} style={{ color: GOLD }} />
-        <span className="text-sm text-white font-mono truncate">{d.q.slice(0, chars)}<span className="opacity-70">|</span></span>
+    <Sheet k={idx}>
+      <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5 mb-4" style={{ background: "#fff", boxShadow: `inset 0 0 0 1.5px ${SAND}` }}>
+        <Search size={18} style={{ color: GOLD }} />
+        <span className="text-[1.02rem] font-medium truncate">{d.q.slice(0, chars)}<span className="animate-pulse" style={{ color: GOLD }}>|</span></span>
       </div>
-      <div className="flex gap-1.5 mb-3 overflow-hidden">
-        {SVC.map((x, i) => (
-          <span key={x.key} className={`shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg ${i === idx ? "text-black" : "bg-white/[0.07] text-white/55"}`} style={i === idx ? { background: GOLD } : undefined} title={x[lang].label}>
-            <x.Icon size={14} />
-          </span>
-        ))}
-      </div>
-      <div className="space-y-2 min-h-[150px]">
-        {showResults && d.results.map(([title, meta, price], i) => (
-          <motion.div key={title} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.12 }} className="flex items-center gap-3 rounded-xl bg-white/[0.07] px-3 py-2.5">
-            <span className="shrink-0 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center"><s.Icon size={15} style={{ color: GOLD }} /></span>
+      <div className="space-y-2.5 min-h-[212px]">
+        {local > 0.4 && d.results.map(([title, meta, price], i) => (
+          <motion.div key={title} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.12 }} className="flex items-center gap-3.5 rounded-2xl p-3" style={card(i === 0)}>
+            <span className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: INK }}><s.Icon size={20} style={{ color: GOLD }} /></span>
             <div className="min-w-0 flex-1">
-              <p className="text-[0.78rem] text-white/90 truncate leading-tight">{title}</p>
-              <p className="text-[0.65rem] text-white/50 truncate flex items-center gap-1">{s.threeD && <Box size={10} style={{ color: GOLD }} />}{meta}</p>
+              <p className="text-[0.92rem] font-semibold truncate leading-tight">{title}</p>
+              <p className="text-[0.74rem] truncate flex items-center gap-1.5" style={{ color: MUTED }}>
+                {s.threeD && <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-px text-[0.6rem] font-bold" style={{ background: GOLD, color: INK }}><Box size={9} />3D</span>}{meta}
+              </p>
             </div>
-            <span className="text-[0.72rem] text-white/85 font-medium whitespace-nowrap">{price}</span>
+            <span className="font-display text-[1.02rem] whitespace-nowrap">{price}</span>
           </motion.div>
         ))}
       </div>
-    </Frame>
+    </Sheet>
   );
 }
 
+const Node = ({ children, label, style, ring }) => (
+  <div className="flex flex-col items-center gap-2 w-[84px]">
+    <div className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center" style={style}>
+      {ring && <motion.span className="absolute inset-0 rounded-full" style={{ boxShadow: `0 0 0 2px ${GOLD}` }} animate={{ scale: [1, 1.35], opacity: [0.7, 0] }} transition={{ duration: 1.6, repeat: Infinity }} />}
+      {children}
+    </div>
+    <span className="text-[0.68rem] font-medium text-center truncate max-w-full" style={{ color: "#6B5440" }}>{label}</span>
+  </div>
+);
+const Wire = ({ p }) => (
+  <div className="relative flex-1 h-[3px] rounded-full mt-[34px]" style={{ background: SAND }}>
+    <div className="absolute inset-y-0 left-0 rounded-full" style={{ background: GOLD, width: `${p * 100}%` }} />
+    <span className="absolute -top-[5px] w-[13px] h-[13px] rounded-full" style={{ background: GOLD, left: `${p * 100}%`, transform: "translateX(-50%)", boxShadow: `0 0 14px ${GOLD}`, opacity: p > 0 && p < 1 ? 1 : 0 }} />
+  </div>
+);
+
 function MatchStep({ idx, local, lang }) {
   const s = SVC[idx], d = s[lang], t = L[lang];
-  const arrived = local > 0.45;
+  const ok = local > 0.7;
   return (
-    <Frame k={idx}>
-      <div className="flex justify-center mb-4"><Pill svc={s} text={d.label} /></div>
-      <div className="flex items-center justify-between gap-2 mb-5">
-        <div className="flex flex-col items-center gap-1.5 w-16">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white font-display">C</div>
-          <span className="text-[0.62rem] text-white/55">{lang === "fr" ? "Client" : "Customer"}</span>
-        </div>
-        <div className="relative flex-1 h-px bg-white/20">
-          <div className="absolute -top-1.5 w-3 h-3 rounded-full" style={{ background: GOLD, left: `${Math.min(local / 0.45, 1) * 100}%`, transform: "translateX(-50%)", boxShadow: `0 0 14px ${GOLD}` }} />
-        </div>
-        <div className="flex flex-col items-center gap-1.5 w-16">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-display" style={{ background: `${GOLD}33`, color: GOLD }}>H</div>
-          <span className="text-[0.62rem] text-white/55">H-Company</span>
-        </div>
-        <div className="relative flex-1 h-px bg-white/20">
-          <div className="absolute -top-1.5 w-3 h-3 rounded-full" style={{ background: GOLD, left: `${arrived ? Math.min((local - 0.45) / 0.35, 1) * 100 : 0}%`, transform: "translateX(-50%)", opacity: arrived ? 1 : 0, boxShadow: `0 0 14px ${GOLD}` }} />
-        </div>
-        <div className="flex flex-col items-center gap-1.5 w-16">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center"><s.Icon size={20} style={{ color: GOLD }} /></div>
-          <span className="text-[0.62rem] text-white/55 truncate max-w-full">{d.partner}</span>
-        </div>
+    <Sheet k={idx}>
+      <div className="flex justify-center mb-5"><Pill svc={s} text={d.label} /></div>
+      <div className="flex items-start gap-1 mb-5">
+        <Node label={lang === "fr" ? "Client" : "Customer"} style={{ background: "#EFE4D2" }}><span className="font-display text-2xl">C</span></Node>
+        <Wire p={Math.min(local / 0.45, 1)} />
+        <Node ring label="H-Company" style={{ background: INK }}><Flame h={34} /></Node>
+        <Wire p={local > 0.45 ? Math.min((local - 0.45) / 0.35, 1) : 0} />
+        <Node label={d.partner} style={{ background: `${GOLD}33`, boxShadow: `inset 0 0 0 2px ${GOLD}` }}><s.Icon size={28} style={{ color: INK }} /></Node>
       </div>
-      <div className="rounded-xl bg-white/[0.07] px-3.5 py-3">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-sm text-white/90">{d.partner}</p>
-          <span className="inline-flex items-center gap-1 text-[0.62rem] text-emerald-300"><ShieldCheck size={12} />{t.verified}</span>
+      <div className="rounded-2xl p-4" style={card(false)}>
+        <div className="flex items-center justify-between mb-0.5">
+          <p className="font-display text-[1.15rem]">{d.partner}</p>
+          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.68rem] font-semibold transition-opacity" style={{ background: "#DDF3E8", color: GREEN, opacity: local > 0.55 ? 1 : 0 }}><ShieldCheck size={13} />{t.verified}</span>
         </div>
-        <p className="text-[0.68rem] text-white/50 mb-2">{d.role}</p>
-        <p className="text-[0.68rem] text-white/70 flex items-center gap-1.5">
-          <Check size={12} style={{ color: GOLD, opacity: local > 0.7 ? 1 : 0.2 }} />{local > 0.7 ? t.matched : t.requestSent}
-        </p>
+        <p className="text-[0.76rem] mb-3" style={{ color: MUTED }}>{d.role}</p>
+        <p className="text-[0.8rem] flex items-center gap-2"><Check size={14} style={{ color: ok ? GREEN : SAND }} />{ok ? t.matched : t.requestSent}</p>
       </div>
-    </Frame>
+    </Sheet>
   );
 }
 
 function ContractStep({ idx, local, lang }) {
   const s = SVC[idx], d = s[lang], t = L[lang];
   const done = local > 0.72;
+  const notch = { background: DEEP, width: 24, height: 24 };
   return (
-    <Frame k={idx}>
+    <Sheet k={idx} className="relative">
       <div className="flex items-center justify-between mb-3">
         <Pill svc={s} text={d.label} />
-        <span className="text-[0.62rem] text-white/45">{t.summary}</span>
+        <span className="text-[0.72rem] font-semibold" style={{ color: MUTED }}>{t.summary}</span>
       </div>
-      <div className="rounded-2xl bg-white/[0.08] p-4 ring-1 ring-white/10">
-        {d.lines.map(([k, v], i) => (
-          <motion.div key={k} initial={{ opacity: 0, x: -6 }} animate={{ opacity: local > 0.08 + i * 0.1 ? 1 : 0, x: local > 0.08 + i * 0.1 ? 0 : -6 }} className="flex items-center justify-between py-1.5 text-[0.74rem] border-b border-white/[0.07] last:border-0">
-            <span className="text-white/50">{k}</span><span className="text-white/90 font-medium text-right">{v}</span>
-          </motion.div>
-        ))}
-        <div className="flex items-center justify-between pt-3 mt-1">
-          <span className="text-[0.68rem] text-white/50">Total</span>
-          <span className="font-display text-lg text-white">{d.total}</span>
-        </div>
+      {d.lines.map(([k, v], i) => (
+        <motion.div key={k} animate={{ opacity: local > 0.08 + i * 0.1 ? 1 : 0, x: local > 0.08 + i * 0.1 ? 0 : -8 }} className="flex items-baseline gap-2 py-2 text-[0.88rem]">
+          <span style={{ color: MUTED }}>{k}</span>
+          <span className="flex-1 border-b border-dotted mb-1" style={{ borderColor: SAND }} />
+          <span className="font-semibold text-right">{v}</span>
+        </motion.div>
+      ))}
+      <div className="relative my-4 border-t-2 border-dashed" style={{ borderColor: SAND }}>
+        <span className="absolute -left-8 md:-left-9 -top-3 rounded-full" style={notch} />
+        <span className="absolute -right-8 md:-right-9 -top-3 rounded-full" style={notch} />
       </div>
-      <div className="mt-3 flex items-center gap-2">
-        <span className="flex-1 inline-flex items-center gap-1.5 text-[0.62rem] text-white/50"><ShieldCheck size={12} />{t.secure}</span>
-        <motion.span animate={{ scale: done ? [1, 0.94, 1] : 1 }} className="rounded-full px-4 py-2 text-[0.72rem] font-medium inline-flex items-center gap-1.5" style={done ? { background: "#34D399", color: "#06281D" } : { background: GOLD, color: "#231A0B" }}>
-          {done && <Check size={13} />}{done ? t.confirmed : t.confirm}
-        </motion.span>
+      <div className="flex items-end justify-between">
+        <span className="text-[0.76rem]" style={{ color: MUTED }}>Total</span>
+        <span className="font-display text-[1.9rem] leading-none">{d.total}</span>
       </div>
-    </Frame>
+      <p className="mt-3 text-[0.7rem] flex items-center gap-1.5" style={{ color: MUTED }}><ShieldCheck size={13} />{t.secure}</p>
+      <motion.div animate={{ opacity: done ? 1 : 0, scale: done ? 1 : 1.7, rotate: -10 }} transition={{ type: "spring", stiffness: 260, damping: 18 }}
+        className="absolute right-5 top-[46%] rounded-xl px-3 py-1 border-[3px] font-display text-lg uppercase tracking-wider pointer-events-none" style={{ color: GREEN, borderColor: GREEN, background: "rgba(250,247,242,.85)" }}>
+        {t.confirmed}
+      </motion.div>
+    </Sheet>
   );
 }
 
@@ -274,22 +290,24 @@ function TrackStep({ idx, local, lang }) {
   const s = SVC[idx], d = s[lang], t = L[lang];
   const reached = Math.min(d.track.length, Math.floor(local / 0.22) + 1);
   return (
-    <Frame k={idx}>
-      <div className="flex items-center justify-between mb-3">
+    <Sheet k={idx}>
+      <div className="flex items-center justify-between mb-4">
         <Pill svc={s} text={d.partner} />
-        <span className="text-[0.62rem] text-white/45">{t.sent}</span>
+        <span className="text-[0.72rem] font-semibold" style={{ color: MUTED }}>{t.sent}</span>
       </div>
-      <div className="rounded-2xl bg-white/[0.07] p-4">
-        <div className="relative space-y-3.5">
-          <div className="absolute left-[9px] top-2 bottom-2 w-px bg-white/15" />
+      <div className="relative">
+        <div className="absolute left-[11px] top-3 bottom-3 w-[3px] rounded-full" style={{ background: SAND }}>
+          <div className="w-full rounded-full transition-all duration-500" style={{ background: GOLD, height: `${((reached - 1) / (d.track.length - 1)) * 100}%` }} />
+        </div>
+        <div className="space-y-4">
           {d.track.map((label, i) => {
             const on = i < reached;
             return (
-              <div key={label} className="relative flex items-center gap-3">
-                <span className="relative z-10 w-[19px] h-[19px] rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: GOLD, background: on ? GOLD : "#1E1A17" }}>
-                  {on && <Check size={11} color="#231A0B" strokeWidth={3} />}
+              <div key={label} className="relative flex items-center gap-4">
+                <span className="relative z-10 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0" style={{ background: on ? GOLD : CREAM, boxShadow: on ? `0 0 0 4px ${GOLD}33` : `inset 0 0 0 2px ${SAND}` }}>
+                  {on && <Check size={14} color={INK} strokeWidth={3} />}
                 </span>
-                <span className={`text-[0.78rem] ${on ? "text-white/90" : "text-white/35"}`}>{label}</span>
+                <span className="text-[0.95rem]" style={{ fontWeight: on ? 600 : 400, opacity: on ? 1 : 0.4 }}>{label}</span>
               </div>
             );
           })}
@@ -297,82 +315,27 @@ function TrackStep({ idx, local, lang }) {
       </div>
       <AnimatePresence>
         {local > 0.5 && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-3 flex items-center gap-2 rounded-xl bg-white/[0.07] px-3 py-2 text-[0.68rem] text-white/70">
-            <Bell size={12} style={{ color: GOLD }} />{t.notif}
-            <Star size={11} className="ml-auto" style={{ color: GOLD }} />
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[0.78rem]" style={{ background: INK, color: CREAM }}>
+            <Bell size={14} style={{ color: GOLD }} />{t.notif}<Star size={12} className="ml-auto" style={{ color: GOLD }} />
           </motion.div>
         )}
       </AnimatePresence>
-    </Frame>
+    </Sheet>
   );
 }
 
 const VARIANTS = [SearchStep, MatchStep, ContractStep, TrackStep];
 
-// 3D temps réel si possible ; sinon (WebGL absent, tests, « réduire les animations ») on garde la version 2D.
-const can3D = () => {
-  try {
-    if (typeof navigator === "undefined" || /jsdom/i.test(navigator.userAgent)) return false;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
-    const c = document.createElement("canvas");
-    return !!(c.getContext("webgl2") || c.getContext("webgl"));
-  } catch { return false; }
-};
-
-function Stage3D({ step, idx, local, lang, fallback }) {
-  const box = useRef(null), api = useRef(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    let dead = false;
-    import("../../three/stepScene.js")
-      .then((m) => { if (!dead && box.current) api.current = m.createStepScene(box.current, () => setFailed(true)); })
-      .catch(() => setFailed(true));
-    return () => { dead = true; api.current?.dispose(); api.current = null; };
-  }, []);
-  const s = SVC[idx], d = s[lang], t = L[lang];
-  useEffect(() => {
-    api.current?.set({ step, idx, local, lang, d, t: { customer: lang === "fr" ? "Client" : "Customer", ok: t.confirmed } });
-  });
-  if (failed) return fallback;
-  const chars = Math.min(d.q.length, Math.floor((local / 0.34) * d.q.length));
-  const caption = [
-    <><Search size={14} style={{ color: GOLD }} /><span className="font-mono">{d.q.slice(0, chars)}<span className="opacity-70">|</span></span></>,
-    <><ShieldCheck size={14} style={{ color: local > 0.7 ? "#34D399" : GOLD }} />{d.partner} · {local > 0.7 ? t.verified : t.requestSent}</>,
-    <><Check size={14} style={{ color: local > 0.72 ? "#34D399" : GOLD }} />{d.total} · {local > 0.72 ? t.confirmed : t.confirm}</>,
-    <><Bell size={14} style={{ color: GOLD }} />{d.track[Math.min(3, Math.floor(local / 0.22))]}</>,
-  ][step] || null;
-  return (
-    <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 38%, #3a2a1c 0%, #1e1a17 55%, #14100c 100%)" }}>
-      <div ref={box} className="absolute inset-0" aria-hidden="true" />
-      <div className="absolute top-14 inset-x-0 flex justify-center pointer-events-none"><Pill svc={s} text={d.label} /></div>
-      <div className="absolute inset-x-0 bottom-[4.4rem] flex justify-center px-4 pointer-events-none">
-        <div className="inline-flex items-center gap-2 rounded-full bg-black/50 backdrop-blur px-4 py-2 text-[0.8rem] text-white/90 ring-1 ring-white/10">{caption}</div>
-      </div>
-    </div>
-  );
-}
-
 export default function StepVideo({ step }) {
   const { lang } = useLanguage();
-  const lg = lang === "en" ? "en" : "fr";
-  const [use3D] = useState(can3D);
   const Content = VARIANTS[step] || SearchStep;
-  const [journey, setJourney] = useState(0);
-  const prev = useRef(step), stepStart = useRef(Date.now());
-  useEffect(() => {
-    if (step < prev.current) setJourney((j) => j + 1); // retour à l'étape 1 → service suivant
-    prev.current = step; stepStart.current = Date.now();
-  }, [step]);
   return (
-    <Chrome journey={journey} step={step} stepStart={stepStart}>
-      {({ idx, local }) => {
-        const flat = (
-          <div className="w-full h-full flex items-center justify-center px-5 pt-12 pb-16">
-            <Content idx={idx} local={local} lang={lg} />
-          </div>
-        );
-        return use3D ? <Stage3D step={step} idx={idx} local={local} lang={lg} fallback={flat} /> : flat;
-      }}
+    <Chrome>
+      {({ idx, local }) => (
+        <div className="absolute inset-0 flex items-center justify-center px-5 pt-[6.5rem] pb-14">
+          <Content idx={idx} local={local} lang={lang === "en" ? "en" : "fr"} />
+        </div>
+      )}
     </Chrome>
   );
 }
