@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bus, BedDouble, UtensilsCrossed, Mountain, ShoppingBag, GraduationCap, Search, Check, ShieldCheck, Box, Bell, Star } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext.jsx";
@@ -113,17 +113,19 @@ const L = {
   en: { requestSent: "Request sent with all details", matched: "Matched", verified: "Verified partner", summary: "Summary", confirm: "Confirm", confirmed: "Confirmed", secure: "Payment and data protected", notif: "Notification sent to the customer", example: "Illustrative example", sent: "Request" },
 };
 
-function Chrome({ children }) {
+const STEP_S = 3.2; // durée d'une étape (même cadence que le cycle automatique de Marketplace)
+
+/** Cadre commun : l'horloge suit le parcours (1 service = 4 étapes), `local` = progression dans l'étape courante. */
+function Chrome({ children, journey, step, stepStart }) {
   const { lang } = useLanguage();
-  const [elapsed, setElapsed] = useState(0);
+  const [sl, setSl] = useState(0);
   useEffect(() => {
-    const start = Date.now();
-    const timer = setInterval(() => setElapsed(((Date.now() - start) / 1000) % DURATION), 80);
+    const timer = setInterval(() => setSl((((Date.now() - stepStart.current) / 1000) / STEP_S) % 1), 80);
     return () => clearInterval(timer);
-  }, []);
-  const idx = Math.min(5, Math.floor(elapsed / SLOT));
-  const local = (elapsed - idx * SLOT) / SLOT; // 0 → 1 dans le service courant
-  const ss = String(Math.floor(elapsed)).padStart(2, "0");
+  }, [stepStart]);
+  const idx = journey % 6, local = sl;
+  const overall = (idx * 4 + step + sl) / 24; // 0 → 1 sur les six services
+  const ss = String(Math.min(DURATION - 1, Math.floor(overall * DURATION))).padStart(2, "0");
   return (
     <div className="relative w-full h-full">
       {children({ idx, local })}
@@ -136,7 +138,7 @@ function Chrome({ children }) {
         <div className="flex gap-1 mb-2" aria-hidden="true">
           {SVC.map((s, i) => (
             <div key={s.key} className="h-1 flex-1 rounded-full bg-white/20 overflow-hidden">
-              <div className="h-full" style={{ background: GOLD, width: i < idx ? "100%" : i === idx ? `${local * 100}%` : "0%" }} />
+              <div className="h-full" style={{ background: GOLD, width: i < idx ? "100%" : i === idx ? `${((step + sl) / 4) * 100}%` : "0%" }} />
             </div>
           ))}
         </div>
@@ -307,16 +309,70 @@ function TrackStep({ idx, local, lang }) {
 
 const VARIANTS = [SearchStep, MatchStep, ContractStep, TrackStep];
 
+// 3D temps réel si possible ; sinon (WebGL absent, tests, « réduire les animations ») on garde la version 2D.
+const can3D = () => {
+  try {
+    if (typeof navigator === "undefined" || /jsdom/i.test(navigator.userAgent)) return false;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch { return false; }
+};
+
+function Stage3D({ step, idx, local, lang, fallback }) {
+  const box = useRef(null), api = useRef(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let dead = false;
+    import("../../three/stepScene.js")
+      .then((m) => { if (!dead && box.current) api.current = m.createStepScene(box.current, () => setFailed(true)); })
+      .catch(() => setFailed(true));
+    return () => { dead = true; api.current?.dispose(); api.current = null; };
+  }, []);
+  const s = SVC[idx], d = s[lang], t = L[lang];
+  useEffect(() => {
+    api.current?.set({ step, idx, local, lang, d, t: { customer: lang === "fr" ? "Client" : "Customer", ok: t.confirmed } });
+  });
+  if (failed) return fallback;
+  const chars = Math.min(d.q.length, Math.floor((local / 0.34) * d.q.length));
+  const caption = [
+    <><Search size={14} style={{ color: GOLD }} /><span className="font-mono">{d.q.slice(0, chars)}<span className="opacity-70">|</span></span></>,
+    <><ShieldCheck size={14} style={{ color: local > 0.7 ? "#34D399" : GOLD }} />{d.partner} · {local > 0.7 ? t.verified : t.requestSent}</>,
+    <><Check size={14} style={{ color: local > 0.72 ? "#34D399" : GOLD }} />{d.total} · {local > 0.72 ? t.confirmed : t.confirm}</>,
+    <><Bell size={14} style={{ color: GOLD }} />{d.track[Math.min(3, Math.floor(local / 0.22))]}</>,
+  ][step] || null;
+  return (
+    <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 38%, #3a2a1c 0%, #1e1a17 55%, #14100c 100%)" }}>
+      <div ref={box} className="absolute inset-0" aria-hidden="true" />
+      <div className="absolute top-14 inset-x-0 flex justify-center pointer-events-none"><Pill svc={s} text={d.label} /></div>
+      <div className="absolute inset-x-0 bottom-[4.4rem] flex justify-center px-4 pointer-events-none">
+        <div className="inline-flex items-center gap-2 rounded-full bg-black/50 backdrop-blur px-4 py-2 text-[0.8rem] text-white/90 ring-1 ring-white/10">{caption}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function StepVideo({ step }) {
   const { lang } = useLanguage();
+  const lg = lang === "en" ? "en" : "fr";
+  const [use3D] = useState(can3D);
   const Content = VARIANTS[step] || SearchStep;
+  const [journey, setJourney] = useState(0);
+  const prev = useRef(step), stepStart = useRef(Date.now());
+  useEffect(() => {
+    if (step < prev.current) setJourney((j) => j + 1); // retour à l'étape 1 → service suivant
+    prev.current = step; stepStart.current = Date.now();
+  }, [step]);
   return (
-    <Chrome>
-      {({ idx, local }) => (
-        <div className="w-full h-full flex items-center justify-center px-5 pt-12 pb-16">
-          <Content idx={idx} local={local} lang={lang === "en" ? "en" : "fr"} />
-        </div>
-      )}
+    <Chrome journey={journey} step={step} stepStart={stepStart}>
+      {({ idx, local }) => {
+        const flat = (
+          <div className="w-full h-full flex items-center justify-center px-5 pt-12 pb-16">
+            <Content idx={idx} local={local} lang={lg} />
+          </div>
+        );
+        return use3D ? <Stage3D step={step} idx={idx} local={local} lang={lg} fallback={flat} /> : flat;
+      }}
     </Chrome>
   );
 }
