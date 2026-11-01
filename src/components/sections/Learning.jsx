@@ -192,7 +192,7 @@ export default function Learning() {
                     <Link to={`/formations/${c.id}`} className="hc-course-title block" style={{ textDecoration: "none" }}>
                       {c.title}
                     </Link>
-                    <p className="hc-course-text">{c.text}</p>
+
                     <Link to={`/formations/${c.id}`} className="hc-course-link">
                       {t("learning.discover")}
                       <svg width="13" height="11" viewBox="0 0 13 11" aria-hidden="true">
