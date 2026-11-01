@@ -76,7 +76,7 @@ export default function Marketplace() {
         </Reveal>
 
         <div
-          className="grid md:grid-cols-[1fr_1.75fr] gap-10 md:gap-16 items-center"
+          className="grid md:grid-cols-[1fr_1.3fr] gap-10 md:gap-16 items-center"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
@@ -138,7 +138,7 @@ export default function Marketplace() {
           </div>
 
           {/* Colonne de droite : "vidéo" de 15s illustrant l'étape active */}
-          <div className="relative aspect-[4/3] md:aspect-[16/11] md:min-h-[560px] rounded-3xl bg-ink-fixed overflow-hidden shadow-2xl">
+          <div className="relative aspect-[4/3] rounded-3xl bg-ink-fixed overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
