@@ -11,6 +11,7 @@ import MyServicesPanel from "../components/dashboard/MyServicesPanel.jsx";
 import ContractTab from "../components/dashboard/ContractTab.jsx";
 import ActivityTab from "../components/dashboard/ActivityTab.jsx";
 import ShareTab from "../components/dashboard/ShareTab.jsx";
+import HubTab from "../components/dashboard/HubTab.jsx";
 import { ModulesTab, ModuleWorkspace, useModules } from "../components/dashboard/ModulesTab.jsx";
 import { MODULES, moduleByKey } from "../components/dashboard/modules.js";
 import { Skeleton, SkeletonCard, SkeletonStatRow } from "../components/ui/Skeleton.jsx";
@@ -24,6 +25,7 @@ const STATUS_LABELS = {
 };
 
 const BASE_TABS = [
+  { key: "hub", label: "Mon espace", icon: LayoutGrid },
   { key: "overview", label: "Vue d'ensemble", icon: LayoutGrid },
   { key: "modules", label: "Modules", icon: Blocks },
   { key: "apps", label: "Mes apps", icon: Boxes },
@@ -63,8 +65,10 @@ export default function PartnerDashboard() {
   const [stats, setStats] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [pageStatus, setPageStatus] = useState("loading"); // loading | ready | error
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("hub");
   const modules = useModules();
+  const [hub, setHub] = useState(null);
+  const [splash, setSplash] = useState(() => { try { return !sessionStorage.getItem("hc_splash"); } catch { return false; } });
   const toast = useToast();
 
   const load = useCallback(async () => {
@@ -109,6 +113,16 @@ export default function PartnerDashboard() {
       setPageStatus("error");
     }
   }, [withAuth]);
+
+  useEffect(() => {
+    if (application?.status === "approved") withAuth((tk) => api.partnerHub.get(tk)).then(setHub).catch(() => {});
+  }, [application, withAuth, modules.state]);
+
+  useEffect(() => {
+    if (!splash) return undefined;
+    const id = setTimeout(() => { setSplash(false); try { sessionStorage.setItem("hc_splash", "1"); } catch { /* ignoré */ } }, 1500);
+    return () => clearTimeout(id);
+  }, [splash]);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) load();
@@ -275,13 +289,21 @@ export default function PartnerDashboard() {
 
   const activeModules = (modules.state?.modules || []).filter((m) => m.active);
   const MOBILE_TABS = [
-    ...BASE_TABS.slice(0, 2),
+    ...BASE_TABS.slice(0, 3),
     ...activeModules.map((m) => ({ key: `m:${m.key}`, label: moduleByKey(m.key).fr.short, icon: moduleByKey(m.key).icon })),
-    ...BASE_TABS.slice(2),
+    ...BASE_TABS.slice(3),
   ];
+  const brandName = hub?.branding?.display_name;
+  const accent = hub?.branding?.accent;
 
   return (
-    <div className="min-h-screen bg-cream md:flex">
+    <div className="min-h-screen bg-cream md:flex" style={accent ? { "--partner-accent": accent } : undefined}>
+      {splash && (
+        <div className="fixed inset-0 z-[600] bg-ink-fixed text-cream-fixed flex flex-col items-center justify-center gap-3 animate-pulse" role="status" aria-live="polite">
+          <p className="font-display italic text-4xl sm:text-5xl text-center px-6">{brandName || application.company}</p>
+          <p className="text-xs tracking-[0.3em] uppercase text-cream-fixed/50">{hub?.branding?.tagline || "Espace partenaire"}</p>
+        </div>
+      )}
       <DashboardSidebar active={activeTab} onSelect={setActiveTab} user={user} onSignOut={signOut} items={MOBILE_TABS} />
 
       <div className="flex-1 min-w-0">
@@ -310,7 +332,7 @@ export default function PartnerDashboard() {
         <main className="px-5 md:px-10 py-8 md:py-10 max-w-6xl">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="font-display text-2xl md:text-3xl text-ink">Espace partenaire</h1>
+              <h1 className="font-display text-2xl md:text-3xl text-ink" style={accent ? { color: accent } : undefined}>{brandName || "Espace partenaire"}</h1>
               <p className="text-sm text-ink-soft mt-1">{application.company}</p>
             </div>
             <div className="hidden md:block">
@@ -318,6 +340,7 @@ export default function PartnerDashboard() {
             </div>
           </div>
 
+          {activeTab === "hub" && <HubTab hub={hub} setHub={setHub} onOpenModules={() => setActiveTab("modules")} onOpenModule={(k) => { setActiveTab(`m:${k}`); window.scrollTo({ top: 0 }); }} />}
           {activeTab === "overview" && (
             <OverviewTab application={application} stats={stats} activities={activities} />
           )}

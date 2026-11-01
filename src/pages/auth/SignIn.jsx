@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { safeRedirect } from "../../lib/redirect.js";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Mail, Lock, ArrowRight, Sparkles, ShieldCheck, QrCode } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
 import LockoutNotice from "../../components/auth/LockoutNotice.jsx";
 import GoogleButton from "../../components/auth/GoogleButton.jsx";
@@ -14,14 +13,15 @@ import { api, ApiError } from "../../lib/api.js";
 
 export default function SignIn() {
   const { t, lang } = useLanguage();
-  const { signIn, isAuthenticated, isLoading } = useUser();
+  const { signIn, signInPartner } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = safeRedirect(location.state?.redirectTo);
+  const redirectTo = location.state?.redirectTo || "/";
 
-  const [mode, setMode] = useState("otp"); // "otp" | "password"
+  const [mode, setMode] = useState(location.state?.mode || "otp"); // "otp" | "password" | "partner"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -47,7 +47,7 @@ export default function SignIn() {
     setLoading(true);
     try {
       await signIn(email, password);
-      navigate(redirectTo, { replace: true }); // « Retour » ne ramène pas au formulaire de connexion
+      navigate(redirectTo);
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) setLocked(true);
       else setError(err?.data?.detail || "E-mail ou mot de passe incorrect.");
@@ -56,8 +56,20 @@ export default function SignIn() {
     }
   }
 
-  // Déjà connecté (ex. retour sur /connexion avec le bouton Précédent) : inutile de rester ici.
-  if (isAuthenticated && !isLoading) return <Navigate to={redirectTo} replace />;
+  async function handlePartnerSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await signInPartner(code.trim(), password);
+      navigate(location.state?.redirectTo || "/dashboard");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429) setLocked(true);
+      else setError(err?.data?.detail || "Code partenaire ou mot de passe incorrect.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <AuthLayout
@@ -79,12 +91,17 @@ export default function SignIn() {
         <>
           <h1 className="font-display text-2xl text-ink mb-2">{t("auth.signinTitle")}</h1>
           <p className="text-sm text-stone mb-8">{t("auth.noAccount")}{" "}
-            <Link to="/creer-un-compte" state={{ redirectTo }} className="text-coffee-dark font-medium hover:underline">
+            <Link to="/creer-un-compte" className="text-coffee-dark font-medium hover:underline">
               {t("auth.joinNetwork")}
             </Link>
           </p>
 
-          <GoogleButton redirectTo={redirectTo} />
+          {mode !== "partner" && (
+            <button type="button" onClick={() => { setError(null); setMode("partner"); }} className="w-full mb-4 inline-flex items-center justify-center gap-2 rounded-xl border border-line text-ink text-sm font-medium py-3 hover:border-coffee-light transition-colors">
+              <ShieldCheck size={15} />{lang === "fr" ? "Je suis partenaire (code + mot de passe)" : "I'm a partner (code + password)"}
+            </button>
+          )}
+          <GoogleButton />
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-line" />
             <span className="text-xs text-ink-faint">{t("auth.orDivider")}</span>
@@ -92,7 +109,29 @@ export default function SignIn() {
           </div>
 
           <AnimatePresence mode="wait">
-            {mode === "otp" ? (
+            {mode === "partner" ? (
+              <motion.form key="partner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handlePartnerSubmit} className="space-y-4">
+                <p className="text-sm text-ink-soft -mt-2">{lang === "fr" ? "Espace partenaire : votre code (ex. HC-123456) et votre mot de passe, reçus par e-mail." : "Partner space: your code (e.g. HC-123456) and the password sent by e-mail."}</p>
+                <div className="relative">
+                  <ShieldCheck size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint" />
+                  <input type="text" required autoFocus autoCapitalize="characters" autoComplete="username" placeholder="HC-123456" value={code} onChange={(e) => setCode(e.target.value)} className="w-full border border-line rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-coffee-light transition-colors uppercase tracking-wider" />
+                </div>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint" />
+                  <input type="password" required autoComplete="current-password" placeholder={t("auth.passwordPh")} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-line rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-coffee-light transition-colors" />
+                </div>
+                <div className="flex justify-between items-center -mt-2">
+                  <Link to="/connexion-qr" className="inline-flex items-center gap-1 text-xs text-coffee-dark hover:text-ink underline underline-offset-4"><QrCode size={13} />{lang === "fr" ? "Se connecter avec un QR code" : "Sign in with QR code"}</Link>
+                  <Link to="/mot-de-passe-oublie" className="text-xs text-ink-soft hover:text-ink">{t("auth.forgotPassword")}</Link>
+                </div>
+                {error && <p className="text-sm text-red-600">{error}</p>}
+                <SlowHint active={loading} />
+                <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 rounded-xl bg-ink text-cream text-sm font-medium py-3.5 hover:bg-coffee-dark transition-colors disabled:opacity-60">
+                  {loading ? t("auth.connecting") : (lang === "fr" ? "Accéder à mon dashboard" : "Open my dashboard")}{!loading && <ArrowRight size={15} />}
+                </button>
+                <button type="button" onClick={() => setMode("otp")} className="w-full text-center text-xs text-ink-soft hover:text-ink transition-colors pt-1">{t("auth.otpToggle")}</button>
+              </motion.form>
+            ) : mode === "otp" ? (
               <motion.form
                 key="otp"
                 initial={{ opacity: 0 }}

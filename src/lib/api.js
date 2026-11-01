@@ -107,6 +107,11 @@ export const api = {
         saveRefreshToken(data?.refresh_token);
         return data;
       }),
+    signInPartner: (code, password) =>
+      request("/api/v1/auth/login-partner", { method: "POST", body: { code, password } }).then((data) => {
+        saveRefreshToken(data?.refresh_token);
+        return data;
+      }),
     signUp: (name, email, password) =>
       request("/api/v1/auth/register", { method: "POST", body: { full_name: name, email, password } }),
     me: (token) => request("/api/v1/auth/me", { token }),
@@ -547,6 +552,33 @@ export const api = {
     list: (token) => request("/api/v1/partner/modules", { token }),
     activate: (token, key) => request(`/api/v1/partner/modules/${key}/activate`, { method: "POST", token }),
     deactivate: (token, key) => request(`/api/v1/partner/modules/${key}/deactivate`, { method: "POST", token }),
+  },
+
+  // Dashboard partenaire unique : plan, fonctions payantes, marque, revenus par app
+  partnerHub: {
+    get: (token) => request("/api/v1/partner/hub", { token }),
+    upgrade: (token) => request("/api/v1/partner/hub/upgrade", { method: "POST", token }),
+    unlock: (token, key) => request(`/api/v1/partner/hub/features/${key}/unlock`, { method: "POST", token }),
+    saveBranding: (token, body) => request("/api/v1/partner/hub/branding", { method: "PUT", token, body }),
+    invite: (code) => request(`/api/v1/partner/invites/${encodeURIComponent(code)}`),
+    admin: {
+      requests: (token) => request("/api/v1/partner/hub/admin/requests", { token }),
+      setPlan: (token, userId, body) => request(`/api/v1/partner/hub/admin/users/${userId}/plan`, { method: "PUT", token, body }),
+      decideFeature: (token, id, body) => request(`/api/v1/partner/hub/admin/features/${id}`, { method: "PUT", token, body }),
+      invites: (token) => request("/api/v1/partner/hub/admin/invites", { token }),
+      createInvite: (token, body) => request("/api/v1/partner/hub/admin/invites", { method: "POST", token, body }),
+    },
+  },
+
+  // Pays, taux de change, bénéficiaires (services hors frontières)
+  geo: {
+    countries: () => request("/api/v1/geo/countries"),
+    rates: () => request("/api/v1/geo/rates"),
+    admin: {
+      overview: (token) => request("/api/v1/geo/admin/overview", { token }),
+      setRate: (token, cur, body) => request(`/api/v1/geo/admin/rates/${cur}`, { method: "PUT", token, body }),
+      setCountry: (token, code, body) => request(`/api/v1/geo/admin/countries/${code}`, { method: "PUT", token, body }),
+    },
   },
 
   // Connexion par QR code (façon WhatsApp Web)

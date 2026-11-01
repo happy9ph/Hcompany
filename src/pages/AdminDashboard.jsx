@@ -18,6 +18,7 @@ import LearningAdminPanel from "../components/admin/LearningAdminPanel.jsx";
 import ShoppingAdminPanel from "../components/admin/ShoppingAdminPanel.jsx";
 import LodgeAdminPanel from "../components/admin/LodgeAdminPanel.jsx";
 import RestaurantAdminPanel from "../components/admin/RestaurantAdminPanel.jsx";
+import PartnerHubAdminPanel from "../components/admin/PartnerHubAdminPanel.jsx";
 import TourismAdminPanel from "../components/admin/TourismAdminPanel.jsx";
 import TransportAdminPanel from "../components/admin/TransportAdminPanel.jsx";
 import AgentsPanel from "../components/admin/AgentsPanel.jsx";
@@ -552,6 +553,15 @@ export default function AdminDashboard() {
                 <p className="text-sm text-ink-soft mt-1">Restaurants à valider, mise à la une, suspension et activité des réservations.</p>
               </div>
               <RestaurantAdminPanel withAuth={withAuth} api={api} onCount={setRestaurantCount} />
+            </>
+          ) : view === "partnerHub" ? (
+            <>
+              <div className="mb-8">
+                <p className="text-xs text-ink-faint mb-2">Espace admin <span className="mx-1">/</span> Invitations & plans</p>
+                <Title className="text-3xl">Invitations & plans partenaires</Title>
+                <p className="text-sm text-ink-soft mt-1">Envoyez le lien de demande de partenariat, activez les plans Pro et les fonctions payantes après paiement.</p>
+              </div>
+              <PartnerHubAdminPanel withAuth={withAuth} api={api} />
             </>
           ) : view === "tourism" ? (
             <>

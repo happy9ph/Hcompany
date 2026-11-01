@@ -10,7 +10,7 @@ import Interpretation from "../components/sections/Interpretation.jsx";
 import Learning from "../components/sections/Learning.jsx";
 import Impact from "../components/sections/Impact.jsx";
 import Partners from "../components/sections/Partners.jsx";
-import JoinForm from "../components/sections/JoinForm.jsx";
+import PartnerInfo from "../components/sections/PartnerInfo.jsx";
 import FAQ from "../components/sections/FAQ.jsx";
 import AdSpace from "../components/sections/AdSpace.jsx";
 import SectionReveal from "../components/ui/SectionReveal.jsx";
@@ -132,7 +132,7 @@ export default function Home() {
           />
         </SectionReveal>
         <SectionReveal variant="split">
-          <JoinForm />
+          <PartnerInfo />
         </SectionReveal>
         <AdSpace />
       </main>

@@ -46,7 +46,10 @@ export default function SellerStart() {
   const op = operatorByKey(f.operator);
 
   function begin() {
-    if (!isAuthenticated) { navigate("/connexion", { state: { redirectTo: "/shopping/vendre" } }); return; }
+    if (!isAuthenticated) { navigate("/connexion", { state: { mode: "partner", redirectTo: "/shopping/vendre" } }); return; }
+    // Une seule inscription : la boutique est créée d'office depuis le dossier partenaire, au déblocage du module.
+    if (!showForm && !(shops || []).length) { navigate("/dashboard"); return; }
+    if (!showForm && (shops || []).length) { navigate("/shopping/vendeur"); return; }
     setShowForm(true);
     setTimeout(() => document.getElementById("shop-form")?.scrollIntoView({ behavior: "smooth" }), 50);
   }
