@@ -614,6 +614,8 @@ export const api = {
       transactions: (token, params = {}) => request(`/api/v1/money/agent/transactions${qs(params)}`, { token }),
       flag: (token, code, body) => request(`/api/v1/money/agent/transactions/${code}/flag`, { method: "POST", token, body }),
       setRate: (token, body) => request("/api/v1/money/agent/rate", { method: "PUT", token, body }),
+      corridorRates: (token) => request("/api/v1/money/agent/corridor-rates", { token }),
+      setCorridorRate: (token, body) => request("/api/v1/money/agent/corridor-rates", { method: "PUT", token, body }),
     },
     admin: {
       overview: (token, days = 30) => request(`/api/v1/money/admin/overview${qs({ days })}`, { token }),
@@ -622,6 +624,8 @@ export const api = {
       assign: (token, body) => request("/api/v1/money/admin/agents", { method: "POST", token, body }),
       remove: (token, id) => request(`/api/v1/money/admin/agents/${id}`, { method: "DELETE", token }),
       audit: (token) => request("/api/v1/money/admin/audit", { token }),
+      corridorRates: (token) => request("/api/v1/money/admin/corridor-rates", { token }),
+      setCorridorRate: (token, body) => request("/api/v1/money/admin/corridor-rates", { method: "PUT", token, body }),
     },
   },
 

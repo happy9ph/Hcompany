@@ -5,6 +5,7 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useRegion } from "../../context/RegionContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import Logo from "../ui/Logo.jsx";
+import BackButton from "../ui/BackButton.jsx";
 import { homeFor } from "../../lib/home.js";
 
 const RAIL = 72, MIN = 200, MAX = 380, DEF = 264, KEY = "hc_app_sidebar";
@@ -130,7 +131,8 @@ export default function AppShell() {
         <header className="sticky top-0 z-20 h-16 bg-cream/90 backdrop-blur border-b border-line flex items-center gap-2 px-3 sm:px-5">
           <button onClick={() => setDrawer(true)} aria-label="Menu" className="md:hidden w-10 h-10 rounded-xl hover:bg-latte-soft flex items-center justify-center"><Menu size={20} /></button>
           <button onClick={() => set({ hidden: !prefs.hidden })} aria-pressed={prefs.hidden} aria-label={prefs.hidden ? (fr ? "Afficher la barre latérale" : "Show sidebar") : (fr ? "Masquer la barre latérale" : "Hide sidebar")} className="hidden md:flex w-10 h-10 rounded-xl hover:bg-latte-soft items-center justify-center text-ink-soft"><PanelLeft size={19} /></button>
-          <Link to="/app" className="md:hidden flex items-center gap-2"><Logo size={26} /></Link>
+          {location.pathname !== "/app" ? <BackButton fallback="/app" compact className="md:hidden" /> : <Link to="/app" className="md:hidden flex items-center gap-2"><Logo size={26} /></Link>}
+          {location.pathname !== "/app" && <BackButton fallback="/app" className="hidden md:inline-flex" />}
           <div className="flex-1" />
           <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink-soft" title={fr ? "Modifiable en bas du site" : "Change it in the site footer"}>{region.info.flag} {region.currency}</span>
           <Link to="/settings" aria-label={fr ? "Mon profil" : "My profile"} className="w-9 h-9 rounded-full bg-ink text-[#C89A3D] flex items-center justify-center font-display">{(first[0] || "H").toUpperCase()}</Link>

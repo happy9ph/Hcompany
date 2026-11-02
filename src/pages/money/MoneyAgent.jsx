@@ -5,6 +5,7 @@ import { api } from "../../lib/api.js";
 import { useUser } from "../../context/Usercontext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import { StatusPill, input, msgOf, nf } from "../../components/money/parts.jsx";
+import CorridorRates from "../../components/money/CorridorRates.jsx";
 
 /** Espace des agents H-Money : contrôle des transactions de leur pays et, si autorisé, taux de leur devise. */
 export default function MoneyAgent() {
@@ -48,6 +49,7 @@ export default function MoneyAgent() {
           <>
             <p className="text-sm text-ink-soft mt-1">Pays : {me.map((c) => c.country).join(", ")}</p>
             {err && <p role="alert" className="text-sm text-red-600 mt-3">{err}</p>}{ok && <p className="text-sm text-emerald-700 mt-3">{ok}</p>}
+            {me.some((c) => c.can_set_rates) && <div className="mt-6"><CorridorRates load={() => withAuth((t) => api.money.agent.corridorRates(t))} save={(b) => withAuth((t) => api.money.agent.setCorridorRate(t, b))} /></div>}
             {me.filter((c) => c.can_set_rates && c.currency !== "USD").map((c) => (
               <section key={c.country} className="mt-6 rounded-2xl border border-line bg-surface p-5">
                 <h2 className="font-display text-lg text-ink">Taux {c.currency} ({c.country})</h2>

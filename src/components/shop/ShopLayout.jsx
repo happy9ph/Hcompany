@@ -1,3 +1,4 @@
+import { PageBack } from "../ui/BackButton.jsx";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Heart, Package, Search, ShoppingBag, Store, Truck } from "lucide-react";
@@ -94,7 +95,7 @@ export default function ShopLayout({ children, width = "max-w-content", hideBar 
       <NavBar />
       <div className="pt-[68px]">
         {!hideBar && <ShopBar />}
-        <main className={`${width} mx-auto px-4 sm:px-6 py-8 sm:py-10 ${className}`}>{children}</main>
+        <main className={`${width} mx-auto px-4 sm:px-6 py-8 sm:py-10 ${className}`}><PageBack root="/shopping" />{children}</main>
       </div>
       <Footer />
     </div>

@@ -7,6 +7,7 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useRegion } from "../../context/RegionContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
+import RatesCard from "../../components/money/RatesCard.jsx";
 import { COUNTRY, FLAG, Field, SimulationBanner, StatusPill, input, msgOf, nf, useCorridors, useQuote } from "../../components/money/parts.jsx";
 
 const TABS = [{ k: "send", label: "Envoyer", Icon: Send }, { k: "request", label: "Demander", Icon: HandCoins }, { k: "history", label: "Historique", Icon: History }];
@@ -199,7 +200,7 @@ export default function MoneyHome({ embedded = false }) {
           <span className="w-16" />
         </div>
       </header>}
-      <main className="max-w-2xl mx-auto px-5 pt-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-8"><div className="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-8 items-start"><div className="min-w-0">
         <h1 className="font-display text-3xl sm:text-4xl text-ink">Zambie <ArrowRight className="inline -mt-1 text-coffee" size={26} /> RD Congo</h1>
         <p className="text-sm text-ink-soft mt-2 mb-6">Envoyez ou demandez de l'argent. Chacun paie et reçoit dans son pays, en mobile money, au taux affiché avant de payer.</p>
         <SimulationBanner show={cor?.simulated} />
@@ -209,7 +210,7 @@ export default function MoneyHome({ embedded = false }) {
           ))}
         </div>
         <AnimatePresence mode="wait"><motion.div key={tab + (result ? "r" : "")} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>{body}</motion.div></AnimatePresence>
-      </main>
+      </div><RatesCard rates={cor?.rates} /></div></main>
     </div>
   );
 }

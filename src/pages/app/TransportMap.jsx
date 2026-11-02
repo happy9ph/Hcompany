@@ -57,7 +57,7 @@ export default function TransportMap() {
   const [trips, setTrips] = useState(null);
   const [book, setBook] = useState(null);
 
-  useEffect(() => { if (!route) return; let on = true; setTrips(null); api.transport.search({ origin: route.origin, destination: route.destination }).then((r) => on && setTrips(r)).catch(() => on && setTrips([])); return () => { on = false; }; }, [route]);
+  useEffect(() => { if (!route) return; let on = true; setTrips(null); api.transport.search({ origin: route.origin, destination: route.destination, sort: "recommended" }).then((r) => on && setTrips(r)).catch(() => on && setTrips([])); return () => { on = false; }; }, [route]);
 
   const key = (r) => `${r.origin}|${r.destination}`;
   const { markers, lines } = useMemo(() => {
@@ -96,7 +96,7 @@ export default function TransportMap() {
           {trips === null ? <Skel /> : !trips.length ? <Empty>Pas de départ à venir sur cette ligne.</Empty> : trips.map((t) => (
             <div key={t.id} className="rounded-2xl border border-line bg-surface p-4">
               <div className="flex items-start justify-between gap-3">
-                <div><p className="font-medium">{fmtDay(t.departure_at)} · {fmtTime(t.departure_at)}</p><p className="text-xs text-ink-soft mt-0.5">{t.operator?.name} · {t.bus_type}</p></div>
+                <div><p className="font-medium">{fmtDay(t.departure_at)} · {fmtTime(t.departure_at)}</p><p className="text-xs text-ink-soft mt-0.5">{t.operator?.name} · {t.bus_type}{t.operator?.promoted && <span className="ml-2 rounded-full bg-[#C89A3D]/20 text-[#8a6a1f] text-[0.65rem] font-semibold px-2 py-0.5">Recommandé</span>}</p></div>
                 <p className="font-display text-xl">{money(t.price)}</p>
               </div>
               <div className="mt-3 flex items-center justify-between gap-3">

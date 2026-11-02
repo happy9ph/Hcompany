@@ -31,7 +31,7 @@ export default function LogementMap() {
         <div key={p.id} className={`rounded-2xl border bg-surface overflow-hidden ${sel?.id === p.id ? "border-[#C89A3D]" : "border-line"}`}>
           <button onClick={() => setSel(p)} className="w-full text-left flex gap-3 p-3">
             {p.image ? <img src={p.image} alt="" loading="lazy" className="w-24 h-20 rounded-xl object-cover shrink-0" /> : <span className="w-24 h-20 rounded-xl bg-latte-soft flex items-center justify-center shrink-0"><BedDouble className="text-coffee" /></span>}
-            <span className="min-w-0"><span className="block font-medium truncate">{p.title}</span><span className="block text-xs text-ink-soft">{p.city}{p.area ? ` · ${p.area}` : ""} · {p.bedrooms} ch.</span>
+            <span className="min-w-0"><span className="block font-medium truncate">{p.title}{p.is_featured && <span className="ml-2 rounded-full bg-[#C89A3D]/20 text-[#8a6a1f] text-[0.65rem] font-semibold px-2 py-0.5">Recommandé</span>}</span><span className="block text-xs text-ink-soft">{p.city}{p.area ? ` · ${p.area}` : ""} · {p.bedrooms} ch.</span>
               <span className="mt-1 flex items-center gap-2 text-sm"><b>{money(p.price_per_night)}</b><span className="text-xs text-ink-faint">/ nuit</span>{p.rating_count > 0 && <span className="inline-flex items-center gap-0.5 text-xs"><Star size={11} className="text-[#C89A3D]" fill="currentColor" />{p.rating_avg.toFixed(1)}</span>}</span></span>
           </button>
           <div className="flex gap-2 px-3 pb-3">

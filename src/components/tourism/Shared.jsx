@@ -1,3 +1,4 @@
+import { PageBack } from "../ui/BackButton.jsx";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, Clock, ImageIcon, Loader2, Mountain, Search, Star, Store, Zap } from "lucide-react";
@@ -74,7 +75,7 @@ export default function TourLayout({ children, width = "max-w-content", hideBar 
       <NavBar />
       <div className="pt-[68px]">
         {!hideBar && <TourBar />}
-        <main className={`${width} mx-auto px-4 sm:px-6 py-8 sm:py-10`}>{children}</main>
+        <main className={`${width} mx-auto px-4 sm:px-6 py-8 sm:py-10`}><PageBack root="/tourisme" />{children}</main>
       </div>
       <Footer />
     </div>

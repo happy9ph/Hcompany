@@ -3,12 +3,14 @@ import { Loader2 } from "lucide-react";
 import { StatusPill, nf } from "../money/parts.jsx";
 
 const msgOf = (e) => e?.data?.detail || e?.message || "Une erreur est survenue.";
-const TABS = [["overview", "Aperçu"], ["tx", "Transactions"], ["agents", "Agents par pays"], ["audit", "Journal"]];
+const TABS = [["overview", "Aperçu"], ["tx", "Transactions"], ["rates", "Taux envoi / retrait"], ["agents", "Agents par pays"], ["audit", "Journal"]];
 const cell = "px-3 py-2.5 text-sm whitespace-nowrap";
 
 function Stat({ label, value, sub }) {
   return <div className="rounded-2xl border border-line bg-surface p-5"><p className="text-xs text-ink-faint">{label}</p><p className="font-display text-2xl sm:text-3xl text-ink mt-1 tabular-nums">{value}</p>{sub && <p className="text-xs text-ink-faint mt-1">{sub}</p>}</div>;
 }
+
+import CorridorRates from "../money/CorridorRates.jsx";
 
 export default function MoneyAdminPanel({ withAuth, api }) {
   const M = api.money.admin;
@@ -84,6 +86,7 @@ export default function MoneyAdminPanel({ withAuth, api }) {
         </div>
       )}
 
+      {tab === "rates" && <CorridorRates maxPct={50} load={() => withAuth((t) => M.corridorRates(t))} save={(b) => withAuth((t) => M.setCorridorRate(t, b))} />}
       {tab === "agents" && (
         <div className="space-y-6">
           <form onSubmit={assign} className="rounded-2xl border border-line bg-surface p-5 grid gap-4 sm:grid-cols-[1.4fr_1fr_auto] items-end">
