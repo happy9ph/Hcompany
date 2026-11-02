@@ -6,6 +6,7 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import NotificationBell from "./NotificationBell.jsx";
 import Logo from "../ui/Logo.jsx";
+import { homeFor } from "../../lib/home.js";
 
 // onDark : la page commence par un bandeau sombre — texte clair tant que la
 // barre est transparente (avant le défilement).
@@ -87,13 +88,13 @@ export default function NavBar({ onDark = false }) {
 
                     <div className="py-1.5">
                       <Link
-                        to={user?.role === "admin" ? "/admin" : user?.role === "agent" ? "/agent" : "/dashboard"}
+                        to={homeFor(user)}
                         role="menuitem"
                         onClick={() => setMenuOpen(false)}
                         className="flex items-center gap-2.5 w-full text-left text-sm text-ink px-4 py-2.5 hover:bg-ink/[0.04] transition-colors"
                       >
                         <LayoutDashboard size={15} className="text-ink-soft" />
-                        {user?.role === "admin" ? t("nav.adminSpace") : user?.role === "agent" ? t("nav.agentSpace") : t("nav.dashboard")}
+                        {user?.role === "admin" ? t("nav.adminSpace") : user?.role === "agent" ? t("nav.agentSpace") : user?.role === "partner" ? t("nav.dashboard") : (t("nav.myApp") !== "nav.myApp" ? t("nav.myApp") : "Mon espace")}
                       </Link>
                       <Link
                         to="/settings"

@@ -1,5 +1,6 @@
 import { clearLoadCache } from "../lib/loadCache.js";
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api.js";
 
 // L'access_token vit uniquement en mémoire (state React), jamais en
@@ -13,6 +14,7 @@ export function UserProvider({ children }) {
   const [token, setToken] = useState(null);
   const [status, setStatus] = useState("loading"); // "loading" | "ready"
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
   const tokenRef = useRef(null);
   tokenRef.current = token;
 
@@ -88,6 +90,7 @@ export function UserProvider({ children }) {
     }
     setToken(null);
     setUser(null);
+    navigate("/connexion", { replace: true }); // se déconnecter ramène toujours à la page de connexion
   }
 
   // À utiliser autour d'un appel API protégé : si le token a expiré (401),

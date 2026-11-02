@@ -42,6 +42,8 @@ const REFERRALS = [
   { value: "Autre", Icon: HelpCircle },
 ];
 
+import { homeFor } from "../lib/home.js";
+
 export default function Onboarding() {
   const { t } = useLanguage();
   const { withAuth, user } = useUser();
@@ -68,14 +70,14 @@ export default function Onboarding() {
       setSuggestion(result.suggestions?.[0] || null);
       setStep(3);
     } catch {
-      navigate("/");
+      navigate(homeFor(user));
     } finally {
       setSaving(false);
     }
   }
 
   function finish() {
-    navigate("/", { state: { justOnboarded: true } });
+    navigate(homeFor(user), { state: { justOnboarded: true } });
   }
 
   const steps = [

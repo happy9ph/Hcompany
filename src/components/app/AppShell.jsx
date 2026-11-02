@@ -105,7 +105,7 @@ export default function AppShell() {
         <div className="p-3 border-t border-white/10 space-y-0.5">
           {prefs.rail && <button onClick={() => set({ rail: false })} aria-label={fr ? "Agrandir la barre latérale" : "Expand sidebar"} className="w-full flex justify-center rounded-xl py-2.5 text-cream-fixed/60 hover:bg-white/10"><ChevronsRight size={18} /></button>}
           <Link to="/settings" title={fr ? "Paramètres" : "Settings"} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-cream-fixed/75 hover:bg-white/10 ${prefs.rail ? "justify-center" : ""}`}><Settings size={18} />{!prefs.rail && (fr ? "Paramètres" : "Settings")}</Link>
-          <button onClick={() => { signOut(); navigate("/"); }} title={fr ? "Se déconnecter" : "Sign out"} className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-cream-fixed/75 hover:bg-white/10 ${prefs.rail ? "justify-center" : ""}`}><LogOut size={18} />{!prefs.rail && (fr ? "Se déconnecter" : "Sign out")}</button>
+          <button onClick={() => signOut()} title={fr ? "Se déconnecter" : "Sign out"} className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-cream-fixed/75 hover:bg-white/10 ${prefs.rail ? "justify-center" : ""}`}><LogOut size={18} />{!prefs.rail && (fr ? "Se déconnecter" : "Sign out")}</button>
         </div>
         {/* Poignée d'étirement */}
         <div role="separator" aria-orientation="vertical" aria-label={fr ? "Redimensionner la barre latérale" : "Resize sidebar"} aria-valuenow={w} aria-valuemin={RAIL} aria-valuemax={MAX} tabIndex={0}
@@ -120,7 +120,7 @@ export default function AppShell() {
           <div role="dialog" aria-modal="true" className="absolute inset-y-0 left-0 w-[82%] max-w-xs bg-ink-fixed text-cream-fixed flex flex-col">
             <div className="h-16 px-4 flex items-center justify-between border-b border-white/10"><span className="flex items-center gap-2.5"><Logo size={28} /><span className="font-display text-lg">H-Company</span></span><button onClick={() => setDrawer(false)} aria-label="Fermer" className="w-9 h-9 rounded-lg hover:bg-white/10 flex items-center justify-center"><X size={18} /></button></div>
             <nav className="flex-1 overflow-y-auto px-3 py-5"><NavItems lang={lang} rail={false} onNavigate={() => setDrawer(false)} /></nav>
-            <div className="p-3 border-t border-white/10"><button onClick={() => { signOut(); navigate("/"); }} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-cream-fixed/75 hover:bg-white/10"><LogOut size={18} />{fr ? "Se déconnecter" : "Sign out"}</button></div>
+            <div className="p-3 border-t border-white/10"><button onClick={() => signOut()} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-cream-fixed/75 hover:bg-white/10"><LogOut size={18} />{fr ? "Se déconnecter" : "Sign out"}</button></div>
           </div>
         </div>
       )}
