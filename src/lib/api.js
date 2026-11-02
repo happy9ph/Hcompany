@@ -595,6 +595,8 @@ export const api = {
   // Confirmation par mot de passe avant les chiffres sensibles (admin)
   adminSecurity: {
     confirm: (token, password) => request("/api/v1/admin-security/confirm", { method: "POST", token, body: { password } }),
+    sendCode: (token) => request("/api/v1/admin-security/otp", { method: "POST", token }),
+    confirmCode: (token, code) => request("/api/v1/admin-security/confirm-otp", { method: "POST", token, body: { code } }),
   },
 
   // H-Money : envoyer ou demander de l'argent entre la Zambie et la RD Congo
