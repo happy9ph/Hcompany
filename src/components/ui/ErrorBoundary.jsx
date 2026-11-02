@@ -1,6 +1,5 @@
 import { Component } from "react";
 import { AlertTriangle } from "lucide-react";
-import { isChunkError, reloadOnce } from "../../lib/chunkReload.js";
 
 /**
  * Filet de sécurité : si un composant plante pendant le rendu (erreur
@@ -19,7 +18,6 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    if (isChunkError(error) && reloadOnce()) return; // ancienne version du site : on recharge
     console.error("Erreur non interceptée :", error, info);
     if (import.meta.env.VITE_SENTRY_DSN) {
       import("@sentry/react").then((Sentry) => {

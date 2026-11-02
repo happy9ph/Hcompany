@@ -221,7 +221,7 @@ export default function ServiceSubscriptionsPanel({ withAuth, api }) {
         ) : (
           <>
             <div className="hidden md:block bg-surface border border-line rounded-2xl overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm block overflow-x-auto md:table">
                 <thead>
                   <tr className="border-b border-line bg-cream/30 text-left text-[11px] text-ink-faint uppercase tracking-[0.12em]">
                     <th className="px-5 py-3 font-medium">{t("adminServices.colService")}</th>

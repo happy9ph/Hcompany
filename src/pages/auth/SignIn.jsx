@@ -10,6 +10,7 @@ import { startOtp } from "../../lib/otpTracker.js";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { api, ApiError } from "../../lib/api.js";
+import { afterLogin } from "../../lib/home.js";
 
 export default function SignIn() {
   const { t, lang } = useLanguage();
@@ -46,8 +47,8 @@ export default function SignIn() {
     setError(null);
     setLoading(true);
     try {
-      await signIn(email, password);
-      navigate(redirectTo);
+      const d = await signIn(email, password);
+      navigate(afterLogin(redirectTo, d?.user));
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) setLocked(true);
       else setError(err?.data?.detail || "E-mail ou mot de passe incorrect.");
@@ -61,8 +62,8 @@ export default function SignIn() {
     setError(null);
     setLoading(true);
     try {
-      await signInPartner(code.trim(), password);
-      navigate(location.state?.redirectTo || "/dashboard");
+      const d = await signInPartner(code.trim(), password);
+      navigate(afterLogin(location.state?.redirectTo, d?.user));
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) setLocked(true);
       else setError(err?.data?.detail || "Code partenaire ou mot de passe incorrect.");

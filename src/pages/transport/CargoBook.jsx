@@ -1,5 +1,4 @@
-import { Suspense, lazy, useState } from "react";
-import BackLink from "../../components/ui/BackLink.jsx";
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import TransportLayout, { BusyButton, Card, ErrorState, Field, PayBox, Spinner, TransportAuthGate, inputCls, usePayBox, useTransportUi } from "../../components/transport/Shared.jsx";
 import { useCargoUi } from "../../i18n/cargoUi.js";
@@ -12,7 +11,6 @@ import { buildPhone, phoneIsComplete } from "../../lib/pricing.js";
 import { fmtDateTime } from "../../lib/transport.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
-const Vehicle3D = lazy(() => import("../../components/transport/Vehicle3D.jsx"));
 
 function Form() {
   const { id } = useParams();
@@ -55,14 +53,9 @@ function Form() {
   }
   return (
     <TransportLayout hideBar width="max-w-3xl">
-      <BackLink to="/transport/colis" className="text-sm text-ink-soft">← {c.title}</BackLink>
+      <Link to="/transport/colis" className="text-sm text-ink-soft">← {c.title}</Link>
       <h1 className="font-display text-3xl text-ink mt-3">{trip.origin} → {trip.destination}</h1>
       <p className="text-sm text-ink-soft mb-6 capitalize">{c.kinds[trip.vehicle.kind]} · {fmtDateTime(trip.departure_at, lang)} · {trip.operator_name}</p>
-      <div className="mb-6">
-        <Suspense fallback={<Spinner label={ui.common.loading} />}>
-          <Vehicle3D kind={trip.vehicle.kind} refrigerated={trip.vehicle.refrigerated} booked={trip.kg_booked / trip.vehicle.capacity_kg} yours={w / trip.vehicle.capacity_kg} />
-        </Suspense>
-      </div>
       <form onSubmit={submit} className="space-y-5">
         <Card className="space-y-4">
           <h2 className="font-display text-xl text-ink">{f.title}</h2>

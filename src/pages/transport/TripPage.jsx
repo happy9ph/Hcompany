@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertTriangle, MapPin } from "lucide-react";
 import TransportLayout, { AmenityChip, Card, ErrorState, OperatorBadge, Rating, RouteLine, SeatMap, Spinner, useTransportUi } from "../../components/transport/Shared.jsx";
@@ -6,7 +6,6 @@ import { useLoad, useShopMoney } from "../../data/shop.js";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { api } from "../../lib/api.js";
 import { fmtDay, searchQuery, toggleSeat, totalFor } from "../../lib/transport.js";
-const BusInterior3D = lazy(() => import("../../components/transport/BusInterior3D.jsx"));
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
 export default function TripPage() {
@@ -20,7 +19,6 @@ export default function TripPage() {
   usePageMeta({ title: t.title });
   const { data: trip, loading, error, reload } = useLoad(() => api.transport.trip(id), [id]);
   const [selected, setSelected] = useState([]);
-  const [view, setView] = useState("2d");
   const [count, setCount] = useState(Math.max(1, Number(params.get("seats")) || 1));
 
   useEffect(() => { if (trip) setSelected((s) => s.filter((x) => !trip.taken_seats.includes(x))); }, [trip]);
@@ -58,18 +56,8 @@ export default function TripPage() {
           <Card>
             <h2 className="font-display text-xl text-ink mb-1">{t.seatMap}</h2>
             <p className="text-sm text-ink-soft mb-5">{t.seatHint}</p>
-            <div className="inline-flex rounded-full bg-latte-soft p-1 mb-4" role="tablist">
-              {[["2d", lang === "en" ? "Plan" : "Plan"], ["3d", lang === "en" ? "Inside the bus (3D)" : "Dans le bus (3D)"]].map(([k, l]) => (
-                <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`px-4 py-1.5 rounded-full text-sm ${view === k ? "bg-ink text-cream" : "text-ink-soft"}`}>{l}</button>
-              ))}
-            </div>
-            {view === "3d" ? (
-              <Suspense fallback={<Spinner label={ui.common.loading} />}>
-                <BusInterior3D total={trip.seats_total} layout={trip.bus_layout || "2+2"} color={trip.bus?.color || "#c89a3d"} taken={trip.taken_seats} selected={selected} onToggle={trip.bookable ? toggle : undefined} readOnly={!trip.bookable} onUnsupported={() => setView("2d")} />
-              </Suspense>
-            ) : (
-              <SeatMap total={trip.seats_total} layout={trip.bus_layout || "2+2"} taken={trip.taken_seats} selected={selected} onToggle={trip.bookable ? toggle : undefined} readOnly={!trip.bookable} />
-            )}
+            <SeatMap total={trip.seats_total} layout={trip.bus_layout || "2+2"} taken={trip.taken_seats} selected={selected} onToggle={trip.bookable ? toggle : undefined} readOnly={!trip.bookable} />
+            <Link to="/app/transport" className="mt-4 inline-block text-sm text-coffee hover:underline">{lang === "en" ? "See the inside of the bus in 3D, on the map →" : "Voir l'intérieur du bus en 3D, sur la carte →"}</Link>
           </Card>
 
           <Card>

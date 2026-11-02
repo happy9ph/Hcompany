@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { safeRedirect } from "../lib/redirect.js";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -62,8 +61,6 @@ export default function Onboarding() {
     }
   }
 
-  const after = safeRedirect(useLocation().state?.redirectTo);
-
   async function submit(finalAnswers) {
     setSaving(true);
     try {
@@ -71,14 +68,14 @@ export default function Onboarding() {
       setSuggestion(result.suggestions?.[0] || null);
       setStep(3);
     } catch {
-      navigate(after, { replace: true });
+      navigate("/");
     } finally {
       setSaving(false);
     }
   }
 
   function finish() {
-    navigate(after, { replace: true, state: { justOnboarded: true } });
+    navigate("/", { state: { justOnboarded: true } });
   }
 
   const steps = [

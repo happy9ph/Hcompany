@@ -31,7 +31,7 @@ export default function NewPassword() {
     try {
       await resetPassword(password);
       setDone(true);
-      setTimeout(() => navigate("/", { replace: true }), 2000);
+      setTimeout(() => navigate("/"), 2000);
     } catch (err) {
       setError(err?.data?.detail || "Une erreur est survenue.");
     } finally {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { safeRedirect } from "../../lib/redirect.js";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, ArrowRight, Users } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
 import LockoutNotice from "../../components/auth/LockoutNotice.jsx";
@@ -13,10 +12,8 @@ import { api, ApiError } from "../../lib/api.js";
 
 export default function Register() {
   const { t } = useLanguage();
-  const { signUp, isAuthenticated, isLoading } = useUser();
+  const { signUp } = useUser();
   const navigate = useNavigate();
-  const location = useLocation();
-  const redirectTo = safeRedirect(location.state?.redirectTo);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,15 +41,13 @@ export default function Register() {
     // de l'e-mail continue en arrière-plan (état et bouton « Réessayer »
     // sur l'écran suivant) au lieu de rallonger l'attente ici.
     startOtp(email.trim(), "register");
-    navigate("/verifier", { state: { email: email.trim(), purpose: "register", redirectTo } });
+    navigate("/verifier", { state: { email: email.trim(), purpose: "register" } });
   }
 
   // Réveille le serveur pendant que la personne remplit le formulaire.
   useEffect(() => {
     api.auth.warmup();
   }, []);
-
-  if (isAuthenticated && !isLoading) return <Navigate to={redirectTo} replace />;
 
   return (
     <AuthLayout
@@ -73,12 +68,12 @@ export default function Register() {
           <h1 className="font-display text-2xl text-ink mb-2">{t("auth.signupTitle")}</h1>
           <p className="text-sm text-stone mb-8">
             {t("auth.alreadyRegistered")}{" "}
-            <Link to="/connexion" state={{ redirectTo }} className="text-coffee-dark font-medium hover:underline">
+            <Link to="/connexion" className="text-coffee-dark font-medium hover:underline">
               {t("auth.signin")}
             </Link>
           </p>
 
-          <GoogleButton redirectTo={redirectTo} />
+          <GoogleButton />
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-line" />
             <span className="text-xs text-ink-faint">{t("auth.orDivider")}</span>

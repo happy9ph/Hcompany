@@ -47,11 +47,6 @@ export function UserProvider({ children }) {
     return applyAuthResponse(data);
   }
 
-  async function signInPartner(code, password) {
-    const data = await api.auth.signInPartner(code, password);
-    return applyAuthResponse(data);
-  }
-
   async function signUp(name, email, password) {
     // /register ne renvoie plus de jeton depuis le passage au service
     // d'authentification commune — un compte fraîchement créé doit
@@ -113,7 +108,6 @@ export function UserProvider({ children }) {
     isLoading: status === "loading",
     error,
     signIn,
-    signInPartner,
     signUp,
     signInWithOtp,
     resetPassword,

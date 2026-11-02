@@ -107,11 +107,6 @@ export const api = {
         saveRefreshToken(data?.refresh_token);
         return data;
       }),
-    signInPartner: (code, password) =>
-      request("/api/v1/auth/login-partner", { method: "POST", body: { code, password } }).then((data) => {
-        saveRefreshToken(data?.refresh_token);
-        return data;
-      }),
     signUp: (name, email, password) =>
       request("/api/v1/auth/register", { method: "POST", body: { full_name: name, email, password } }),
     me: (token) => request("/api/v1/auth/me", { token }),
@@ -416,37 +411,6 @@ export const api = {
     },
   },
 
-  tour: {
-    home: () => request("/api/v1/tourism/home"),
-    search: (params = {}) => request(`/api/v1/tourism/search${qs(params)}`),
-    detail: (slug) => request(`/api/v1/tourism/tours/${slug}`),
-    departures: (id, days = 90) => request(`/api/v1/tourism/tours/${id}/departures${qs({ days })}`),
-    reviews: (id) => request(`/api/v1/tourism/tours/${id}/reviews`),
-    book: (token, body) => request("/api/v1/tourism/bookings", { method: "POST", token, body }),
-    mine: (token) => request("/api/v1/tourism/me/bookings", { token }),
-    cancel: (token, code) => request(`/api/v1/tourism/me/bookings/${code}/cancel`, { method: "POST", token }),
-    review: (token, code, body) => request(`/api/v1/tourism/me/bookings/${code}/review`, { method: "POST", token, body }),
-    owner: {
-      upload: (token, file) => { const fd = new FormData(); fd.append("file", file); return request("/api/v1/tourism/owner/uploads", { method: "POST", token, body: fd }); },
-      list: (token) => request("/api/v1/tourism/owner/tours", { token }),
-      create: (token, body) => request("/api/v1/tourism/owner/tours", { method: "POST", token, body }),
-      update: (token, id, body) => request(`/api/v1/tourism/owner/tours/${id}`, { method: "PUT", token, body }),
-      act: (token, id, what) => request(`/api/v1/tourism/owner/tours/${id}/${what}`, { method: "POST", token }),
-      departures: (token, id) => request(`/api/v1/tourism/owner/tours/${id}/departures`, { token }),
-      addDepartures: (token, id, body) => request(`/api/v1/tourism/owner/tours/${id}/departures`, { method: "POST", token, body }),
-      updateDeparture: (token, did, body) => request(`/api/v1/tourism/owner/departures/${did}`, { method: "PUT", token, body }),
-      deleteDeparture: (token, did) => request(`/api/v1/tourism/owner/departures/${did}`, { method: "DELETE", token }),
-      bookings: (token, id, params = {}) => request(`/api/v1/tourism/owner/tours/${id}/bookings${qs(params)}`, { token }),
-      action: (token, code, body) => request(`/api/v1/tourism/owner/bookings/${code}/action`, { method: "POST", token, body }),
-      stats: (token, id, days = 30) => request(`/api/v1/tourism/owner/tours/${id}/stats${qs({ days })}`, { token }),
-    },
-    admin: {
-      overview: (token) => request("/api/v1/tourism/admin/overview", { token }),
-      list: (token, params = {}) => request(`/api/v1/tourism/admin/tours${qs(params)}`, { token }),
-      decide: (token, id, what, reason = "") => request(`/api/v1/tourism/admin/tours/${id}/${what}`, { method: "POST", token, body: ["reject", "suspend"].includes(what) ? { reason } : undefined }),
-    },
-  },
-
   lodge: {
     home: (token) => request("/api/v1/lodging/home", { token }),
     amenities: () => request("/api/v1/lodging/amenities"),
@@ -552,33 +516,6 @@ export const api = {
     list: (token) => request("/api/v1/partner/modules", { token }),
     activate: (token, key) => request(`/api/v1/partner/modules/${key}/activate`, { method: "POST", token }),
     deactivate: (token, key) => request(`/api/v1/partner/modules/${key}/deactivate`, { method: "POST", token }),
-  },
-
-  // Dashboard partenaire unique : plan, fonctions payantes, marque, revenus par app
-  partnerHub: {
-    get: (token) => request("/api/v1/partner/hub", { token }),
-    upgrade: (token) => request("/api/v1/partner/hub/upgrade", { method: "POST", token }),
-    unlock: (token, key) => request(`/api/v1/partner/hub/features/${key}/unlock`, { method: "POST", token }),
-    saveBranding: (token, body) => request("/api/v1/partner/hub/branding", { method: "PUT", token, body }),
-    invite: (code) => request(`/api/v1/partner/invites/${encodeURIComponent(code)}`),
-    admin: {
-      requests: (token) => request("/api/v1/partner/hub/admin/requests", { token }),
-      setPlan: (token, userId, body) => request(`/api/v1/partner/hub/admin/users/${userId}/plan`, { method: "PUT", token, body }),
-      decideFeature: (token, id, body) => request(`/api/v1/partner/hub/admin/features/${id}`, { method: "PUT", token, body }),
-      invites: (token) => request("/api/v1/partner/hub/admin/invites", { token }),
-      createInvite: (token, body) => request("/api/v1/partner/hub/admin/invites", { method: "POST", token, body }),
-    },
-  },
-
-  // Pays, taux de change, bénéficiaires (services hors frontières)
-  geo: {
-    countries: () => request("/api/v1/geo/countries"),
-    rates: () => request("/api/v1/geo/rates"),
-    admin: {
-      overview: (token) => request("/api/v1/geo/admin/overview", { token }),
-      setRate: (token, cur, body) => request(`/api/v1/geo/admin/rates/${cur}`, { method: "PUT", token, body }),
-      setCountry: (token, code, body) => request(`/api/v1/geo/admin/countries/${code}`, { method: "PUT", token, body }),
-    },
   },
 
   // Connexion par QR code (façon WhatsApp Web)

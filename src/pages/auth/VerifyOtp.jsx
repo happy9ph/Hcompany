@@ -1,6 +1,6 @@
+import { afterLogin } from "../../lib/home.js";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { safeRedirect } from "../../lib/redirect.js";
 import { motion } from "framer-motion";
 import { MailCheck, ArrowRight, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
@@ -28,7 +28,7 @@ export default function VerifyOtp() {
 
   const email = location.state?.email;
   const purpose = location.state?.purpose || "login";
-  const redirectTo = safeRedirect(location.state?.redirectTo);
+  const redirectTo = location.state?.redirectTo || "/";
 
   const [digits, setDigits] = useState(Array(CODE_LENGTH).fill(""));
   const [error, setError] = useState(null);
@@ -80,10 +80,10 @@ export default function VerifyOtp() {
     setError(null);
     setLoading(true);
     try {
-      await signInWithOtp(email, "email", code, purpose);
-      if (purpose === "register") navigate("/bienvenue", { replace: true, state: { redirectTo } });
-      else if (purpose === "reset_password") navigate("/nouveau-mot-de-passe", { replace: true });
-      else navigate(redirectTo, { replace: true, state: { justSignedIn: true } });
+      const d = await signInWithOtp(email, "email", code, purpose);
+      if (purpose === "register") navigate("/bienvenue");
+      else if (purpose === "reset_password") navigate("/nouveau-mot-de-passe");
+      else navigate(afterLogin(redirectTo, d?.user), { state: { justSignedIn: true } });
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) setLocked(true);
       else {
@@ -197,7 +197,7 @@ export default function VerifyOtp() {
             >
               {resendIn > 0 ? `${t("auth.otpResendIn")} ${resendIn}s` : t("auth.otpResend")}
             </button>
-            <Link to="/connexion" state={{ redirectTo }} className="text-ink-soft hover:text-ink transition-colors">
+            <Link to="/connexion" className="text-ink-soft hover:text-ink transition-colors">
               {t("auth.otpChangeEmail")}
             </Link>
           </div>

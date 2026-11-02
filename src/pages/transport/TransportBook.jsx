@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import BackLink from "../../components/ui/BackLink.jsx";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Lock } from "lucide-react";
 import TransportLayout, { BusyButton, Card, ErrorState, Field, PayBox, RouteLine, Spinner, TransportAuthGate, inputCls, usePayBox, useTransportUi } from "../../components/transport/Shared.jsx";
@@ -75,7 +74,7 @@ function Form() {
 
   return (
     <TransportLayout hideBar>
-      <BackLink to={back} className="text-sm text-coffee hover:underline">← {b.backToTrip}</BackLink>
+      <Link to={back} className="text-sm text-coffee hover:underline">← {b.backToTrip}</Link>
       <h1 className="font-display text-3xl sm:text-4xl text-ink mt-3 mb-8">{b.title}</h1>
       <form onSubmit={submit} noValidate className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
         <div className="space-y-6">

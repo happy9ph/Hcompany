@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import BackLink from "../../components/ui/BackLink.jsx";
 import { Link, useParams } from "react-router-dom";
 import { Clock, ExternalLink, MapPin, MessageCircle, Phone, Send, ShieldCheck, Star } from "lucide-react";
 import LodgeLayout from "../../components/lodge/LodgeLayout.jsx";
@@ -118,7 +117,7 @@ function Content() {
 
   return (
     <LodgeLayout width="max-w-5xl">
-      <BackLink to="/logement/mes-sejours" className="text-sm text-coffee hover:underline">← {t.back}</BackLink>
+      <Link to="/logement/mes-sejours" className="text-sm text-coffee hover:underline">← {t.back}</Link>
       <div className="mt-4 mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl sm:text-4xl text-ink">{b.property.title}</h1>

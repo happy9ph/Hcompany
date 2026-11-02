@@ -1,5 +1,4 @@
 import { useState } from "react";
-import BackLink from "../../components/ui/BackLink.jsx";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Phone, Printer } from "lucide-react";
 import TransportLayout, { BusyButton, Card, ErrorState, Field, Modal, RouteLine, Spinner, StatusPill, TicketQR, TransportAuthGate, inputCls, useTransportUi } from "../../components/transport/Shared.jsx";
@@ -39,7 +38,7 @@ function Detail() {
 
   return (
     <TransportLayout width="max-w-3xl">
-      <BackLink to="/transport/mes-billets" className="text-sm text-coffee hover:underline print:hidden">← {t.back}</BackLink>
+      <Link to="/transport/mes-billets" className="text-sm text-coffee hover:underline print:hidden">← {t.back}</Link>
       {params.get("new") && (
         <div className="mt-4 rounded-3xl bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 p-5 flex gap-3 print:hidden"><CheckCircle2 className="shrink-0" /><div><p className="font-medium">{ui.book.success}</p><p className="text-sm">{ui.book.successLead}</p></div></div>
       )}

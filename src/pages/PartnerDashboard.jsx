@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { LayoutGrid, FileText, Activity, Tag, Boxes, Compass, Blocks, QrCode as QrIcon } from "lucide-react";
+import { LayoutGrid, FileText, Activity, Tag, Boxes, Compass, Blocks, Megaphone, QrCode as QrIcon } from "lucide-react";
 import { useUser } from "../context/Usercontext.jsx";
 import { api } from "../lib/api.js";
 import DashboardSidebar from "../components/dashboard/DashboardSidebar.jsx";
@@ -12,6 +12,7 @@ import ContractTab from "../components/dashboard/ContractTab.jsx";
 import ActivityTab from "../components/dashboard/ActivityTab.jsx";
 import ShareTab from "../components/dashboard/ShareTab.jsx";
 import HubTab from "../components/dashboard/HubTab.jsx";
+import PromoPanel from "../components/app/PromoPanel.jsx";
 import { ModulesTab, ModuleWorkspace, useModules } from "../components/dashboard/ModulesTab.jsx";
 import { MODULES, moduleByKey } from "../components/dashboard/modules.js";
 import { Skeleton, SkeletonCard, SkeletonStatRow } from "../components/ui/Skeleton.jsx";
@@ -28,6 +29,7 @@ const BASE_TABS = [
   { key: "hub", label: "Mon espace", icon: LayoutGrid },
   { key: "overview", label: "Vue d'ensemble", icon: LayoutGrid },
   { key: "modules", label: "Modules", icon: Blocks },
+  { key: "promos", label: "Promotions", icon: Megaphone },
   { key: "apps", label: "Mes apps", icon: Boxes },
   { key: "services", label: "Mes services", icon: Compass },
   { key: "offers", label: "Offres", icon: Tag },
@@ -341,6 +343,7 @@ export default function PartnerDashboard() {
           </div>
 
           {activeTab === "hub" && <HubTab hub={hub} setHub={setHub} onOpenModules={() => setActiveTab("modules")} onOpenModule={(k) => { setActiveTab(`m:${k}`); window.scrollTo({ top: 0 }); }} />}
+          {activeTab === "promos" && <PromoPanel withAuth={withAuth} api={api} />}
           {activeTab === "overview" && (
             <OverviewTab application={application} stats={stats} activities={activities} />
           )}

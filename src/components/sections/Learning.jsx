@@ -105,7 +105,7 @@ export default function Learning() {
         }
         .hc-course-text { font-size: 0.92rem; line-height: 1.65; color: #5C6357; flex: 1; }
         .hc-course-link {
-          margin-top: 1.2rem; display: inline-flex; align-items: center; gap: 0.4rem;
+          margin-top: 1.5rem; display: inline-flex; align-items: center; gap: 0.4rem;
           font-size: 0.88rem; font-weight: 600;
           color: var(--hc-ink); text-decoration: none;
         }
@@ -192,7 +192,7 @@ export default function Learning() {
                     <Link to={`/formations/${c.id}`} className="hc-course-title block" style={{ textDecoration: "none" }}>
                       {c.title}
                     </Link>
-
+                    <p className="hc-course-text">{c.text}</p>
                     <Link to={`/formations/${c.id}`} className="hc-course-link">
                       {t("learning.discover")}
                       <svg width="13" height="11" viewBox="0 0 13 11" aria-hidden="true">

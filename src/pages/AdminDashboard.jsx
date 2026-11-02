@@ -18,8 +18,6 @@ import LearningAdminPanel from "../components/admin/LearningAdminPanel.jsx";
 import ShoppingAdminPanel from "../components/admin/ShoppingAdminPanel.jsx";
 import LodgeAdminPanel from "../components/admin/LodgeAdminPanel.jsx";
 import RestaurantAdminPanel from "../components/admin/RestaurantAdminPanel.jsx";
-import PartnerHubAdminPanel from "../components/admin/PartnerHubAdminPanel.jsx";
-import TourismAdminPanel from "../components/admin/TourismAdminPanel.jsx";
 import TransportAdminPanel from "../components/admin/TransportAdminPanel.jsx";
 import AgentsPanel from "../components/admin/AgentsPanel.jsx";
 import CommandPalette from "../components/admin/CommandPalette.jsx";
@@ -110,7 +108,6 @@ export default function AdminDashboard() {
   const [shoppingCount, setShoppingCount] = useState(0);
   const [lodgingCount, setLodgingCount] = useState(0);
   const [restaurantCount, setRestaurantCount] = useState(0);
-  const [tourismCount, setTourismCount] = useState(0);
   const [transportCount, setTransportCount] = useState(0);
   const [todoOpen, setTodoOpen] = useState(true);
   const [todoHidden, setTodoHidden] = useState(false);
@@ -190,7 +187,6 @@ export default function AdminDashboard() {
     if (!isAdmin) return;
     withAuth((t) => api.shop.admin.overview(t)).then((o) => setShoppingCount(o.shops_pending + o.disputes_open + o.payouts_pending)).catch(() => {});
     withAuth((t) => api.resto.admin.overview(t)).then((o) => setRestaurantCount(o.restaurants?.pending || 0)).catch(() => {});
-    withAuth((t) => api.tour.admin.overview(t)).then((o) => setTourismCount(o.tours?.pending || 0)).catch(() => {});
     withAuth((t) => api.lodge.admin.overview(t)).then((o) => setLodgingCount(o.properties_pending + o.disputes_open + o.payouts_pending)).catch(() => {});
     withAuth((t) => api.transport.admin.overview(t)).then((o) => setTransportCount(o.operators_pending + o.disputes_open + o.payouts_pending)).catch(() => {});
   }, [isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -459,7 +455,7 @@ export default function AdminDashboard() {
         onSignOut={signOut}
         view={view}
         onViewChange={(v) => { setView(v); closeDetail(); }}
-        counts={{ applications: stats.pending, requests: pendingAppsCount, serviceRequests: pendingServiceSubsCount, trainingRequests: pendingTrainingCount, learning: pendingRegistrationsCount, shopping: shoppingCount, lodging: lodgingCount, restaurant: restaurantCount, tourism: tourismCount, transport: transportCount }}
+        counts={{ applications: stats.pending, requests: pendingAppsCount, serviceRequests: pendingServiceSubsCount, trainingRequests: pendingTrainingCount, learning: pendingRegistrationsCount, shopping: shoppingCount, lodging: lodgingCount, restaurant: restaurantCount, transport: transportCount }}
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
@@ -553,24 +549,6 @@ export default function AdminDashboard() {
                 <p className="text-sm text-ink-soft mt-1">Restaurants à valider, mise à la une, suspension et activité des réservations.</p>
               </div>
               <RestaurantAdminPanel withAuth={withAuth} api={api} onCount={setRestaurantCount} />
-            </>
-          ) : view === "partnerHub" ? (
-            <>
-              <div className="mb-8">
-                <p className="text-xs text-ink-faint mb-2">Espace admin <span className="mx-1">/</span> Invitations & plans</p>
-                <Title className="text-3xl">Invitations & plans partenaires</Title>
-                <p className="text-sm text-ink-soft mt-1">Envoyez le lien de demande de partenariat, activez les plans Pro et les fonctions payantes après paiement.</p>
-              </div>
-              <PartnerHubAdminPanel withAuth={withAuth} api={api} />
-            </>
-          ) : view === "tourism" ? (
-            <>
-              <div className="mb-8">
-                <p className="text-xs text-ink-faint mb-2">Espace admin <span className="mx-1">/</span> H-Tourisme</p>
-                <Title className="text-3xl">H-Tourisme</Title>
-                <p className="text-sm text-ink-soft mt-1">Excursions à valider, mise à la une, suspension et activité des réservations.</p>
-              </div>
-              <TourismAdminPanel withAuth={withAuth} api={api} onCount={setTourismCount} />
             </>
           ) : view === "transport" ? (
             <>

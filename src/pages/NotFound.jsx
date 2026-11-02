@@ -1,12 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Compass } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
 export default function NotFound() {
-  const { t, lang } = useLanguage();
-  const navigate = useNavigate();
-  const canGoBack = (window.history.state?.idx ?? 0) > 0;
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6 text-center">
@@ -30,11 +28,6 @@ export default function NotFound() {
           <ArrowLeft size={15} />
           {t("notFound.cta")}
         </Link>
-        {canGoBack && (
-          <button type="button" onClick={() => navigate(-1)} className="block mx-auto mt-4 text-sm text-ink-soft hover:text-ink underline underline-offset-4">
-            {lang === "en" ? "Go back to the previous page" : "Revenir à la page précédente"}
-          </button>
-        )}
       </motion.div>
     </div>
   );

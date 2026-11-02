@@ -11,11 +11,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@imgly/background-removal": "^1.7.0",
     "@sentry/react": "^10.74.0",
     "@tailwindcss/vite": "^4.3.3",
     "framer-motion": "^13.2.0",
     "jspdf": "^4.2.1",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.42.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",

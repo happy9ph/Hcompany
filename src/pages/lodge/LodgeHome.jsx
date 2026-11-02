@@ -42,7 +42,7 @@ export default function LodgeHome() {
         </div>
       </section>
 
-      <Link to="/logement/quartier" className="group mb-10 flex items-center justify-between gap-4 rounded-3xl border border-line bg-gradient-to-r from-latte-soft to-cream p-6 hover:border-coffee-light transition">
+      <Link to="/app/logement" className="group mb-10 flex items-center justify-between gap-4 rounded-3xl border border-line bg-gradient-to-r from-latte-soft to-cream p-6 hover:border-coffee-light transition">
         <span className="flex items-center gap-4"><span className="w-12 h-12 rounded-2xl bg-coffee text-cream-fixed flex items-center justify-center"><Footprints size={22} /></span><span><span className="block font-display text-xl text-ink">{ui.walk.link}</span><span className="block text-sm text-ink-soft">{ui.walk.linkLead}</span></span></span>
         <ArrowRight className="text-coffee group-hover:translate-x-1 transition" size={20} />
       </Link>

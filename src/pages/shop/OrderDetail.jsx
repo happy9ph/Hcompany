@@ -1,5 +1,4 @@
 import { useState } from "react";
-import BackLink from "../../components/ui/BackLink.jsx";
 import { Link, useParams } from "react-router-dom";
 import { AlertTriangle, ChevronLeft, Loader2, MapPin, ShieldCheck, Star } from "lucide-react";
 import ShopLayout from "../../components/shop/ShopLayout.jsx";
@@ -80,7 +79,7 @@ function Inner() {
   const inFlow = TRACK_STEPS.includes(ord.status);
   return (
     <ShopLayout width="max-w-4xl">
-      <BackLink to="/shopping/mes-commandes" className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-coffee mb-5"><ChevronLeft size={16} /> {o.title}</BackLink>
+      <Link to="/shopping/mes-commandes" className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-coffee mb-5"><ChevronLeft size={16} /> {o.title}</Link>
       <div className="flex items-start justify-between gap-3 flex-wrap mb-8">
         <div>
           <h1 className="font-display text-3xl text-ink">{o.order} <span className="font-mono text-2xl">{ord.code}</span></h1>

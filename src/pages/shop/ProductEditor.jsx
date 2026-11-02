@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ChevronLeft, Loader2, Plus, Sparkles, Star, Trash2, X } from "lucide-react";
+import { ChevronLeft, Loader2, Plus, Star, Trash2, X } from "lucide-react";
 import ShopLayout from "../../components/shop/ShopLayout.jsx";
 import AuthGate from "../../components/shop/AuthGate.jsx";
 import { ErrorState, ImagePicker, ShopImage, Spinner, useShopUi, useSellerUi } from "../../components/shop/Shared.jsx";
@@ -9,13 +9,12 @@ import { errMessage, useCategories, useLoad, useShopMoney } from "../../data/sho
 import { useUser } from "../../context/Usercontext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
-import { api, uploadUrl } from "../../lib/api.js";
-import { isCutout } from "../../lib/colorize.js";
+import { api } from "../../lib/api.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
 const XT = {
-  fr: { reCut: "Détourer cette photo", reCutAll: (n) => `Détourer les ${n} photo${n > 1 ? "s" : ""} non détourée${n > 1 ? "s" : ""}`, reCutting: "Détourage en cours…", reCutDone: (n) => `${n} photo${n > 1 ? "s détourées" : " détourée"}. Enregistrez l'article pour conserver le changement.`, cut: "Détourer automatiquement les photos (IA, sur votre appareil — 1re fois un peu plus long)", cutMiss: "Détourage impossible pour au moins une photo : elle a été gardée telle quelle.", colors: "Couleurs de l'article", colorsHint: "Le client voit l'article « habillé » de la couleur choisie (photo détourée ou modèle 3D).", addColor: "Ajouter une couleur", colorName: "Nom (ex. Noir)", model3d: "Vue 3D", model3dHint: "Forme 3D que le client peut faire tourner et recolorer.", none: "Aucune" },
-  en: { reCut: "Cut out this photo", reCutAll: (n) => `Cut out the ${n} remaining photo${n > 1 ? "s" : ""}`, reCutting: "Cutting out…", reCutDone: (n) => `${n} photo${n > 1 ? "s" : ""} cut out. Save the item to keep the change.`, cut: "Automatically cut out photos (AI, on your device — first use takes longer)", cutMiss: "Cut-out failed for at least one photo: it was kept as is.", colors: "Item colours", colorsHint: "Customers see the item \"dressed\" in the chosen colour (cut-out photo or 3D model).", addColor: "Add a colour", colorName: "Name (e.g. Black)", model3d: "3D view", model3dHint: "3D shape customers can rotate and recolour.", none: "None" },
+  fr: { cut: "Détourer automatiquement les photos (supprime un fond uni)", cutMiss: "Fond non uni : la photo a été gardée telle quelle.", colors: "Couleurs de l'article", colorsHint: "Le client voit l'article « habillé » de la couleur choisie (photo détourée ou modèle 3D).", addColor: "Ajouter une couleur", colorName: "Nom (ex. Noir)", model3d: "Vue 3D", model3dHint: "Forme 3D que le client peut faire tourner et recolorer.", none: "Aucune" },
+  en: { cut: "Automatically cut out photos (removes a plain background)", cutMiss: "Background isn't plain: the photo was kept as is.", colors: "Item colours", colorsHint: "Customers see the item \"dressed\" in the chosen colour (cut-out photo or 3D model).", addColor: "Add a colour", colorName: "Name (e.g. Black)", model3d: "3D view", model3dHint: "3D shape customers can rotate and recolour.", none: "None" },
 };
 const M3 = { sofa: ["Canapé", "Sofa"], armchair: ["Fauteuil", "Armchair"], chair: ["Chaise", "Chair"], table: ["Table", "Table"], bed: ["Lit", "Bed"], wardrobe: ["Armoire", "Wardrobe"], shelf: ["Étagère", "Shelf"], lamp: ["Lampe", "Lamp"], tshirt: ["T-shirt", "T-shirt"], hoodie: ["Sweat à capuche", "Hoodie"], dress: ["Robe", "Dress"], trousers: ["Pantalon", "Trousers"], shoe: ["Chaussure", "Shoe"], bag: ["Sac", "Bag"] };
 
@@ -37,32 +36,6 @@ function Inner() {
   const cats = useCategories();
   const x = XT[lang] || XT.fr;
   const [cut, setCut] = useState(true);
-  const [recutting, setRecutting] = useState(null); // null | chemin | "all"
-  // Re-détoure des photos DÉJÀ envoyées (anciennes photos au fond raté ou non détourées), dans le navigateur.
-  // Rien n'est écrit sur l'article tant que le vendeur n'a pas cliqué sur « Enregistrer ».
-  async function recut(paths) {
-    if (!paths.length || recutting) return;
-    setRecutting(paths.length > 1 ? "all" : paths[0]);
-    const replaced = {};
-    let ok = 0, miss = 0;
-    try {
-      const { cutoutInBrowser } = await import("../../lib/removeBg.js");
-      for (const p of paths) {
-        try {
-          const res = await fetch(uploadUrl(p));
-          if (!res.ok) throw new Error("fetch");
-          const blob = await res.blob();
-          const out = await cutoutInBrowser(new File([blob], "photo", { type: blob.type || "image/jpeg" }));
-          const r = await withAuth((t) => api.shop.seller.upload(t, out, false, true));
-          if (!r.cutout) throw new Error("not-cut");
-          replaced[p] = r.path; ok++;
-        } catch { miss++; }   // l'ancienne photo est conservée
-      }
-      if (ok) setF((s) => ({ ...s, images: s.images.map((y) => replaced[y] || y) }));
-    } finally { setRecutting(null); }
-    if (ok) toast.success?.(x.reCutDone(ok));
-    if (miss) toast.info?.(x.cutMiss);
-  }
   const [f, setF] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -75,10 +48,10 @@ function Inner() {
     if (!existing) return;
     setF({
       title: existing.title, description: existing.description || "", category_id: existing.category_id || "", price: String(existing.price),
-         compare_at_price: existing.compare_at_price ? String(existing.compare_at_price) : "", stock: String(existing.stock), sku: existing.sku || "", brand: existing.brand || "",
-         weight_kg: existing.weight_kg ? String(existing.weight_kg) : "", attributes: (existing.attributes || []).map((a) => `${a.label}: ${a.value}`).join("\n"),
-         tags: (existing.tags || []).join(", "), status: existing.status, images: existing.images || [], colors: existing.colors || [], model3d: existing.model3d || "",
-         variants: (existing.variants || []).map((v) => ({ id: v.id, label: v.label, sku: v.sku || "", price: v.price && v.price !== existing.price ? String(v.price) : "", stock: String(v.stock), is_active: v.is_active })),
+      compare_at_price: existing.compare_at_price ? String(existing.compare_at_price) : "", stock: String(existing.stock), sku: existing.sku || "", brand: existing.brand || "",
+      weight_kg: existing.weight_kg ? String(existing.weight_kg) : "", attributes: (existing.attributes || []).map((a) => `${a.label}: ${a.value}`).join("\n"),
+      tags: (existing.tags || []).join(", "), status: existing.status, images: existing.images || [], colors: existing.colors || [], model3d: existing.model3d || "",
+      variants: (existing.variants || []).map((v) => ({ id: v.id, label: v.label, sku: v.sku || "", price: v.price && v.price !== existing.price ? String(v.price) : "", stock: String(v.stock), is_active: v.is_active })),
     });
     setTargetShop(existing.shop.id);
   }, [existing]);
@@ -123,114 +96,101 @@ function Inner() {
   const card = "rounded-3xl border border-line bg-surface p-6 sm:p-8 space-y-5";
   return (
     <ShopLayout width="max-w-4xl">
-    <Link to={`/shopping/vendeur?boutique=${targetShop || ""}&onglet=products`} className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-coffee mb-5"><ChevronLeft size={16} /> {e.back}</Link>
-    <h1 className="font-display text-3xl text-ink mb-8">{isNew ? e.newTitle : e.editTitle}</h1>
-    <form onSubmit={save} noValidate className="space-y-6">
-    {isNew && shops.data?.length > 1 && (
-      <SField label={ui.common.shopBy}><select className={fieldClass} value={targetShop || ""} onChange={(ev) => setTargetShop(Number(ev.target.value))}>{shops.data.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></SField>
-    )}
-    <section className={card}>
-    <h2 className="font-display text-xl text-ink">{e.basics}</h2>
-    <SField label={e.title} error={errors.title}><input className={fieldClass} value={f.title} onChange={set("title")} maxLength={140} /></SField>
-    <SField label={e.description}><textarea className={`${fieldClass} resize-y`} rows={5} value={f.description} onChange={set("description")} maxLength={6000} /></SField>
-    <div className="grid sm:grid-cols-2 gap-4">
-    <SField label={e.category}><select className={fieldClass} value={f.category_id} onChange={set("category_id")}><option value="">{e.chooseCategory}</option>{flatCats.map((c) => <option key={c.id} value={c.id}>{lang === "en" ? c.name_en : c.name_fr}</option>)}</select></SField>
-    <SField label={e.brand}><input className={fieldClass} value={f.brand} onChange={set("brand")} maxLength={60} /></SField>
-    <SField label={e.sku}><input className={fieldClass} value={f.sku} onChange={set("sku")} maxLength={60} /></SField>
-    <SField label={e.weight}><input className={fieldClass} type="number" min="0" step="0.01" value={f.weight_kg} onChange={set("weight_kg")} /></SField>
-    </div>
-    <SField label={e.attributes} hint={e.attributesHint}><textarea className={`${fieldClass} resize-y font-mono text-xs`} rows={3} value={f.attributes} onChange={set("attributes")} maxLength={2000} /></SField>
-    <SField label={e.tags}><input className={fieldClass} value={f.tags} onChange={set("tags")} maxLength={300} /></SField>
-    </section>
-
-    <section className={card}>
-    <h2 className="font-display text-xl text-ink">{e.images}</h2>
-    <p className="text-xs text-ink-faint -mt-3">{e.imagesHint}</p>
-    {f.images.length > 0 && (
-      <ul className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-      {f.images.map((p, i) => (
-        <li key={p} className="relative group">
-        <ShopImage path={p} ratio="aspect-square" className={`rounded-2xl ${i === 0 ? "ring-2 ring-coffee" : ""}`} />
-        {!isCutout(p) && (
-          <button type="button" onClick={() => recut([p])} disabled={!!recutting} aria-label={x.reCut} title={x.reCut}
-          className="absolute top-1 left-1 w-7 h-7 rounded-full bg-cream-fixed/90 text-ink-fixed flex items-center justify-center disabled:opacity-60">
-          {recutting === p || recutting === "all" ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
-          </button>
+      <Link to={`/shopping/vendeur?boutique=${targetShop || ""}&onglet=products`} className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-coffee mb-5"><ChevronLeft size={16} /> {e.back}</Link>
+      <h1 className="font-display text-3xl text-ink mb-8">{isNew ? e.newTitle : e.editTitle}</h1>
+      <form onSubmit={save} noValidate className="space-y-6">
+        {isNew && shops.data?.length > 1 && (
+          <SField label={ui.common.shopBy}><select className={fieldClass} value={targetShop || ""} onChange={(ev) => setTargetShop(Number(ev.target.value))}>{shops.data.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></SField>
         )}
-        <div className="absolute inset-x-1 bottom-1 flex justify-between">
-        {i !== 0 ? <button type="button" onClick={() => setF((x) => ({ ...x, images: [p, ...x.images.filter((y) => y !== p)] }))} aria-label={e.makeMain} title={e.makeMain} className="w-7 h-7 rounded-full bg-cream-fixed/90 text-ink-fixed flex items-center justify-center"><Star size={13} /></button> : <span />}
-        <button type="button" onClick={() => setF((x) => ({ ...x, images: x.images.filter((y) => y !== p) }))} aria-label={e.removeImage} className="w-7 h-7 rounded-full bg-cream-fixed/90 text-ink-fixed flex items-center justify-center"><X size={13} /></button>
-        </div>
-        </li>
-      ))}
-      </ul>
-    )}
-    {f.images.some((p) => !isCutout(p)) && (
-      <button type="button" onClick={() => recut(f.images.filter((p) => !isCutout(p)))} disabled={!!recutting}
-      className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm text-ink hover:border-coffee-light disabled:opacity-60">
-      {recutting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-      {recutting ? x.reCutting : x.reCutAll(f.images.filter((p) => !isCutout(p)).length)}
-      </button>
-    )}
-    <label className="flex items-center gap-2 text-sm text-ink"><input type="checkbox" className="accent-coffee" checked={cut} onChange={(ev) => setCut(ev.target.checked)} />{x.cut}</label>
-    {f.images.length < 10 && <ImagePicker multiple cutout={cut} onCutoutMiss={() => toast.info?.(x.cutMiss)} label={e.addImage} onChange={(paths) => setF((x) => ({ ...x, images: [...x.images, ...paths].slice(0, 10) }))} />}
-    {errors.images && <p role="alert" className="text-xs text-red-600">{errors.images}</p>}
-    </section>
+        <section className={card}>
+          <h2 className="font-display text-xl text-ink">{e.basics}</h2>
+          <SField label={e.title} error={errors.title}><input className={fieldClass} value={f.title} onChange={set("title")} maxLength={140} /></SField>
+          <SField label={e.description}><textarea className={`${fieldClass} resize-y`} rows={5} value={f.description} onChange={set("description")} maxLength={6000} /></SField>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <SField label={e.category}><select className={fieldClass} value={f.category_id} onChange={set("category_id")}><option value="">{e.chooseCategory}</option>{flatCats.map((c) => <option key={c.id} value={c.id}>{lang === "en" ? c.name_en : c.name_fr}</option>)}</select></SField>
+            <SField label={e.brand}><input className={fieldClass} value={f.brand} onChange={set("brand")} maxLength={60} /></SField>
+            <SField label={e.sku}><input className={fieldClass} value={f.sku} onChange={set("sku")} maxLength={60} /></SField>
+            <SField label={e.weight}><input className={fieldClass} type="number" min="0" step="0.01" value={f.weight_kg} onChange={set("weight_kg")} /></SField>
+          </div>
+          <SField label={e.attributes} hint={e.attributesHint}><textarea className={`${fieldClass} resize-y font-mono text-xs`} rows={3} value={f.attributes} onChange={set("attributes")} maxLength={2000} /></SField>
+          <SField label={e.tags}><input className={fieldClass} value={f.tags} onChange={set("tags")} maxLength={300} /></SField>
+        </section>
 
-    <section className={card}>
-    <h2 className="font-display text-xl text-ink">{e.pricing}</h2>
-    <p className="text-xs text-ink-faint -mt-3">{e.priceCurrency(pivot)}</p>
-    <div className="grid sm:grid-cols-3 gap-4">
-    <SField label={e.price} error={errors.price}><input className={fieldClass} type="number" min="0.5" step="0.01" value={f.price} onChange={set("price")} /></SField>
-    <SField label={e.compare}><input className={fieldClass} type="number" min="0" step="0.01" value={f.compare_at_price} onChange={set("compare_at_price")} /></SField>
-    <SField label={e.stock}><input className={fieldClass} type="number" min="0" value={f.stock} onChange={set("stock")} disabled={f.variants.length > 0} /></SField>
-    </div>
-    </section>
+        <section className={card}>
+          <h2 className="font-display text-xl text-ink">{e.images}</h2>
+          <p className="text-xs text-ink-faint -mt-3">{e.imagesHint}</p>
+          {f.images.length > 0 && (
+            <ul className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+              {f.images.map((p, i) => (
+                <li key={p} className="relative group">
+                  <ShopImage path={p} ratio="aspect-square" className={`rounded-2xl ${i === 0 ? "ring-2 ring-coffee" : ""}`} />
+                  <div className="absolute inset-x-1 bottom-1 flex justify-between">
+                    {i !== 0 ? <button type="button" onClick={() => setF((x) => ({ ...x, images: [p, ...x.images.filter((y) => y !== p)] }))} aria-label={e.makeMain} title={e.makeMain} className="w-7 h-7 rounded-full bg-cream-fixed/90 text-ink-fixed flex items-center justify-center"><Star size={13} /></button> : <span />}
+                    <button type="button" onClick={() => setF((x) => ({ ...x, images: x.images.filter((y) => y !== p) }))} aria-label={e.removeImage} className="w-7 h-7 rounded-full bg-cream-fixed/90 text-ink-fixed flex items-center justify-center"><X size={13} /></button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <label className="flex items-center gap-2 text-sm text-ink"><input type="checkbox" className="accent-coffee" checked={cut} onChange={(ev) => setCut(ev.target.checked)} />{x.cut}</label>
+          {f.images.length < 10 && <ImagePicker multiple cutout={cut} onCutoutMiss={() => toast.info?.(x.cutMiss)} label={e.addImage} onChange={(paths) => setF((x) => ({ ...x, images: [...x.images, ...paths].slice(0, 10) }))} />}
+          {errors.images && <p role="alert" className="text-xs text-red-600">{errors.images}</p>}
+        </section>
 
-    <section className={card}>
-    <h2 className="font-display text-xl text-ink">{x.colors}</h2>
-    <p className="text-xs text-ink-faint -mt-3">{x.colorsHint}</p>
-    {f.colors.map((c, i) => (
-      <div key={i} className="flex items-center gap-2">
-      <input type="color" aria-label="color" value={c.hex} onChange={(ev) => setF((p) => ({ ...p, colors: p.colors.map((y, j) => (j === i ? { ...y, hex: ev.target.value } : y)) }))} className="w-11 h-11 rounded-xl border border-line bg-surface p-1" />
-      <input aria-label={x.colorName} placeholder={x.colorName} maxLength={30} className={fieldClass} value={c.name} onChange={(ev) => setF((p) => ({ ...p, colors: p.colors.map((y, j) => (j === i ? { ...y, name: ev.target.value } : y)) }))} />
-      <button type="button" aria-label={e.removeImage} onClick={() => setF((p) => ({ ...p, colors: p.colors.filter((_, j) => j !== i) }))} className="h-11 w-9 text-ink-faint hover:text-red-600 flex items-center justify-center"><X size={16} /></button>
-      </div>
-    ))}
-    {f.colors.length < 8 && <button type="button" onClick={() => setF((p) => ({ ...p, colors: [...p.colors, { name: "", hex: "#111111" }] }))} className="inline-flex items-center gap-2 text-sm text-coffee"><Plus size={14} />{x.addColor}</button>}
-    <SField label={x.model3d} hint={x.model3dHint}>
-    <select className={fieldClass} value={f.model3d} onChange={set("model3d")}><option value="">{x.none}</option>{Object.entries(M3).map(([k, v]) => <option key={k} value={k}>{lang === "en" ? v[1] : v[0]}</option>)}</select>
-    </SField>
-    </section>
+        <section className={card}>
+          <h2 className="font-display text-xl text-ink">{e.pricing}</h2>
+          <p className="text-xs text-ink-faint -mt-3">{e.priceCurrency(pivot)}</p>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <SField label={e.price} error={errors.price}><input className={fieldClass} type="number" min="0.5" step="0.01" value={f.price} onChange={set("price")} /></SField>
+            <SField label={e.compare}><input className={fieldClass} type="number" min="0" step="0.01" value={f.compare_at_price} onChange={set("compare_at_price")} /></SField>
+            <SField label={e.stock}><input className={fieldClass} type="number" min="0" value={f.stock} onChange={set("stock")} disabled={f.variants.length > 0} /></SField>
+          </div>
+        </section>
 
-    <section className={card}>
-    <h2 className="font-display text-xl text-ink">{e.variants}</h2>
-    <p className="text-xs text-ink-faint -mt-3">{e.variantsHint}</p>
-    {f.variants.map((v, i) => (
-      <div key={v.id || i} className="grid grid-cols-[1fr_90px_90px_auto] gap-2 items-end">
-      <SField label={i === 0 ? e.variantLabel : ""}><input aria-label={e.variantLabel} className={fieldClass} value={v.label} onChange={(ev) => setVariant(i, "label", ev.target.value)} maxLength={80} /></SField>
-      <SField label={i === 0 ? e.variantPrice : ""}><input aria-label={e.variantPrice} className={fieldClass} type="number" min="0" step="0.01" value={v.price} onChange={(ev) => setVariant(i, "price", ev.target.value)} /></SField>
-      <SField label={i === 0 ? e.variantStock : ""}><input aria-label={e.variantStock} className={fieldClass} type="number" min="0" value={v.stock} onChange={(ev) => setVariant(i, "stock", ev.target.value)} /></SField>
-      <button type="button" aria-label={e.removeImage} onClick={() => setF((x) => ({ ...x, variants: x.variants.filter((_, j) => j !== i) }))} className="h-11 w-9 text-ink-faint hover:text-red-600 flex items-center justify-center"><Trash2 size={16} /></button>
-      </div>
-    ))}
-    {errors.variants && <p role="alert" className="text-xs text-red-600">{errors.variants}</p>}
-    <button type="button" onClick={() => setF((x) => ({ ...x, variants: [...x.variants, { label: "", sku: "", price: "", stock: "0", is_active: true }] }))} className="inline-flex items-center gap-2 text-sm text-coffee hover:underline"><Plus size={15} /> {e.addVariant}</button>
-    </section>
+        <section className={card}>
+          <h2 className="font-display text-xl text-ink">{x.colors}</h2>
+          <p className="text-xs text-ink-faint -mt-3">{x.colorsHint}</p>
+          {f.colors.map((c, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input type="color" aria-label="color" value={c.hex} onChange={(ev) => setF((p) => ({ ...p, colors: p.colors.map((y, j) => (j === i ? { ...y, hex: ev.target.value } : y)) }))} className="w-11 h-11 rounded-xl border border-line bg-surface p-1" />
+              <input aria-label={x.colorName} placeholder={x.colorName} maxLength={30} className={fieldClass} value={c.name} onChange={(ev) => setF((p) => ({ ...p, colors: p.colors.map((y, j) => (j === i ? { ...y, name: ev.target.value } : y)) }))} />
+              <button type="button" aria-label={e.removeImage} onClick={() => setF((p) => ({ ...p, colors: p.colors.filter((_, j) => j !== i) }))} className="h-11 w-9 text-ink-faint hover:text-red-600 flex items-center justify-center"><X size={16} /></button>
+            </div>
+          ))}
+          {f.colors.length < 8 && <button type="button" onClick={() => setF((p) => ({ ...p, colors: [...p.colors, { name: "", hex: "#111111" }] }))} className="inline-flex items-center gap-2 text-sm text-coffee"><Plus size={14} />{x.addColor}</button>}
+          <SField label={x.model3d} hint={x.model3dHint}>
+            <select className={fieldClass} value={f.model3d} onChange={set("model3d")}><option value="">{x.none}</option>{Object.entries(M3).map(([k, v]) => <option key={k} value={k}>{lang === "en" ? v[1] : v[0]}</option>)}</select>
+          </SField>
+        </section>
 
-    <section className={card}>
-    <h2 className="font-display text-xl text-ink">{e.status}</h2>
-    <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-label={e.status}>
-    {[["draft", e.statusDraft], ["active", e.statusActive], ["archived", e.statusArchived]].map(([k, l]) => (
-      <button type="button" key={k} role="radio" aria-checked={f.status === k} onClick={() => setF((x) => ({ ...x, status: k }))} className={`rounded-2xl border p-4 text-sm text-left ${f.status === k ? "border-coffee bg-latte-soft text-ink" : "border-line text-ink-soft hover:border-coffee-light"}`}>{l}</button>
-    ))}
-    </div>
-    {isNew && shop && shop.status !== "approved" && <p className="text-xs text-amber-700 dark:text-amber-300">{e.shopNotApproved}</p>}
-    </section>
+        <section className={card}>
+          <h2 className="font-display text-xl text-ink">{e.variants}</h2>
+          <p className="text-xs text-ink-faint -mt-3">{e.variantsHint}</p>
+          {f.variants.map((v, i) => (
+            <div key={v.id || i} className="grid grid-cols-[1fr_90px_90px_auto] gap-2 items-end">
+              <SField label={i === 0 ? e.variantLabel : ""}><input aria-label={e.variantLabel} className={fieldClass} value={v.label} onChange={(ev) => setVariant(i, "label", ev.target.value)} maxLength={80} /></SField>
+              <SField label={i === 0 ? e.variantPrice : ""}><input aria-label={e.variantPrice} className={fieldClass} type="number" min="0" step="0.01" value={v.price} onChange={(ev) => setVariant(i, "price", ev.target.value)} /></SField>
+              <SField label={i === 0 ? e.variantStock : ""}><input aria-label={e.variantStock} className={fieldClass} type="number" min="0" value={v.stock} onChange={(ev) => setVariant(i, "stock", ev.target.value)} /></SField>
+              <button type="button" aria-label={e.removeImage} onClick={() => setF((x) => ({ ...x, variants: x.variants.filter((_, j) => j !== i) }))} className="h-11 w-9 text-ink-faint hover:text-red-600 flex items-center justify-center"><Trash2 size={16} /></button>
+            </div>
+          ))}
+          {errors.variants && <p role="alert" className="text-xs text-red-600">{errors.variants}</p>}
+          <button type="button" onClick={() => setF((x) => ({ ...x, variants: [...x.variants, { label: "", sku: "", price: "", stock: "0", is_active: true }] }))} className="inline-flex items-center gap-2 text-sm text-coffee hover:underline"><Plus size={15} /> {e.addVariant}</button>
+        </section>
 
-    {serverError && <p role="alert" className="rounded-xl bg-red-500/10 text-red-700 dark:text-red-300 text-sm p-4">{serverError}</p>}
-    <div className="flex justify-end"><button disabled={busy || !targetShop} className="rounded-full bg-ink text-cream text-sm font-medium px-10 py-4 hover:bg-coffee-dark disabled:opacity-60 inline-flex items-center gap-2">{busy ? <><Loader2 size={16} className="animate-spin" /> {e.saving}</> : e.save}</button></div>
-    </form>
+        <section className={card}>
+          <h2 className="font-display text-xl text-ink">{e.status}</h2>
+          <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-label={e.status}>
+            {[["draft", e.statusDraft], ["active", e.statusActive], ["archived", e.statusArchived]].map(([k, l]) => (
+              <button type="button" key={k} role="radio" aria-checked={f.status === k} onClick={() => setF((x) => ({ ...x, status: k }))} className={`rounded-2xl border p-4 text-sm text-left ${f.status === k ? "border-coffee bg-latte-soft text-ink" : "border-line text-ink-soft hover:border-coffee-light"}`}>{l}</button>
+            ))}
+          </div>
+          {isNew && shop && shop.status !== "approved" && <p className="text-xs text-amber-700 dark:text-amber-300">{e.shopNotApproved}</p>}
+        </section>
+
+        {serverError && <p role="alert" className="rounded-xl bg-red-500/10 text-red-700 dark:text-red-300 text-sm p-4">{serverError}</p>}
+        <div className="flex justify-end"><button disabled={busy || !targetShop} className="rounded-full bg-ink text-cream text-sm font-medium px-10 py-4 hover:bg-coffee-dark disabled:opacity-60 inline-flex items-center gap-2">{busy ? <><Loader2 size={16} className="animate-spin" /> {e.saving}</> : e.save}</button></div>
+      </form>
     </ShopLayout>
   );
 }
