@@ -59,7 +59,24 @@ class NetworkError extends Error {
   }
 }
 
+// Confirmation par mot de passe de l'admin (jeton de 10 min, gardé en mémoire d'onglet uniquement).
+const ADMIN_CONFIRM_KEY = "hc_admin_confirm";
+export function getAdminConfirm() {
+  try {
+    const raw = sessionStorage.getItem(ADMIN_CONFIRM_KEY);
+    if (!raw) return null;
+    const { token, exp } = JSON.parse(raw);
+    if (Date.now() > exp) { sessionStorage.removeItem(ADMIN_CONFIRM_KEY); return null; }
+    return { token, exp };
+  } catch { return null; }
+}
+export function setAdminConfirm(token, expiresInSec) {
+  try { sessionStorage.setItem(ADMIN_CONFIRM_KEY, JSON.stringify({ token, exp: Date.now() + expiresInSec * 1000 - 5000 })); } catch { /* ignoré */ }
+}
+export function clearAdminConfirm() { try { sessionStorage.removeItem(ADMIN_CONFIRM_KEY); } catch { /* ignoré */ } }
+
 async function request(path, { method = "GET", body, token, headers = {} } = {}) {
+  const confirm = path.includes("/admin") ? getAdminConfirm() : null;
   // Un FormData (upload de fichier) ne doit pas être JSON.stringify()'d, et
   // le Content-Type multipart avec sa boundary doit être posé par le
   // navigateur lui-même, pas fixé ici en dur.
@@ -76,6 +93,7 @@ async function request(path, { method = "GET", body, token, headers = {} } = {})
       headers: {
         ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(confirm ? { "X-Admin-Confirm": confirm.token } : {}),
         ...headers,
       },
       body: isFormData ? body : body ? JSON.stringify(body) : undefined,
@@ -93,6 +111,10 @@ async function request(path, { method = "GET", body, token, headers = {} } = {})
   const data = isJson ? await res.json().catch(() => null) : null;
 
   if (!res.ok) {
+    if (res.status === 428 && typeof window !== "undefined") {
+      clearAdminConfirm();
+      window.dispatchEvent(new CustomEvent("hc:admin-confirm-required"));
+    }
     throw new ApiError(data?.detail || res.statusText, res.status, data);
   }
 
@@ -104,6 +126,11 @@ export const api = {
   auth: {
     signIn: (email, password) =>
       request("/api/v1/auth/login", { method: "POST", body: { email, password } }).then((data) => {
+        saveRefreshToken(data?.refresh_token);
+        return data;
+      }),
+    signInPartner: (code, password) =>
+      request("/api/v1/auth/login-partner", { method: "POST", body: { code, password } }).then((data) => {
         saveRefreshToken(data?.refresh_token);
         return data;
       }),
@@ -411,6 +438,37 @@ export const api = {
     },
   },
 
+  tour: {
+    home: () => request("/api/v1/tourism/home"),
+    search: (params = {}) => request(`/api/v1/tourism/search${qs(params)}`),
+    detail: (slug) => request(`/api/v1/tourism/tours/${slug}`),
+    departures: (id, days = 90) => request(`/api/v1/tourism/tours/${id}/departures${qs({ days })}`),
+    reviews: (id) => request(`/api/v1/tourism/tours/${id}/reviews`),
+    book: (token, body) => request("/api/v1/tourism/bookings", { method: "POST", token, body }),
+    mine: (token) => request("/api/v1/tourism/me/bookings", { token }),
+    cancel: (token, code) => request(`/api/v1/tourism/me/bookings/${code}/cancel`, { method: "POST", token }),
+    review: (token, code, body) => request(`/api/v1/tourism/me/bookings/${code}/review`, { method: "POST", token, body }),
+    owner: {
+      upload: (token, file) => { const fd = new FormData(); fd.append("file", file); return request("/api/v1/tourism/owner/uploads", { method: "POST", token, body: fd }); },
+      list: (token) => request("/api/v1/tourism/owner/tours", { token }),
+      create: (token, body) => request("/api/v1/tourism/owner/tours", { method: "POST", token, body }),
+      update: (token, id, body) => request(`/api/v1/tourism/owner/tours/${id}`, { method: "PUT", token, body }),
+      act: (token, id, what) => request(`/api/v1/tourism/owner/tours/${id}/${what}`, { method: "POST", token }),
+      departures: (token, id) => request(`/api/v1/tourism/owner/tours/${id}/departures`, { token }),
+      addDepartures: (token, id, body) => request(`/api/v1/tourism/owner/tours/${id}/departures`, { method: "POST", token, body }),
+      updateDeparture: (token, did, body) => request(`/api/v1/tourism/owner/departures/${did}`, { method: "PUT", token, body }),
+      deleteDeparture: (token, did) => request(`/api/v1/tourism/owner/departures/${did}`, { method: "DELETE", token }),
+      bookings: (token, id, params = {}) => request(`/api/v1/tourism/owner/tours/${id}/bookings${qs(params)}`, { token }),
+      action: (token, code, body) => request(`/api/v1/tourism/owner/bookings/${code}/action`, { method: "POST", token, body }),
+      stats: (token, id, days = 30) => request(`/api/v1/tourism/owner/tours/${id}/stats${qs({ days })}`, { token }),
+    },
+    admin: {
+      overview: (token) => request("/api/v1/tourism/admin/overview", { token }),
+      list: (token, params = {}) => request(`/api/v1/tourism/admin/tours${qs(params)}`, { token }),
+      decide: (token, id, what, reason = "") => request(`/api/v1/tourism/admin/tours/${id}/${what}`, { method: "POST", token, body: ["reject", "suspend"].includes(what) ? { reason } : undefined }),
+    },
+  },
+
   lodge: {
     home: (token) => request("/api/v1/lodging/home", { token }),
     amenities: () => request("/api/v1/lodging/amenities"),
@@ -516,6 +574,82 @@ export const api = {
     list: (token) => request("/api/v1/partner/modules", { token }),
     activate: (token, key) => request(`/api/v1/partner/modules/${key}/activate`, { method: "POST", token }),
     deactivate: (token, key) => request(`/api/v1/partner/modules/${key}/deactivate`, { method: "POST", token }),
+  },
+
+  // Dashboard partenaire unique : plan, fonctions payantes, marque, revenus par app
+  partnerHub: {
+    get: (token) => request("/api/v1/partner/hub", { token }),
+    upgrade: (token) => request("/api/v1/partner/hub/upgrade", { method: "POST", token }),
+    unlock: (token, key) => request(`/api/v1/partner/hub/features/${key}/unlock`, { method: "POST", token }),
+    saveBranding: (token, body) => request("/api/v1/partner/hub/branding", { method: "PUT", token, body }),
+    invite: (code) => request(`/api/v1/partner/invites/${encodeURIComponent(code)}`),
+    admin: {
+      requests: (token) => request("/api/v1/partner/hub/admin/requests", { token }),
+      setPlan: (token, userId, body) => request(`/api/v1/partner/hub/admin/users/${userId}/plan`, { method: "PUT", token, body }),
+      decideFeature: (token, id, body) => request(`/api/v1/partner/hub/admin/features/${id}`, { method: "PUT", token, body }),
+      invites: (token) => request("/api/v1/partner/hub/admin/invites", { token }),
+      createInvite: (token, body) => request("/api/v1/partner/hub/admin/invites", { method: "POST", token, body }),
+    },
+  },
+
+  // Confirmation par mot de passe avant les chiffres sensibles (admin)
+  adminSecurity: {
+    confirm: (token, password) => request("/api/v1/admin-security/confirm", { method: "POST", token, body: { password } }),
+  },
+
+  // H-Money : envoyer ou demander de l'argent entre la Zambie et la RD Congo
+  money: {
+    corridors: () => request("/api/v1/money/corridors"),
+    quote: (params) => request(`/api/v1/money/quote${qs(params)}`),
+    send: (token, body) => request("/api/v1/money/transfers", { method: "POST", token, body }),
+    mine: (token) => request("/api/v1/money/transfers", { token }),
+    request: (token, body) => request("/api/v1/money/requests", { method: "POST", token, body }),
+    viewRequest: (token, code) => request(`/api/v1/money/requests/${encodeURIComponent(code)}`, { token }),
+    payRequest: (token, code, body) => request(`/api/v1/money/requests/${encodeURIComponent(code)}/pay`, { method: "POST", token, body }),
+    declineRequest: (token, code) => request(`/api/v1/money/requests/${encodeURIComponent(code)}/decline`, { method: "POST", token }),
+    agent: {
+      me: (token) => request("/api/v1/money/agent/me", { token }),
+      transactions: (token, params = {}) => request(`/api/v1/money/agent/transactions${qs(params)}`, { token }),
+      flag: (token, code, body) => request(`/api/v1/money/agent/transactions/${code}/flag`, { method: "POST", token, body }),
+      setRate: (token, body) => request("/api/v1/money/agent/rate", { method: "PUT", token, body }),
+    },
+    admin: {
+      overview: (token, days = 30) => request(`/api/v1/money/admin/overview${qs({ days })}`, { token }),
+      transactions: (token, params = {}) => request(`/api/v1/money/admin/transactions${qs(params)}`, { token }),
+      agents: (token) => request("/api/v1/money/admin/agents", { token }),
+      assign: (token, body) => request("/api/v1/money/admin/agents", { method: "POST", token, body }),
+      remove: (token, id) => request(`/api/v1/money/admin/agents/${id}`, { method: "DELETE", token }),
+      audit: (token) => request("/api/v1/money/admin/audit", { token }),
+    },
+  },
+
+  // Espaces publicitaires (H-Company + partenaires ayant débloqué la promotion)
+  promos: {
+    serve: (placement = "app_home", limit = 3) => request(`/api/v1/promos${qs({ placement, limit })}`),
+    seen: (id) => request(`/api/v1/promos/${id}/impression`, { method: "POST" }).catch(() => {}),
+    clicked: (id) => request(`/api/v1/promos/${id}/click`, { method: "POST" }).catch(() => {}),
+    mine: (token) => request("/api/v1/promos/mine", { token }),
+    create: (token, body) => request("/api/v1/promos/mine", { method: "POST", token, body }),
+    update: (token, id, body) => request(`/api/v1/promos/mine/${id}`, { method: "PUT", token, body }),
+    pause: (token, id, paused) => request(`/api/v1/promos/mine/${id}`, { method: "PATCH", token, body: { paused } }),
+    remove: (token, id) => request(`/api/v1/promos/mine/${id}`, { method: "DELETE", token }),
+    admin: {
+      list: (token, status) => request(`/api/v1/promos/admin/all${qs({ status })}`, { token }),
+      create: (token, body) => request("/api/v1/promos/admin", { method: "POST", token, body }),
+      decide: (token, id, status, reason = "") => request(`/api/v1/promos/admin/${id}`, { method: "PATCH", token, body: { status, reason } }),
+      remove: (token, id) => request(`/api/v1/promos/admin/${id}`, { method: "DELETE", token }),
+    },
+  },
+
+  // Pays, taux de change, bénéficiaires (services hors frontières)
+  geo: {
+    countries: () => request("/api/v1/geo/countries"),
+    rates: () => request("/api/v1/geo/rates"),
+    admin: {
+      overview: (token) => request("/api/v1/geo/admin/overview", { token }),
+      setRate: (token, cur, body) => request(`/api/v1/geo/admin/rates/${cur}`, { method: "PUT", token, body }),
+      setCountry: (token, code, body) => request(`/api/v1/geo/admin/countries/${code}`, { method: "PUT", token, body }),
+    },
   },
 
   // Connexion par QR code (façon WhatsApp Web)

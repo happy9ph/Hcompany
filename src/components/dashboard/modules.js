@@ -1,4 +1,4 @@
-import { Bus, GraduationCap, Home, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import { Bus, GraduationCap, Home, ShoppingBag, UtensilsCrossed, Mountain } from "lucide-react";
 
 /** Modules que le partenaire débloque depuis son dashboard. */
 export const MODULES = [
@@ -21,6 +21,11 @@ export const MODULES = [
     key: "restaurant", icon: UtensilsCrossed, route: "/restaurant/pro",
     fr: { name: "H-Restaurant", short: "Restaurant", desc: "Dessinez votre salle en 3D, publiez votre menu et recevez les réservations.", links: [["Espace restaurant", "/restaurant/pro"], ["Réservations", "/restaurant/pro?tab=reservations"], ["Menu", "/restaurant/pro?tab=menu"], ["Plan de salle", "/restaurant/pro?tab=room"]] },
     en: { name: "H-Restaurant", short: "Restaurant", desc: "Draw your dining room in 3D, publish your menu and receive bookings.", links: [["Restaurant space", "/restaurant/pro"], ["Bookings", "/restaurant/pro?tab=reservations"], ["Menu", "/restaurant/pro?tab=menu"], ["Floor plan", "/restaurant/pro?tab=room"]] },
+  },
+  {
+    key: "tourism", icon: Mountain, route: "/tourisme/pro",
+    fr: { name: "H-Tourisme", short: "Tourisme", desc: "Publiez vos excursions, programmez les départs et gérez les réservations.", links: [["Espace tourisme", "/tourisme/pro"], ["Départs", "/tourisme/pro?tab=departures"], ["Réservations", "/tourisme/pro?tab=bookings"]] },
+    en: { name: "H-Tourism", short: "Tourism", desc: "Publish your tours, schedule departures and manage bookings.", links: [["Tourism space", "/tourisme/pro"], ["Departures", "/tourisme/pro?tab=departures"], ["Bookings", "/tourisme/pro?tab=bookings"]] },
   },
   {
     key: "learning", icon: GraduationCap, route: "/formations/mon-bouquet",

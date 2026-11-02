@@ -9,7 +9,17 @@ import { HeadManager } from "./components/ui/HeadManager.jsx";
 // chargement du site — réduit sensiblement le poids initial.
 const Home = lazy(() => import("./pages/Home.jsx"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard.jsx"));
+const AppShell = lazy(() => import("./components/app/AppShell.jsx"));
+const AppHome = lazy(() => import("./pages/app/AppHome.jsx"));
+const TransportMap = lazy(() => import("./pages/app/TransportMap.jsx"));
+const ColisMap = lazy(() => import("./pages/app/ColisMap.jsx"));
+const LogementMap = lazy(() => import("./pages/app/LogementMap.jsx"));
+const MoneyHome = lazy(() => import("./pages/money/MoneyHome.jsx"));
+const MoneyRequestPay = lazy(() => import("./pages/money/MoneyRequestPay.jsx"));
+const MoneyAgent = lazy(() => import("./pages/money/MoneyAgent.jsx"));
+const PartnerApply = lazy(() => import("./pages/PartnerApply.jsx"));
 const Settings = lazy(() => import("./pages/Settings.jsx"));
+const AdminConfirmGate = lazy(() => import("./components/admin/AdminConfirmGate.jsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
 const AgentDashboard = lazy(() => import("./pages/AgentDashboard.jsx"));
 const Onboarding = lazy(() => import("./pages/Onboarding.jsx"));
@@ -61,6 +71,11 @@ const RestoSearch = lazy(() => import("./pages/resto/RestoSearch.jsx"));
 const RestoPage = lazy(() => import("./pages/resto/RestoPage.jsx"));
 const MyReservations = lazy(() => import("./pages/resto/MyReservations.jsx"));
 const RestoPro = lazy(() => import("./pages/resto/RestoPro.jsx"));
+const TourismHome = lazy(() => import("./pages/tour/TourismHome.jsx"));
+const TourSearch = lazy(() => import("./pages/tour/TourSearch.jsx"));
+const TourPage = lazy(() => import("./pages/tour/TourPage.jsx"));
+const MyTourBookings = lazy(() => import("./pages/tour/MyTourBookings.jsx"));
+const TourPro = lazy(() => import("./pages/tour/TourPro.jsx"));
 const LodgeHome = lazy(() => import("./pages/lodge/LodgeHome.jsx"));
 const LodgeWalk = lazy(() => import("./pages/lodge/LodgeWalk.jsx"));
 const LodgeSearch = lazy(() => import("./pages/lodge/LodgeSearch.jsx"));
@@ -111,8 +126,19 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<PartnerDashboard />} />
+          <Route path="/app" element={<AppShell />}>
+            <Route index element={<AppHome />} />
+            <Route path="money" element={<MoneyHome embedded />} />
+            <Route path="transport" element={<TransportMap />} />
+            <Route path="colis" element={<ColisMap />} />
+            <Route path="logement" element={<LogementMap />} />
+          </Route>
+          <Route path="/money" element={<MoneyHome />} />
+          <Route path="/money/demande/:code" element={<MoneyRequestPay />} />
+          <Route path="/money/agent" element={<MoneyAgent />} />
+          <Route path="/demande-partenariat" element={<PartnerApply />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminConfirmGate><AdminDashboard /></AdminConfirmGate>} />
           <Route path="/agent" element={<AgentDashboard />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
           {/* Pages des services H- (Transport, Logement, Restaurant, Learning,
@@ -175,9 +201,14 @@ export default function App() {
           <Route path="/restaurant/r/:slug" element={<RestoPage />} />
           <Route path="/restaurant/mes-reservations" element={<MyReservations />} />
           <Route path="/restaurant/pro" element={<RestoPro />} />
+          <Route path="/tourisme" element={<TourismHome />} />
+          <Route path="/tourisme/recherche" element={<TourSearch />} />
+          <Route path="/tourisme/t/:slug" element={<TourPage />} />
+          <Route path="/tourisme/mes-reservations" element={<MyTourBookings />} />
+          <Route path="/tourisme/pro" element={<TourPro />} />
           <Route path="/logement" element={<LodgeHome />} />
           <Route path="/logement/recherche" element={<LodgeSearch />} />
-          <Route path="/logement/quartier" element={<LodgeWalk />} />
+          <Route path="/logement/quartier" element={<Navigate to="/app/logement" replace />} />
           <Route path="/logement/s/:slug" element={<PropertyPage />} />
           <Route path="/logement/reserver/:slug" element={<LodgeBook />} />
           <Route path="/logement/mes-sejours" element={<MyTrips />} />
