@@ -9,6 +9,7 @@ import { HeadManager } from "./components/ui/HeadManager.jsx";
 // chargement du site — réduit sensiblement le poids initial.
 const Home = lazy(() => import("./pages/Home.jsx"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard.jsx"));
+const FloatingPromo = lazy(() => import("./components/app/FloatingPromo.jsx"));
 const AppShell = lazy(() => import("./components/app/AppShell.jsx"));
 const AppHome = lazy(() => import("./pages/app/AppHome.jsx"));
 const TransportMap = lazy(() => import("./pages/app/TransportMap.jsx"));
@@ -172,7 +173,8 @@ export default function App() {
           {/* La formation d'équipe est désormais le bouquet « Équipe » de H-Learning. */}
           <Route path="/formation-equipe" element={<Navigate to="/formations/bouquets?plan=equipe#equipe" replace />} />
           <Route path="/interpretation" element={<InterpretationDetail />} />
-          <Route path="/shopping" element={<ShopHome />} />
+          <Route path="/shopping" element={<ShopCatalog />} />
+          <Route path="/shopping/accueil" element={<ShopHome />} />
           <Route path="/shopping/produits" element={<ShopCatalog />} />
           <Route path="/shopping/produit/:id" element={<ProductPage />} />
           <Route path="/shopping/boutique/:slug" element={<ShopStore />} />
@@ -227,6 +229,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         </div>
+        <FloatingPromo />
       </Suspense>
       <Chatbot />
     </HeadManager>

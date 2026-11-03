@@ -2,6 +2,7 @@ import { Suspense, lazy, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BedDouble, Star } from "lucide-react";
 import { api } from "../../lib/api.js";
+import { coordOf } from "../../lib/cities.js";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useLoad, useShopMoney } from "../../data/shop.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
@@ -15,13 +16,20 @@ export default function LogementMap() {
   usePageMeta({ title: "Logements sur la carte" });
   const { money } = useShopMoney();
   const { token } = useUser();
-  const { data, loading } = useLoad(() => api.lodge.search({ per_page: 60 }, token), [token]);
+  const { data, loading } = useLoad(() => api.lodge.search({ per_page: 48 }, token), [token]);
   const items = data?.items || data || [];
   const [sel, setSel] = useState(null);
   const [tour, setTour] = useState(null);
-  const located = items.filter((p) => p.latitude != null && p.longitude != null);
+  // Position exacte si l'hôte l'a donnée ; sinon le centre de la ville, décalé de façon stable pour que les annonces ne se superposent pas.
+  const spot = (p) => {
+    if (p.latitude != null && p.longitude != null) return [p.latitude, p.longitude];
+    const c = coordOf(p.city); if (!c) return null;
+    const a = (p.id * 2654435761) % 360, r = 0.012 + ((p.id * 40503) % 100) / 100 * 0.03;
+    return [c[0] + Math.sin((a * Math.PI) / 180) * r, c[1] + Math.cos((a * Math.PI) / 180) * r];
+  };
+  const located = items.map((p) => ({ p, pos: spot(p) })).filter((x) => x.pos).map((x) => ({ ...x.p, latitude: x.pos[0], longitude: x.pos[1] }));
   const markers = useMemo(() => located.map((p) => ({ id: String(p.id), lat: p.latitude, lng: p.longitude, label: money(p.price_per_night), emoji: "🏠", active: sel?.id === p.id })), [located.length, sel, money]); // eslint-disable-line react-hooks/exhaustive-deps
-  const fit = useMemo(() => (sel && sel.latitude != null ? [[sel.latitude, sel.longitude]] : undefined), [sel]);
+  const fit = useMemo(() => { const x = sel && located.find((l) => l.id === sel.id); return x ? [[x.latitude, x.longitude]] : undefined; }, [sel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <MapLayout title="Logements sur la carte" lead="Touchez une maison pour voir le logement, faire la visite 3D de l'intérieur, puis réserver."
