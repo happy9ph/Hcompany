@@ -46,7 +46,7 @@ export default function AppHome() {
 
   const month = new Date().toISOString().slice(0, 7);
   const stats = useMemo(() => {
-    const sent = (tx || []).filter((t) => (t.created_at || "").startsWith(month) && t.status !== "failed" && t.status !== "cancelled" && t.status !== "declined");
+    const sent = (tx || []).filter((t) => (t.created_at || "").startsWith(month) && t.status !== "failed" && t.status !== "cancelled" && t.status !== "declined" && t.status !== "rejected" && t.status !== "refunded");
     const byCur = sent.reduce((a, t) => ({ ...a, [t.send_currency]: (a[t.send_currency] || 0) + Number(t.send_amount || 0) }), {});
     const upcoming = (trips || []).filter((b) => ["confirmed", "pending"].includes(b.status)).length;
     const parcels = (cargo || []).filter((b) => !["delivered", "cancelled", "completed"].includes(b.status)).length;

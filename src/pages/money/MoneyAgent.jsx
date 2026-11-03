@@ -6,6 +6,7 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import { StatusPill, input, msgOf, nf } from "../../components/money/parts.jsx";
 import CorridorRates from "../../components/money/CorridorRates.jsx";
+import ReviewQueue from "../../components/money/ReviewQueue.jsx";
 
 /** Espace des agents H-Money : contrôle des transactions de leur pays et, si autorisé, taux de leur devise. */
 export default function MoneyAgent() {
@@ -61,6 +62,7 @@ export default function MoneyAgent() {
                 <p className="text-xs text-ink-faint mt-2">Variation limitée à ±25 % par changement. Chaque modification est journalisée.</p>
               </section>
             ))}
+            {me.some((c) => c.can_review) && tx && <div className="mt-8"><ReviewQueue rows={tx} onDecide={async (code, approve, reason) => { await withAuth((t) => api.money.agent.review(t, code, { approve, reason })); await load(); }} /></div>}
             {me.some((c) => c.can_review) && (
               <section className="mt-8">
                 <div className="flex items-center justify-between mb-3"><h2 className="font-display text-xl text-ink">Transactions</h2><label className="text-sm inline-flex items-center gap-2"><input type="checkbox" checked={only} onChange={(e) => setOnly(e.target.checked)} />Signalées seulement</label></div>

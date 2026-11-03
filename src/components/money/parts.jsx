@@ -14,17 +14,17 @@ export function useCorridors() {
 }
 
 /** Devis en direct (anti-rebond 350 ms). mode=send : « j'envoie X » ; mode=receive : « il doit recevoir X ». */
-export function useQuote({ amount, from, to, mode = "send" }) {
+export function useQuote({ amount, from, to, mode = "send", withFee = true }) {
   const [q, setQ] = useState(null);
   const [err, setErr] = useState("");
   useEffect(() => {
     const n = Number(amount);
     if (!n || n <= 0) { setQ(null); setErr(""); return undefined; }
     const id = setTimeout(() => {
-      api.money.quote({ amount: n, from, to, mode }).then((r) => { setQ(r); setErr(""); }).catch((e) => { setQ(null); setErr(msgOf(e)); });
+      api.money.quote({ amount: n, from, to, mode, ...(mode === "send" ? { with_fee: withFee } : {}) }).then((r) => { setQ(r); setErr(""); }).catch((e) => { setQ(null); setErr(msgOf(e)); });
     }, 350);
     return () => clearTimeout(id);
-  }, [amount, from, to, mode]);
+  }, [amount, from, to, mode, withFee]);
   return { q, err };
 }
 
@@ -38,8 +38,8 @@ export function Field({ label, hint, children }) {
   );
 }
 
-const TONE = { completed: "bg-emerald-50 text-emerald-700 border-emerald-200", awaiting_payer: "bg-amber-50 text-amber-700 border-amber-200", refunded: "bg-sky-50 text-sky-700 border-sky-200", cancelled: "bg-red-50 text-red-700 border-red-200", declined: "bg-red-50 text-red-700 border-red-200", expired: "bg-stone-100 text-stone-600 border-stone-200" };
-const LABEL = { completed: "Terminé", awaiting_payer: "En attente de paiement", refunded: "Remboursé", cancelled: "Annulé", declined: "Refusé", expired: "Expiré", collected: "En cours", created: "En cours" };
+const TONE = { completed: "bg-emerald-50 text-emerald-700 border-emerald-200", awaiting_payer: "bg-amber-50 text-amber-700 border-amber-200", under_review: "bg-violet-50 text-violet-700 border-violet-200", rejected: "bg-red-50 text-red-700 border-red-200", refunded: "bg-sky-50 text-sky-700 border-sky-200", cancelled: "bg-red-50 text-red-700 border-red-200", declined: "bg-red-50 text-red-700 border-red-200", expired: "bg-stone-100 text-stone-600 border-stone-200" };
+const LABEL = { under_review: "En contrôle", rejected: "Refusé après contrôle", completed: "Terminé", awaiting_payer: "En attente de paiement", refunded: "Remboursé", cancelled: "Annulé", declined: "Refusé", expired: "Expiré", collected: "En cours", created: "En cours" };
 export function StatusPill({ status }) {
   return <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${TONE[status] || "bg-latte-soft text-coffee-dark border-latte"}`}>{LABEL[status] || status}</span>;
 }

@@ -11,6 +11,7 @@ function Stat({ label, value, sub }) {
 }
 
 import CorridorRates from "../money/CorridorRates.jsx";
+import ReviewQueue from "../money/ReviewQueue.jsx";
 
 export default function MoneyAdminPanel({ withAuth, api }) {
   const M = api.money.admin;
@@ -72,6 +73,7 @@ export default function MoneyAdminPanel({ withAuth, api }) {
 
       {tab === "tx" && (
         <div className="space-y-4">
+          <ReviewQueue rows={tx} onDecide={async (code, approve, reason) => { await withAuth((t) => M.review(t, code, { approve, reason })); await load(); }} />
           <div className="flex flex-wrap gap-3">
             <select aria-label="Statut" value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })} className="rounded-xl border border-line bg-surface px-3 py-2 text-sm"><option value="">Tous statuts</option>{["completed", "awaiting_payer", "refunded", "cancelled", "declined", "expired"].map((s) => <option key={s} value={s}>{s}</option>)}</select>
             <select aria-label="Pays" value={filter.country} onChange={(e) => setFilter({ ...filter, country: e.target.value })} className="rounded-xl border border-line bg-surface px-3 py-2 text-sm"><option value="">Tous pays</option><option value="ZM">Zambie</option><option value="CD">RD Congo</option></select>

@@ -24,8 +24,8 @@ function QuoteCard({ q, err, verb }) {
       <p className="text-[11px] uppercase tracking-[0.18em] text-cream-fixed/50">Le bénéficiaire reçoit</p>
       <p className="font-display text-4xl sm:text-5xl mt-1 tabular-nums" style={{ color: "#C89A3D" }}>{nf(q.receive_amount, q.receive_currency)}</p>
       <dl className="mt-5 grid grid-cols-3 gap-3 text-xs">
-        <div><dt className="text-cream-fixed/50">Montant</dt><dd className="mt-0.5 tabular-nums">{nf(q.send_amount, q.send_currency)}</dd></div>
-        <div><dt className="text-cream-fixed/50">Frais</dt><dd className="mt-0.5 tabular-nums">{nf(q.fee, q.send_currency)}</dd></div>
+        <div><dt className="text-cream-fixed/50">{q.fee_mode === "deducted" ? "Converti" : "Montant"}</dt><dd className="mt-0.5 tabular-nums">{nf(q.send_amount, q.send_currency)}</dd></div>
+        <div><dt className="text-cream-fixed/50">{q.fee_mode === "deducted" ? "Frais (retirés)" : "Frais (ajoutés)"}</dt><dd className="mt-0.5 tabular-nums">{nf(q.fee, q.send_currency)}</dd></div>
         <div><dt className="text-cream-fixed/50">Vous payez</dt><dd className="mt-0.5 font-semibold tabular-nums">{nf(q.total_paid, q.send_currency)}</dd></div>
       </dl>
       <p className="text-[11px] text-cream-fixed/45 mt-4">Taux : 1 {q.send_currency} ≈ {q.rate} {q.receive_currency} · affiché avant tout paiement</p>
@@ -34,12 +34,16 @@ function QuoteCard({ q, err, verb }) {
 }
 
 function Result({ t, onAgain }) {
-  const ok = t.status === "completed";
+  const review = t.status === "under_review", ok = t.status === "completed";
+  const title = review ? "Envoi enregistré" : ok ? "Envoi effectué" : t.status === "rejected" ? "Envoi refusé" : "Envoi non abouti";
+  const text = review ? `Votre paiement est bien reçu. Un contrôle rapide est en cours : ${t.counterpart_name} recevra ${nf(t.receive_amount, t.receive_currency)} dès la confirmation. En cas de refus, vous êtes remboursé.`
+    : ok ? `${t.counterpart_name} reçoit ${nf(t.receive_amount, t.receive_currency)}.` : t.failure_reason;
+  const tone = review ? "bg-violet-100 text-violet-700" : ok ? "bg-emerald-100 text-emerald-700" : "bg-sky-100 text-sky-700";
   return (
     <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="rounded-3xl border border-line bg-surface p-8 text-center">
-      <span className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${ok ? "bg-emerald-100 text-emerald-700" : "bg-sky-100 text-sky-700"}`}><Check size={30} /></span>
-      <h2 className="font-display text-2xl text-ink mt-5">{ok ? "Envoi effectué" : "Envoi non abouti"}</h2>
-      <p className="text-sm text-ink-soft mt-2">{ok ? `${t.counterpart_name} reçoit ${nf(t.receive_amount, t.receive_currency)}.` : t.failure_reason}</p>
+      <span className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${tone}`}>{review ? <ShieldCheck size={30} /> : <Check size={30} />}</span>
+      <h2 className="font-display text-2xl text-ink mt-5">{title}</h2>
+      <p className="text-sm text-ink-soft mt-2 max-w-sm mx-auto">{text}</p>
       <p className="text-xs text-ink-faint mt-3">Référence <strong className="text-ink">{t.code}</strong>{t.simulated && " · démonstration"}</p>
       <button onClick={onAgain} className="mt-6 rounded-full bg-ink text-cream text-sm font-medium px-6 py-3">Nouvelle opération</button>
     </motion.div>
@@ -55,7 +59,8 @@ function SendForm({ cor, onDone }) {
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const { q, err: qErr } = useQuote({ amount: f.amount, from, to });
+  const [withFee, setWithFee] = useState(true);
+  const { q, err: qErr } = useQuote({ amount: f.amount, from, to, withFee });
   const ops = cor?.operators || {};
   const benOp = f.benOp && ops[to]?.some((o) => o.key === f.benOp) ? f.benOp : ops[to]?.[0]?.key || "";
   const payOp = f.payOp && ops[from]?.some((o) => o.key === f.payOp) ? f.payOp : ops[from]?.[0]?.key || "";
@@ -63,7 +68,7 @@ function SendForm({ cor, onDone }) {
   async function submit(e) {
     e.preventDefault(); setBusy(true); setErr("");
     try {
-      onDone(await withAuth((t) => api.money.send(t, { from_country: from, to_country: to, amount: Number(f.amount), beneficiary_name: f.name, beneficiary_phone: f.phone, beneficiary_operator: benOp, pay_phone: f.payPhone, pay_operator: payOp, note: f.note })));
+      onDone(await withAuth((t) => api.money.send(t, { from_country: from, to_country: to, amount: Number(f.amount), with_fee: withFee, beneficiary_name: f.name, beneficiary_phone: f.phone, beneficiary_operator: benOp, pay_phone: f.payPhone, pay_operator: payOp, note: f.note })));
     } catch (x) { setErr(msgOf(x)); } finally { setBusy(false); }
   }
   return (
@@ -76,6 +81,11 @@ function SendForm({ cor, onDone }) {
       <Field label={`Montant à envoyer (${cor?.currencies?.[from] || ""})`}>
         <input required inputMode="decimal" type="number" min="0" step="0.01" className={`${input} text-2xl font-display py-4`} value={f.amount} onChange={set("amount")} placeholder="0" />
       </Field>
+      <label className="flex items-start gap-3 rounded-2xl border border-line bg-surface p-4 cursor-pointer">
+        <input type="checkbox" checked={withFee} onChange={(e) => setWithFee(e.target.checked)} className="mt-1 w-4 h-4 accent-[#3B2417]" />
+        <span className="text-sm"><span className="font-medium text-ink block">Ajouter les frais d'envoi à mon montant</span>
+          <span className="text-ink-soft">{withFee ? "Coché : vous payez le montant + les frais, le bénéficiaire reçoit le montant saisi (converti)." : "Décoché : les frais sont retirés du montant saisi. Vous payez exactement ce montant, le bénéficiaire reçoit un peu moins."}</span></span>
+      </label>
       <QuoteCard q={q} err={qErr} verb="recevra le bénéficiaire" />
       <fieldset className="space-y-4"><legend className="font-display text-lg text-ink mb-1">Qui reçoit ? ({COUNTRY[to].fr})</legend>
         <Field label="Nom complet"><input required className={input} value={f.name} onChange={set("name")} autoComplete="off" /></Field>
