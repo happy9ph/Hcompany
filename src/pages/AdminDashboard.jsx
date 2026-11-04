@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useUser } from "../context/Usercontext.jsx";
 import { api } from "../lib/api.js";
+import BigChart from "../components/ui/BigChart.jsx";
 import AdminSidebar from "../components/admin/AdminSidebar.jsx";
 import ApplicationsTable, { timeAgo, exportApplicationsCsv, isTyping } from "../components/admin/ApplicationsTable.jsx";
 import ApplicationDetail from "../components/admin/ApplicationDetail.jsx";
@@ -456,7 +457,7 @@ export default function AdminDashboard() {
       : { core: "bg-coffee", Icon: CheckCircle2, ring: GOLD };
 
   return (
-    <div className="min-h-screen bg-cream md:flex">
+    <div className="min-h-screen bg-cream md:flex md:items-start">
       <AdminSidebar
         user={user}
         onSignOut={signOut}
@@ -689,6 +690,11 @@ export default function AdminDashboard() {
                       Réessayer
                     </button>
                   </div>
+                )}
+
+                {pageStatus === "ready" && stats.days && (
+                  <BigChart className="mb-6" title="Candidatures" subtitle="14 derniers jours" unit="reçues"
+                    data={stats.days.map((d) => ({ label: d.date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }), value: d.count }))} />
                 )}
 
                 {pageStatus === "ready" && (

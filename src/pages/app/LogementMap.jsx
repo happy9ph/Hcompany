@@ -7,7 +7,6 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useLoad, useShopMoney } from "../../data/shop.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import MapView from "../../components/app/MapView.jsx";
-import PromoSlot from "../../components/app/PromoSlot.jsx";
 import MapLayout, { Empty, Modal, Skel } from "../../components/app/MapLayout.jsx";
 
 const Interior3D = lazy(() => import("../../components/lodge/Interior3D.jsx"));
@@ -34,7 +33,6 @@ export default function LogementMap() {
   return (
     <MapLayout title="Logements sur la carte" lead="Touchez une maison pour voir le logement, faire la visite 3D de l'intérieur, puis réserver."
       map={<MapView markers={markers} fitTo={fit} onSelect={(id) => setSel(items.find((p) => String(p.id) === id) || null)} center={[-15.4, 28.3]} zoom={11} />}>
-      <PromoSlot placement="app_logement" limit={1} variant="banner" />
       {loading ? <Skel /> : !items.length ? <Empty>Aucun logement pour le moment.</Empty> : items.map((p) => (
         <div key={p.id} className={`rounded-2xl border bg-surface overflow-hidden ${sel?.id === p.id ? "border-[#C89A3D]" : "border-line"}`}>
           <button onClick={() => setSel(p)} className="w-full text-left flex gap-3 p-3">

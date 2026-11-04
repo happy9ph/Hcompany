@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, Check, Circle, Star, Trash2 } from "lucide-react";
@@ -14,6 +15,7 @@ import { AMENITY_GROUPS } from "../../i18n/lodgeUi.js";
 import { STAY_TYPES } from "../../lib/lodge.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
+const LocationPicker = lazy(() => import("../../components/app/LocationPicker.jsx"));
 const EMPTY = {
   title: "", summary: "", description: "", type: "lodge", country: "Zambie", city: "", area: "", address: "", latitude: "", longitude: "",
   price_per_night: "", cleaning_fee: 0, weekly_discount: 0, monthly_discount: 0, max_guests: 2, bedrooms: 1, beds: 1, bathrooms: 1, units: 1,
@@ -136,6 +138,10 @@ function Content() {
             <Field label={t.area} htmlFor="e-area"><input id="e-area" className={inputCls} value={f.area} onChange={set("area")} /></Field>
           </div>
           <Field label={t.address} hint={t.addressHint} htmlFor="e-addr"><input id="e-addr" maxLength={240} className={inputCls} value={f.address} onChange={set("address")} /></Field>
+          <Suspense fallback={<div className="h-80 rounded-2xl bg-latte-soft/60 animate-pulse" />}>
+            <LocationPicker lat={f.latitude} lng={f.longitude} city={f.city} onChange={(la, ln) => { setDirty(true); setF((s) => ({ ...s, latitude: la, longitude: ln })); }} />
+          </Suspense>
+          <p className="text-xs text-ink-faint -mt-2">Les voyageurs voient une position approximative (environ 1 km) avant de réserver ; l'adresse exacte n'est donnée qu'après réservation.</p>
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label={t.latitude} htmlFor="e-lat"><input id="e-lat" type="number" step="any" min="-90" max="90" className={inputCls} value={f.latitude} onChange={set("latitude")} placeholder="-15.4167" /></Field>
             <Field label={t.longitude} htmlFor="e-lng"><input id="e-lng" type="number" step="any" min="-180" max="180" className={inputCls} value={f.longitude} onChange={set("longitude")} placeholder="28.2833" /></Field>

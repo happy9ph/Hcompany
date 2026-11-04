@@ -7,7 +7,6 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import { StatusPill, nf } from "../../components/money/parts.jsx";
-import PromoSlot from "../../components/app/PromoSlot.jsx";
 
 const ACCESS = [
   { to: "/app/money", Icon: Wallet, fr: "H-Money", en: "H-Money" },
@@ -83,7 +82,6 @@ export default function AppHome() {
         </div>
       </section>
 
-      <PromoSlot placement="app_home" limit={3} />
 
       {/* Performances */}
       <section aria-label={fr ? "Aperçu" : "Overview"}>

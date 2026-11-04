@@ -7,7 +7,6 @@ import { coordOf } from "../../lib/cities.js";
 import { fmtDay, fmtTime, searchQuery, toggleSeat } from "../../lib/transport.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import MapView from "../../components/app/MapView.jsx";
-import PromoSlot from "../../components/app/PromoSlot.jsx";
 import MapLayout, { Empty, Modal, Skel } from "../../components/app/MapLayout.jsx";
 
 const BusInterior3D = lazy(() => import("../../components/transport/BusInterior3D.jsx"));
@@ -79,7 +78,6 @@ export default function TransportMap() {
   return (
     <MapLayout title="Bus sur la carte" lead="Touchez une ligne ou une ville, puis réservez et choisissez votre siège dans le bus en 3D."
       map={<MapView markers={markers} lines={lines} fitTo={fit} onSelect={pick} />}>
-      <PromoSlot placement="app_transport" limit={1} variant="banner" />
       {loading ? <Skel /> : !routes?.length ? <Empty>Aucune ligne disponible pour le moment.</Empty> : !route ? (
         <>
           <p className="text-sm font-semibold">Lignes populaires</p>

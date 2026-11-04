@@ -7,7 +7,6 @@ import { coordOf } from "../../lib/cities.js";
 import { fmtDay, fmtTime } from "../../lib/transport.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import MapView from "../../components/app/MapView.jsx";
-import PromoSlot from "../../components/app/PromoSlot.jsx";
 import MapLayout, { Empty, Modal, Skel } from "../../components/app/MapLayout.jsx";
 
 const Vehicle3D = lazy(() => import("../../components/transport/Vehicle3D.jsx"));
@@ -43,7 +42,6 @@ export default function ColisMap() {
         {terr && <p className="text-xs text-red-600 mt-2">{terr}</p>}
         {tracked && <p className="text-sm mt-2 text-ink-soft">Statut : <b className="text-ink">{tracked.status}</b>{tracked.current_location ? ` · ${tracked.current_location}` : ""}</p>}
       </form>
-      <PromoSlot placement="app_colis" limit={1} variant="banner" />
       {loading ? <Skel /> : !trips?.length ? <Empty>Aucun trajet de fret pour le moment.</Empty> : trips.map((t) => (
         <div key={t.id} className={`rounded-2xl border bg-surface p-4 ${sel?.id === t.id ? "border-[#C89A3D]" : "border-line"}`}>
           <button onClick={() => setSel(t)} className="w-full text-left">
