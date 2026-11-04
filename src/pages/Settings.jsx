@@ -190,7 +190,7 @@ export default function Settings() {
                       {t(account.account_status === "blocked" ? "account.blockedBanner" : "account.disabledBanner")}
                     </p>
                     <Link
-                      to="/#rejoindre"
+                      to="/partenaires#rejoindre"
                       className="inline-block text-sm font-medium rounded-full bg-ink text-cream px-5 py-2.5 hover:bg-coffee-dark transition-colors"
                     >
                       {t("account.contactSupport")}

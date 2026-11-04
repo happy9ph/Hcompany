@@ -41,7 +41,7 @@ export default function MyServicesPanel({ summary, catalog = [] }) {
       <div className="flex items-center justify-between">
         <h3 className="font-medium text-ink">{t("myServices.heading")}</h3>
         <Link
-          to="/#explorer"
+          to="/partenaires#explorer"
           className="flex items-center gap-1.5 text-sm font-medium rounded-full bg-ink text-cream px-4 py-2 hover:bg-coffee-dark transition-colors"
         >
           <Compass size={15} />

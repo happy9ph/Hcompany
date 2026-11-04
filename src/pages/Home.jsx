@@ -60,7 +60,7 @@ export default function Home() {
 
   // Défile jusqu'à l'ancre indiquée dans l'URL (#rejoindre, #services...)
   // une fois le contenu prêt — une navigation programmatique (ex: après
-  // connexion, redirection vers "/#rejoindre") ne déclenche pas le
+  // connexion, redirection vers "/partenaires#rejoindre") ne déclenche pas le
   // défilement natif du navigateur comme le ferait un lien classique.
   // Réessaie plusieurs fois : la section ciblée peut ne pas encore être
   // révélée (squelette encore affiché) au tout premier essai.

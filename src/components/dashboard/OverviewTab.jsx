@@ -1,5 +1,7 @@
 import { CheckCircle2, FileText, Activity, Calendar } from "lucide-react";
 import StatCard from "./StatCard.jsx";
+import { useMemo } from "react";
+import BigChart from "../ui/BigChart.jsx";
 import ActivityDonutChart from "./ActivityDonutChart.jsx";
 
 const CONTRACT_LABELS = {
@@ -12,8 +14,16 @@ export default function OverviewTab({ application, stats, activities }) {
     ? new Date(stats.partner_since).toLocaleDateString("fr-FR", { year: "numeric", month: "long" })
     : " : ";
 
+  const series = useMemo(() => {
+    const days = [];
+    for (let i = 29; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); days.push({ key: d.toDateString(), label: d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }), value: 0 }); }
+    (activities || []).forEach((a) => { const k = new Date(a.created_at).toDateString(); const row = days.find((x) => x.key === k); if (row) row.value += 1; });
+    return days;
+  }, [activities]);
+
   return (
     <div className="space-y-6">
+      <BigChart title="Activité" subtitle="30 derniers jours" unit="actions" height={260} data={series} />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Candidature"

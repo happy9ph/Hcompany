@@ -44,7 +44,7 @@ function SignInPrompt({ t }) {
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
           to="/connexion"
-          state={{ redirectTo: "/#rejoindre" }}
+          state={{ redirectTo: "/partenaires#rejoindre" }}
           className="inline-flex items-center gap-2 rounded-full bg-ink text-cream text-sm font-medium px-6 py-3 hover:bg-coffee-dark transition-colors"
         >
           <LogIn size={15} />
@@ -52,7 +52,7 @@ function SignInPrompt({ t }) {
         </Link>
         <Link
           to="/creer-un-compte"
-          state={{ redirectTo: "/#rejoindre" }}
+          state={{ redirectTo: "/partenaires#rejoindre" }}
           className="inline-flex items-center gap-2 rounded-full border border-line text-ink text-sm font-medium px-6 py-3 hover:border-coffee-light transition-colors"
         >
           <UserPlus size={15} />

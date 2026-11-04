@@ -137,6 +137,7 @@ export const api = {
     signUp: (name, email, password) =>
       request("/api/v1/auth/register", { method: "POST", body: { full_name: name, email, password } }),
     me: (token) => request("/api/v1/auth/me", { token }),
+    updateMe: (token, full_name) => request("/api/v1/auth/me", { method: "PATCH", token, body: { full_name } }),
     // Réveille l'API et le service d'authentification (hébergeur gratuit en
     // veille) avant que la personne n'ait fini de remplir le formulaire.
     // Sans effet de bord ; au plus un appel toutes les 4 minutes.
@@ -628,6 +629,8 @@ export const api = {
       review: (token, code, body) => request(`/api/v1/money/admin/transactions/${code}/review`, { method: "POST", token, body }),
       corridorRates: (token) => request("/api/v1/money/admin/corridor-rates", { token }),
       setCorridorRate: (token, body) => request("/api/v1/money/admin/corridor-rates", { method: "PUT", token, body }),
+      settings: (token) => request("/api/v1/money/admin/settings", { token }),
+      saveSettings: (token, body) => request("/api/v1/money/admin/settings", { method: "PUT", token, body }),
     },
   },
 

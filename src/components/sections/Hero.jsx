@@ -167,14 +167,14 @@ export default function Hero() {
             </p>
             <div className="mt-8 flex flex-col items-center gap-4">
               <MotionLink
-                to="/#rejoindre"
+                to="/partenaires#rejoindre"
                 className="bg-coffee text-cream rounded-full px-7 py-3.5 font-medium hover:bg-coffee-dark transition-colors shadow-[0_16px_32px_-14px_rgba(74,48,32,0.6)]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {t("hero.cta")}
               </MotionLink>
-              <Link to="/#about" className="text-sm font-medium text-ink underline underline-offset-4 decoration-line hover:decoration-coffee hover:text-coffee transition-colors">
+              <Link to="/partenaires#about" className="text-sm font-medium text-ink underline underline-offset-4 decoration-line hover:decoration-coffee hover:text-coffee transition-colors">
                 {t("hero.more")}<ArrowRight />
               </Link>
             </div>

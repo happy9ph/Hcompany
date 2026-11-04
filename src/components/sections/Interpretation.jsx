@@ -37,7 +37,7 @@ export default function Interpretation() {
 
           <div className="flex flex-wrap items-center gap-4">
             <RouterLink
-              to="/#rejoindre"
+              to="/partenaires#rejoindre"
               className="inline-flex items-center gap-1.5 rounded-full bg-ink text-cream text-sm font-medium px-6 py-3 hover:bg-coffee-dark transition-colors"
             >
               {t("interpretation.cta")}

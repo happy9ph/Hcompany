@@ -79,7 +79,7 @@ export default function SubscribeServiceModal({ service, onClose, onSubscribed }
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/connexion"
-                state={{ redirectTo: "/#explorer" }}
+                state={{ redirectTo: "/partenaires#explorer" }}
                 className="inline-flex items-center gap-2 rounded-full bg-ink text-cream text-sm font-medium px-6 py-3 hover:bg-coffee-dark transition-colors"
               >
                 <LogIn size={15} />
@@ -87,7 +87,7 @@ export default function SubscribeServiceModal({ service, onClose, onSubscribed }
               </Link>
               <Link
                 to="/creer-un-compte"
-                state={{ redirectTo: "/#explorer" }}
+                state={{ redirectTo: "/partenaires#explorer" }}
                 className="inline-flex items-center gap-2 rounded-full border border-line text-ink text-sm font-medium px-6 py-3 hover:border-coffee-light transition-colors"
               >
                 <UserPlus size={15} />

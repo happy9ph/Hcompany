@@ -20,7 +20,7 @@ export default function ServiceDetail() {
   const text = meta ? t(`services.${meta.key}t`) : null;
   usePageMeta(meta ? { title: name, description: text } : null);
 
-  if (!meta) return <Navigate to="/#marketplace" replace />;
+  if (!meta) return <Navigate to="/partenaires#marketplace" replace />;
 
   const category = t(`services.categories.${meta.categoryKey}`);
   const unit = UNIT_LABEL[lang][meta.unitKey];
@@ -36,7 +36,7 @@ export default function ServiceDetail() {
       <DetailHero
         art={<TradeArt name={meta.categoryKey} className="w-full h-full" />}
         overlay="linear-gradient(0deg, rgba(30,26,23,0.92) 5%, rgba(30,26,23,0.55) 55%, rgba(30,26,23,0.15) 100%)"
-        backTo="/#marketplace"
+        backTo="/partenaires#marketplace"
         backLabel={t("services.heading")}
         icon={Sparkles}
         badge={
@@ -88,7 +88,7 @@ export default function ServiceDetail() {
               {lang === "fr" ? "Devis ajusté à votre besoin exact." : "Quote adjusted to your exact needs."}
             </p>
             <Link
-              to="/#rejoindre"
+              to="/partenaires#rejoindre"
               className="w-full flex items-center justify-center gap-2 rounded-full bg-ink text-cream text-sm font-medium py-4 hover:bg-coffee-dark hover:scale-[1.02] transition-all"
             >
               {t("services.request")}

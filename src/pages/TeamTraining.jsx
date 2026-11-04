@@ -145,7 +145,7 @@ export default function TeamTraining() {
         </svg>
 
         <div className="relative max-w-content mx-auto text-center">
-          <Link to="/#learning" className="inline-flex items-center gap-1.5 text-cream-fixed/60 text-sm hover:text-cream-fixed transition-colors mb-8">
+          <Link to="/partenaires#learning" className="inline-flex items-center gap-1.5 text-cream-fixed/60 text-sm hover:text-cream-fixed transition-colors mb-8">
             <ArrowLeft size={14} />
             H-learning
           </Link>

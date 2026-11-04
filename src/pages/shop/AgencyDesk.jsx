@@ -60,7 +60,7 @@ function Inner() {
   if (me.error) {
     return (
       <ShopLayout width="max-w-2xl">
-        <EmptyState icon={MapPin} title={t.notAgency} hint={t.notAgencyHint} action={<Link to="/#rejoindre" className="rounded-full bg-ink text-cream text-sm px-6 py-3">{t.becomePartner}</Link>} />
+        <EmptyState icon={MapPin} title={t.notAgency} hint={t.notAgencyHint} action={<Link to="/partenaires#rejoindre" className="rounded-full bg-ink text-cream text-sm px-6 py-3">{t.becomePartner}</Link>} />
       </ShopLayout>
     );
   }

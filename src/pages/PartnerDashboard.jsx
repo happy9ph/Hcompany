@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { LayoutGrid, FileText, Activity, Tag, Boxes, Compass, Blocks, Megaphone, QrCode as QrIcon } from "lucide-react";
 import { useUser } from "../context/Usercontext.jsx";
 import { api } from "../lib/api.js";
+import AccountMenu from "../components/app/AccountMenu.jsx";
+import NotificationBell from "../components/layout/NotificationBell.jsx";
 import DashboardSidebar from "../components/dashboard/DashboardSidebar.jsx";
 import OverviewTab from "../components/dashboard/OverviewTab.jsx";
 import OffersTab from "../components/dashboard/OffersTab.jsx";
@@ -313,7 +315,7 @@ export default function PartnerDashboard() {
         <header className="md:hidden sticky top-0 z-10 bg-cream/95 backdrop-blur-sm border-b border-line">
           <div className="flex items-center justify-between px-4 py-4">
             <Link to="/" className="font-display text-lg text-ink">H-Company</Link>
-            <button onClick={signOut} className="text-xs text-ink-soft">Déconnexion</button>
+            <div className="flex items-center gap-1"><NotificationBell /><AccountMenu onPartner={false} /></div>
           </div>
           <div className="flex px-2 pb-2 gap-1 overflow-x-auto">
             {MOBILE_TABS.map(({ key, label, icon: Icon }) => (
@@ -337,8 +339,10 @@ export default function PartnerDashboard() {
               <h1 className="font-display text-2xl md:text-3xl text-ink" style={accent ? { color: accent } : undefined}>{brandName || "Espace partenaire"}</h1>
               <p className="text-sm text-ink-soft mt-1">{application.company}</p>
             </div>
-            <div className="hidden md:block">
+            <div className="hidden md:flex items-center gap-3">
               <StatusBadge status={application.status} />
+              <NotificationBell />
+              <AccountMenu onPartner={false} />
             </div>
           </div>
 

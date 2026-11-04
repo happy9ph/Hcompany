@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { StatusPill, nf } from "../money/parts.jsx";
 
 const msgOf = (e) => e?.data?.detail || e?.message || "Une erreur est survenue.";
-const TABS = [["overview", "Aperçu"], ["tx", "Transactions"], ["rates", "Taux envoi / retrait"], ["agents", "Agents par pays"], ["audit", "Journal"]];
+const TABS = [["overview", "Aperçu"], ["tx", "Transactions"], ["rates", "Taux envoi / retrait"], ["fees", "Frais & plafonds"], ["agents", "Agents par pays"], ["audit", "Journal"]];
 const cell = "px-3 py-2.5 text-sm whitespace-nowrap";
 
 function Stat({ label, value, sub }) {
@@ -12,6 +12,33 @@ function Stat({ label, value, sub }) {
 
 import CorridorRates from "../money/CorridorRates.jsx";
 import ReviewQueue from "../money/ReviewQueue.jsx";
+
+const FIELDS = [["fee_pct", "Commission (%)", "Pourcentage prélevé sur chaque envoi", "0.1"], ["min_fee_usd", "Frais minimum (USD)", "Plancher de la commission", "0.1"], ["min_usd", "Montant minimum (USD)", "Par opération", "0.5"], ["max_usd", "Montant maximum (USD)", "Par opération", "10"], ["daily_max_usd", "Plafond journalier (USD)", "Par personne et par jour", "50"]];
+
+function FeesSettings({ load, save }) {
+  const [v, setV] = useState(null), [err, setErr] = useState(""), [ok, setOk] = useState(false), [busy, setBusy] = useState(false);
+  useEffect(() => { load().then(setV).catch((e) => setErr(msgOf(e))); }, [load]);
+  if (!v) return err ? <p className="text-sm text-[#9B2C2C]">{err}</p> : <Loader2 className="animate-spin text-ink-soft" />;
+  const submit = async (e) => {
+    e.preventDefault(); setBusy(true); setErr(""); setOk(false);
+    try { setV(await save(Object.fromEntries(FIELDS.map(([k]) => [k, Number(v[k])])))); setOk(true); } catch (x) { setErr(Array.isArray(x?.data?.detail) ? x.data.detail.map((d) => d.msg).join(" ") : msgOf(x)); } finally { setBusy(false); }
+  };
+  return (
+    <form onSubmit={submit} className="max-w-2xl rounded-2xl border border-line bg-surface p-6 space-y-5">
+      <p className="text-sm text-ink-soft">Ces valeurs s'appliquent immédiatement à tous les nouveaux envois et demandes. Chaque changement est enregistré dans le journal.</p>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {FIELDS.map(([k, label, hint, step]) => (
+          <label key={k} className="block text-sm"><span className="font-medium text-ink">{label}</span>
+            <input type="number" min="0" step={step} required value={v[k]} onChange={(e) => { setOk(false); setV({ ...v, [k]: e.target.value }); }} className="mt-1 w-full rounded-xl border border-line bg-cream px-3 py-2.5 tabular-nums" />
+            <span className="text-xs text-ink-faint">{hint}</span></label>
+        ))}
+      </div>
+      {err && <p className="text-sm text-[#9B2C2C]" role="alert">{err}</p>}
+      {ok && <p className="text-sm text-[#1F4D2E]" role="status">Enregistré.</p>}
+      <button disabled={busy} className="rounded-full bg-ink text-cream px-6 py-2.5 text-sm font-medium disabled:opacity-50">{busy ? "…" : "Enregistrer"}</button>
+    </form>
+  );
+}
 
 export default function MoneyAdminPanel({ withAuth, api }) {
   const M = api.money.admin;
@@ -88,6 +115,7 @@ export default function MoneyAdminPanel({ withAuth, api }) {
         </div>
       )}
 
+      {tab === "fees" && <FeesSettings load={() => withAuth((t) => M.settings(t))} save={(b) => withAuth((t) => M.saveSettings(t, b))} />}
       {tab === "rates" && <CorridorRates maxPct={50} load={() => withAuth((t) => M.corridorRates(t))} save={(b) => withAuth((t) => M.setCorridorRate(t, b))} />}
       {tab === "agents" && (
         <div className="space-y-6">

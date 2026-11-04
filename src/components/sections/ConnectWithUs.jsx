@@ -6,9 +6,9 @@ import ContactModal from "./ContactModal.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const LINKS = [
-  { key: "partner", to: "/#rejoindre", Icon: Handshake },
+  { key: "partner", to: "/partenaires#rejoindre", Icon: Handshake },
   { key: "dashboard", to: "/connexion", Icon: LayoutDashboard },
-  { key: "explore", to: "/#explorer", Icon: Compass },
+  { key: "explore", to: "/partenaires#explorer", Icon: Compass },
   { key: "training", to: "/formations/bouquets?plan=equipe#equipe", Icon: GraduationCap },
   { key: "contact", modal: true, Icon: Mail },
 ];

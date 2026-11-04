@@ -92,9 +92,9 @@ function scoreKeywords(kws, nText, toks) {
 
 const L = {
   home: { fr: "Accueil", en: "Home", to: "/" },
-  services: { fr: "Voir nos métiers", en: "See our trades", to: "/#services" },
-  explore: { fr: "Explorer les services", en: "Explore the services", to: "/#explorer" },
-  join: { fr: "Rejoindre le réseau", en: "Join the network", to: "/#rejoindre" },
+  services: { fr: "Voir nos métiers", en: "See our trades", to: "/partenaires#services" },
+  explore: { fr: "Explorer les services", en: "Explore the services", to: "/partenaires#explorer" },
+  join: { fr: "Rejoindre le réseau", en: "Join the network", to: "/partenaires#rejoindre" },
   signin: { fr: "Se connecter", en: "Sign in", to: "/connexion" },
   register: { fr: "Créer un compte", en: "Create an account", to: "/creer-un-compte" },
   forgot: { fr: "Mot de passe oublié", en: "Forgot password", to: "/mot-de-passe-oublie" },

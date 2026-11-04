@@ -7,6 +7,7 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useRegion } from "../../context/RegionContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
+import PhoneField from "../../components/money/PhoneField.jsx";
 import RatesCard from "../../components/money/RatesCard.jsx";
 import { COUNTRY, FLAG, Field, SimulationBanner, StatusPill, input, msgOf, nf, useCorridors, useQuote } from "../../components/money/parts.jsx";
 
@@ -90,13 +91,13 @@ function SendForm({ cor, onDone }) {
       <fieldset className="space-y-4"><legend className="font-display text-lg text-ink mb-1">Qui reçoit ? ({COUNTRY[to].fr})</legend>
         <Field label="Nom complet"><input required className={input} value={f.name} onChange={set("name")} autoComplete="off" /></Field>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Numéro mobile money" hint="Format international, ex. +243 81 234 5678"><input required type="tel" className={input} value={f.phone} onChange={set("phone")} /></Field>
+          <Field label="Numéro mobile money" hint={`Indicatif ${COUNTRY[to].fr} ajouté automatiquement`}><PhoneField country={to} value={f.phone} onChange={(v) => setF((p) => ({ ...p, phone: v }))} /></Field>
           <Field label="Opérateur"><OperatorSelect list={ops[to]} value={benOp} onChange={(v) => setF((p) => ({ ...p, benOp: v }))} /></Field>
         </div>
       </fieldset>
       <fieldset className="space-y-4"><legend className="font-display text-lg text-ink mb-1">Vous payez avec ({COUNTRY[from].fr})</legend>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Votre numéro mobile money"><input required type="tel" className={input} value={f.payPhone} onChange={set("payPhone")} /></Field>
+          <Field label="Votre numéro mobile money"><PhoneField country={from} value={f.payPhone} onChange={(v) => setF((p) => ({ ...p, payPhone: v }))} /></Field>
           <Field label="Opérateur"><OperatorSelect list={ops[from]} value={payOp} onChange={(v) => setF((p) => ({ ...p, payOp: v }))} /></Field>
         </div>
         <Field label="Message (facultatif)"><input maxLength={200} className={input} value={f.note} onChange={set("note")} /></Field>
@@ -153,7 +154,7 @@ function RequestForm({ cor }) {
       <Field label={`Montant que je veux recevoir (${cor?.currencies?.[mine] || ""})`}><input required type="number" min="0" step="0.01" inputMode="decimal" className={`${input} text-2xl font-display py-4`} value={f.amount} onChange={set("amount")} placeholder="0" /></Field>
       {q && <p className="rounded-xl bg-latte-soft px-4 py-3 text-sm text-coffee-dark">Votre proche paiera environ <strong>{nf(q.total_paid, q.send_currency)}</strong> (frais inclus) pour que vous receviez exactement {nf(q.receive_amount, q.receive_currency)}.</p>}
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label="Votre numéro de réception"><input required type="tel" className={input} value={f.phone} onChange={set("phone")} /></Field>
+        <Field label="Votre numéro de réception"><PhoneField country={mine} value={f.phone} onChange={(v) => setF((p) => ({ ...p, phone: v }))} /></Field>
         <Field label="Opérateur"><OperatorSelect list={ops[mine]} value={op} onChange={(v) => setF((p) => ({ ...p, op: v }))} /></Field>
       </div>
       <Field label="Nom de la personne sollicitée"><input required className={input} value={f.payer} onChange={set("payer")} /></Field>

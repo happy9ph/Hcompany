@@ -30,7 +30,7 @@ export default function PartnerDetail() {
   const previewContent = meta ? getPartnerContent(t, meta) : null;
   usePageMeta(meta ? { title: meta.name, description: previewContent?.text } : null);
 
-  if (!meta) return <Navigate to="/#partenaires" replace />;
+  if (!meta) return <Navigate to="/partenaires#partenaires" replace />;
 
   const content = previewContent;
   const others = PARTNER_META.filter((p) => p.slug !== slug).slice(0, 3);
@@ -43,7 +43,7 @@ export default function PartnerDetail() {
       <DetailHero
         image={`https://loremflickr.com/1600/1000/${encodeURIComponent(meta.heroImage)}`}
         overlay={`linear-gradient(0deg, ${gradientHex}f0 5%, ${gradientHex}90 45%, rgba(30,26,23,0.2) 100%)`}
-        backTo="/#partenaires"
+        backTo="/partenaires#partenaires"
         backLabel={t("partners.heading")}
         title={meta.name}
       >
@@ -135,7 +135,7 @@ export default function PartnerDetail() {
               </button>
             )}
             <Link
-              to="/#rejoindre"
+              to="/partenaires#rejoindre"
               className={`w-full flex items-center justify-center gap-2 rounded-full text-sm font-medium py-4 transition-all ${
                 CONTACTABLE_SLUGS.includes(meta.slug)
                   ? "border border-line text-ink hover:bg-line/50"

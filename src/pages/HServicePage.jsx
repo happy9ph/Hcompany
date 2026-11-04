@@ -89,7 +89,7 @@ export default function HServicePage() {
   const page = key ? getServicePage(key, lang) : null;
   usePageMeta(page ? { title: page.name, description: page.tagline } : null);
 
-  if (!page) return <Navigate to="/#explorer" replace />;
+  if (!page) return <Navigate to="/partenaires#explorer" replace />;
 
   const theme = H_SERVICE_THEME[key];
   const resolved = resolveServices(catalogState).list.find((s) => s.key === key);
@@ -116,7 +116,7 @@ export default function HServicePage() {
             <div className="hidden md:block absolute inset-0" style={{ background: `linear-gradient(90deg, ${theme.from} 0%, transparent 45%)` }} />
           </div>
           <div className="relative max-w-content mx-auto px-6 py-14 md:py-24 min-h-[520px] flex flex-col justify-center">
-            <BackLink to="/#explorer" className="inline-flex items-center gap-1.5 text-sm text-cream-fixed/70 hover:text-cream-fixed transition-colors mb-8 w-fit">
+            <BackLink to="/partenaires#explorer" className="inline-flex items-center gap-1.5 text-sm text-cream-fixed/70 hover:text-cream-fixed transition-colors mb-8 w-fit">
               <ArrowLeft size={14} />
               {ui.backToServices}
             </BackLink>

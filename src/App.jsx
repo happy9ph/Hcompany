@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { useUser } from "./context/Usercontext.jsx";
+import { homeFor } from "./lib/home.js";
 import Chatbot from "./components/chatbot/Chatbot.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
 import { HeadManager } from "./components/ui/HeadManager.jsx";
@@ -112,6 +114,14 @@ function OldCourseRedirect() {
   return <Navigate to={`/formations/${id}`} replace />;
 }
 
+// « / » = la nouvelle app : chacun arrive dans son espace ; sans connexion, on va à la page de connexion.
+// L'ancien site (présentation, devenir partenaire) vit sur /partenaires.
+function RootGate() {
+  const { user, isAuthenticated, isLoading } = useUser();
+  if (isLoading) return <RouteFallback />;
+  return <Navigate to={isAuthenticated ? homeFor(user) : "/connexion"} replace />;
+}
+
 export default function App() {
   return (
     <HeadManager>
@@ -125,7 +135,8 @@ export default function App() {
       <Suspense fallback={<RouteFallback />}>
         <div id="main-content">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<RootGate />} />
+          <Route path="/partenaires" element={<Home />} />
           <Route path="/dashboard" element={<PartnerDashboard />} />
           <Route path="/app" element={<AppShell />}>
             <Route index element={<AppHome />} />

@@ -1,3 +1,4 @@
+import Logo from "../ui/Logo.jsx";
 import { Link, useLocation } from "react-router-dom";
 import { LayoutGrid, FileText, Activity, Tag, Boxes, Compass, Settings as SettingsIcon, LogOut } from "lucide-react";
 
@@ -20,7 +21,7 @@ export default function DashboardSidebar({ active, onSelect, user, onSignOut, it
   return (
     <aside className="hidden md:flex md:w-64 shrink-0 flex-col border-r border-line bg-surface h-screen sticky top-0">
       <div className="px-6 py-6 border-b border-line">
-        <Link to="/" className="font-display text-xl text-ink">H-Company</Link>
+        <Link to="/" className="flex items-center gap-2 font-display text-xl text-ink"><Logo size={26} />H-Company</Link>
         <p className="text-xs text-ink-soft mt-1">Espace partenaire</p>
       </div>
 
