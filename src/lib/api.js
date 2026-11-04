@@ -604,10 +604,11 @@ export const api = {
   money: {
     corridors: () => request("/api/v1/money/corridors"),
     quote: (params) => request(`/api/v1/money/quote${qs(params)}`),
+    compare: (params) => request(`/api/v1/money/quote/compare${qs(params)}`),
     send: (token, body) => request("/api/v1/money/transfers", { method: "POST", token, body }),
     mine: (token) => request("/api/v1/money/transfers", { token }),
     request: (token, body) => request("/api/v1/money/requests", { method: "POST", token, body }),
-    viewRequest: (token, code) => request(`/api/v1/money/requests/${encodeURIComponent(code)}`, { token }),
+    viewRequest: (token, code, payOp = "") => request(`/api/v1/money/requests/${encodeURIComponent(code)}${payOp ? `?pay_op=${encodeURIComponent(payOp)}` : ""}`, { token }),
     payRequest: (token, code, body) => request(`/api/v1/money/requests/${encodeURIComponent(code)}/pay`, { method: "POST", token, body }),
     declineRequest: (token, code) => request(`/api/v1/money/requests/${encodeURIComponent(code)}/decline`, { method: "POST", token }),
     agent: {
@@ -629,6 +630,8 @@ export const api = {
       review: (token, code, body) => request(`/api/v1/money/admin/transactions/${code}/review`, { method: "POST", token, body }),
       corridorRates: (token) => request("/api/v1/money/admin/corridor-rates", { token }),
       setCorridorRate: (token, body) => request("/api/v1/money/admin/corridor-rates", { method: "PUT", token, body }),
+      operators: (token) => request("/api/v1/money/admin/operators", { token }),
+      setOperator: (token, body) => request("/api/v1/money/admin/operators", { method: "PUT", token, body }),
       settings: (token) => request("/api/v1/money/admin/settings", { token }),
       saveSettings: (token, body) => request("/api/v1/money/admin/settings", { method: "PUT", token, body }),
     },

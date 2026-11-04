@@ -7,9 +7,10 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useRegion } from "../../context/RegionContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
+import OperatorPicker from "../../components/money/OperatorPicker.jsx";
 import PhoneField from "../../components/money/PhoneField.jsx";
 import RatesCard from "../../components/money/RatesCard.jsx";
-import { COUNTRY, FLAG, Field, SimulationBanner, StatusPill, input, msgOf, nf, useCorridors, useQuote } from "../../components/money/parts.jsx";
+import { COUNTRY, FLAG, Field, SimulationBanner, StatusPill, input, msgOf, nf, useCompare, useCorridors, useQuote } from "../../components/money/parts.jsx";
 
 const TABS = [{ k: "send", label: "Envoyer", Icon: Send }, { k: "request", label: "Demander", Icon: HandCoins }, { k: "history", label: "Historique", Icon: History }];
 
@@ -61,10 +62,13 @@ function SendForm({ cor, onDone }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [withFee, setWithFee] = useState(true);
-  const { q, err: qErr } = useQuote({ amount: f.amount, from, to, withFee });
   const ops = cor?.operators || {};
-  const benOp = f.benOp && ops[to]?.some((o) => o.key === f.benOp) ? f.benOp : ops[to]?.[0]?.key || "";
-  const payOp = f.payOp && ops[from]?.some((o) => o.key === f.payOp) ? f.payOp : ops[from]?.[0]?.key || "";
+  const pick = (list, role, cur) => { const l = (list || []).filter((o) => o[role]); return cur && l.some((o) => o.key === cur) ? cur : l.find((o) => role === "receive" ? o.cheapest_receive : false)?.key || l[0]?.key || ""; };
+  const benOp = pick(ops[to], "receive", f.benOp);
+  const payOp = pick(ops[from], "pay", f.payOp);
+  const { q, err: qErr } = useQuote({ amount: f.amount, from, to, withFee, payOp, benOp });
+  const cmp = useCompare({ amount: f.amount, from, to, withFee, payOp });
+  const hints = Object.fromEntries(Object.entries(cmp).map(([k, v]) => [k, { line: `${nf(v.receive_amount, v.receive_currency)}`, sub: `Frais ${nf(v.fee, v.send_currency)}` }]));
 
   async function submit(e) {
     e.preventDefault(); setBusy(true); setErr("");
@@ -92,14 +96,14 @@ function SendForm({ cor, onDone }) {
         <Field label="Nom complet"><input required className={input} value={f.name} onChange={set("name")} autoComplete="off" /></Field>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Numéro mobile money" hint={`Indicatif ${COUNTRY[to].fr} ajouté automatiquement`}><PhoneField country={to} value={f.phone} onChange={(v) => setF((p) => ({ ...p, phone: v }))} /></Field>
-          <Field label="Opérateur"><OperatorSelect list={ops[to]} value={benOp} onChange={(v) => setF((p) => ({ ...p, benOp: v }))} /></Field>
-        </div>
+          </div>
+        <Field label="Opérateur du bénéficiaire" hint="Montant reçu et frais selon l'opérateur choisi"><OperatorPicker ops={ops[to]} role="receive" value={benOp} onChange={(v) => setF((p) => ({ ...p, benOp: v }))} hints={hints} /></Field>
       </fieldset>
       <fieldset className="space-y-4"><legend className="font-display text-lg text-ink mb-1">Vous payez avec ({COUNTRY[from].fr})</legend>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Votre numéro mobile money"><PhoneField country={from} value={f.payPhone} onChange={(v) => setF((p) => ({ ...p, payPhone: v }))} /></Field>
-          <Field label="Opérateur"><OperatorSelect list={ops[from]} value={payOp} onChange={(v) => setF((p) => ({ ...p, payOp: v }))} /></Field>
-        </div>
+          </div>
+        <Field label="Payer avec"><OperatorPicker ops={ops[from]} role="pay" value={payOp} onChange={(v) => setF((p) => ({ ...p, payOp: v }))} /></Field>
         <Field label="Message (facultatif)"><input maxLength={200} className={input} value={f.note} onChange={set("note")} /></Field>
       </fieldset>
       {err && <p role="alert" className="text-sm text-red-600">{err}</p>}
@@ -118,9 +122,10 @@ function RequestForm({ cor }) {
   const payer = mine === "ZM" ? "CD" : "ZM";
   const [f, setF] = useState({ amount: "", phone: "", op: "", payer: "", note: "" });
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
-  const { q } = useQuote({ amount: f.amount, from: payer, to: mine, mode: "receive" });
   const ops = cor?.operators || {};
-  const op = f.op && ops[mine]?.some((o) => o.key === f.op) ? f.op : ops[mine]?.[0]?.key || "";
+  const rl = (ops[mine] || []).filter((o) => o.receive);
+  const op = f.op && rl.some((o) => o.key === f.op) ? f.op : rl.find((o) => o.cheapest_receive)?.key || rl[0]?.key || "";
+  const { q } = useQuote({ amount: f.amount, from: payer, to: mine, mode: "receive", benOp: op });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(null);
@@ -155,8 +160,8 @@ function RequestForm({ cor }) {
       {q && <p className="rounded-xl bg-latte-soft px-4 py-3 text-sm text-coffee-dark">Votre proche paiera environ <strong>{nf(q.total_paid, q.send_currency)}</strong> (frais inclus) pour que vous receviez exactement {nf(q.receive_amount, q.receive_currency)}.</p>}
       <div className="grid sm:grid-cols-2 gap-4">
         <Field label="Votre numéro de réception"><PhoneField country={mine} value={f.phone} onChange={(v) => setF((p) => ({ ...p, phone: v }))} /></Field>
-        <Field label="Opérateur"><OperatorSelect list={ops[mine]} value={op} onChange={(v) => setF((p) => ({ ...p, op: v }))} /></Field>
-      </div>
+        </div>
+      <Field label="Je reçois sur"><OperatorPicker ops={ops[mine]} role="receive" value={op} onChange={(v) => setF((p) => ({ ...p, op: v }))} /></Field>
       <Field label="Nom de la personne sollicitée"><input required className={input} value={f.payer} onChange={set("payer")} /></Field>
       <Field label="Motif (facultatif)"><input maxLength={200} className={input} value={f.note} onChange={set("note")} placeholder="Loyer, frais de scolarité…" /></Field>
       {err && <p role="alert" className="text-sm text-red-600">{err}</p>}

@@ -1,3 +1,5 @@
+import OperatorPicker from "../../components/money/OperatorPicker.jsx";
+import PhoneField from "../../components/money/PhoneField.jsx";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Loader2, ShieldCheck } from "lucide-react";
@@ -22,10 +24,16 @@ export default function MoneyRequestPay() {
   useEffect(() => { if (!isLoading && !isAuthenticated) navigate("/connexion", { state: { redirectTo: `/money/demande/${code}` } }); }, [isLoading, isAuthenticated, navigate, code]);
   useEffect(() => { if (isAuthenticated) withAuth((t) => api.money.viewRequest(t, code)).then(setR).catch((e) => setR({ error: msgOf(e) })); }, [isAuthenticated, withAuth, code]);
 
+  useEffect(() => {
+    if (!isAuthenticated || !op) return;
+    withAuth((t) => api.money.viewRequest(t, code, op)).then((x) => setR((prev) => (prev && !prev.error ? { ...prev, quote: x.quote } : prev))).catch(() => {});
+  }, [op, isAuthenticated, withAuth, code]);
+
   if (r === undefined) return <div className="min-h-screen bg-cream flex items-center justify-center"><Loader2 className="animate-spin text-ink-faint" /></div>;
   const q = r.quote;
   const ops = cor?.operators?.[r.from_country] || [];
-  const opKey = op || ops[0]?.key || "";
+  const payable = ops.filter((o) => o.pay);
+  const opKey = op && payable.some((o) => o.key === op) ? op : payable[0]?.key || "";
   async function pay(e) {
     e.preventDefault(); setBusy(true); setErr("");
     try { setR({ ...(await withAuth((t) => api.money.payRequest(t, code, { pay_phone: phone, pay_operator: opKey }))), quote: q, asker_name: r.asker_name }); } catch (x) { setErr(msgOf(x)); } finally { setBusy(false); }
@@ -50,8 +58,8 @@ export default function MoneyRequestPay() {
                   <p className="font-display text-3xl mt-1 tabular-nums" style={{ color: "#C89A3D" }}>{nf(q.total_paid, q.send_currency)}</p>
                   <p className="text-xs text-cream-fixed/55 mt-2">dont frais {nf(q.fee, q.send_currency)} · taux affiché avant paiement</p>
                 </div>
-                <Field label="Votre numéro mobile money"><input required type="tel" className={input} value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
-                <Field label="Opérateur"><select className={input} value={opKey} onChange={(e) => setOp(e.target.value)}>{ops.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}</select></Field>
+                <Field label="Votre numéro mobile money"><PhoneField country={r.from_country} value={phone} onChange={setPhone} /></Field>
+                <Field label="Payer avec"><OperatorPicker ops={ops} role="pay" value={opKey} onChange={setOp} /></Field>
                 {err && <p role="alert" className="text-sm text-red-600">{err}</p>}
                 <button disabled={busy} className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-ink text-cream font-medium py-4 hover:bg-coffee-dark disabled:opacity-50">{busy ? <Loader2 size={17} className="animate-spin" /> : <ShieldCheck size={17} />}Payer</button>
                 <button type="button" onClick={decline} className="w-full text-center text-xs text-ink-faint hover:text-ink">Refuser cette demande</button>

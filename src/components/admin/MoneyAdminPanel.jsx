@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { StatusPill, nf } from "../money/parts.jsx";
 
 const msgOf = (e) => e?.data?.detail || e?.message || "Une erreur est survenue.";
-const TABS = [["overview", "Aperçu"], ["tx", "Transactions"], ["rates", "Taux envoi / retrait"], ["fees", "Frais & plafonds"], ["agents", "Agents par pays"], ["audit", "Journal"]];
+const TABS = [["overview", "Aperçu"], ["tx", "Transactions"], ["rates", "Taux envoi / retrait"], ["fees", "Frais & plafonds"], ["ops", "Opérateurs (PawaPay)"], ["agents", "Agents par pays"], ["audit", "Journal"]];
 const cell = "px-3 py-2.5 text-sm whitespace-nowrap";
 
 function Stat({ label, value, sub }) {
@@ -13,7 +13,43 @@ function Stat({ label, value, sub }) {
 import CorridorRates from "../money/CorridorRates.jsx";
 import ReviewQueue from "../money/ReviewQueue.jsx";
 
-const FIELDS = [["fee_pct", "Commission (%)", "Pourcentage prélevé sur chaque envoi", "0.1"], ["min_fee_usd", "Frais minimum (USD)", "Plancher de la commission", "0.1"], ["min_usd", "Montant minimum (USD)", "Par opération", "0.5"], ["max_usd", "Montant maximum (USD)", "Par opération", "10"], ["daily_max_usd", "Plafond journalier (USD)", "Par personne et par jour", "50"]];
+const FIELDS = [["fee_pct", "Commission de base (%)", "Plancher : les frais montent automatiquement si le coût PawaPay l'exige", "0.1"], ["target_margin_pct", "Marge nette minimale (%)", "Gagnée APRÈS les frais opérateur + PawaPay", "0.1"], ["min_fee_usd", "Frais minimum (USD)", "Plancher de la commission", "0.1"], ["min_usd", "Montant minimum (USD)", "Par opération", "0.5"], ["max_usd", "Montant maximum (USD)", "Par opération", "10"], ["daily_max_usd", "Plafond journalier (USD)", "Par personne et par jour", "50"]];
+
+const tiersText = (t) => (t || []).map(([b, f]) => `${b == null ? "*" : b}:${f}`).join(", ");
+const parseTiers = (txt) => txt.split(",").map((x) => x.trim()).filter(Boolean).map((x) => { const [b, f] = x.split(":"); return [b.trim() === "*" ? null : Number(b), Number(f)]; });
+
+function OperatorRow({ r, onSave }) {
+  const [v, setV] = useState({ enabled: r.enabled, pct: r.pct, tiers: tiersText(r.tiers), confirmed: r.confirmed, note: r.note });
+  const [busy, setBusy] = useState(false), [msg, setMsg] = useState("");
+  const dirty = v.enabled !== r.enabled || Number(v.pct) !== r.pct || v.tiers !== tiersText(r.tiers) || v.confirmed !== r.confirmed;
+  const save = async () => { setBusy(true); setMsg(""); try { await onSave({ country: r.country, operator: r.operator, direction: r.direction, enabled: v.enabled, pct: Number(v.pct), tiers: parseTiers(v.tiers), confirmed: v.confirmed, note: v.note }); setMsg("✓"); } catch (e) { setMsg(msgOf(e)); } finally { setBusy(false); } };
+  return (
+    <tr className="border-b border-line last:border-0 align-top">
+      <td className={cell}>{r.country === "ZM" ? "🇿🇲" : "🇨🇩"} <strong>{r.label}</strong><span className="block text-[11px] text-ink-faint">{r.code}</span></td>
+      <td className={cell}>{r.direction === "in" ? "Encaisser" : "Verser"}</td>
+      <td className={cell}><input type="checkbox" checked={v.enabled} onChange={(e) => setV({ ...v, enabled: e.target.checked })} aria-label="Actif" /></td>
+      <td className={cell}><input type="number" step="0.01" min="0" value={v.pct} onChange={(e) => setV({ ...v, pct: e.target.value })} className="w-20 rounded-lg border border-line bg-cream px-2 py-1 tabular-nums" /> %</td>
+      <td className={cell}><input value={v.tiers} onChange={(e) => setV({ ...v, tiers: e.target.value })} placeholder="150.01:0.5, 500.01:1, *:5.5" className="w-56 rounded-lg border border-line bg-cream px-2 py-1 text-xs" /></td>
+      <td className={cell}><label className="inline-flex items-center gap-1.5 text-xs"><input type="checkbox" checked={v.confirmed} onChange={(e) => setV({ ...v, confirmed: e.target.checked })} />{v.confirmed ? "Confirmé" : <span className="text-[#8a6a1f]">À vérifier</span>}</label></td>
+      <td className={cell}><button disabled={!dirty || busy} onClick={save} className="rounded-full bg-ink text-cream text-xs px-3 py-1.5 disabled:opacity-30">Enregistrer</button> <span className="text-xs">{msg}</span></td>
+    </tr>
+  );
+}
+
+function OperatorFees({ load, save }) {
+  const [rows, setRows] = useState(null), [err, setErr] = useState("");
+  useEffect(() => { load().then(setRows).catch((e) => setErr(msgOf(e))); }, [load]);
+  if (!rows) return err ? <p className="text-sm text-[#9B2C2C]">{err}</p> : <Loader2 className="animate-spin text-ink-soft" />;
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-ink-soft max-w-3xl">Coût de l'agrégateur (frais opérateur + 1 % PawaPay) par opérateur et par sens. Le prix client est calculé pour couvrir ce coût <strong>plus</strong> la marge nette minimale : on ne perd rien, quel que soit l'opérateur choisi. Tranches : <code>borne:fixe</code> en devise locale (« * » = au-delà). Les lignes « À vérifier » sont des hypothèses : corrigez-les d'après votre contrat.</p>
+      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+        <table className="w-full text-left"><thead><tr className="text-xs text-ink-faint border-b border-line"><th className={cell}>Opérateur</th><th className={cell}>Sens</th><th className={cell}>Actif</th><th className={cell}>Taux</th><th className={cell}>Frais fixes par tranche</th><th className={cell}>Statut</th><th className={cell} /></tr></thead>
+          <tbody>{rows.map((r) => <OperatorRow key={`${r.country}${r.operator}${r.direction}`} r={r} onSave={save} />)}</tbody></table>
+      </div>
+    </div>
+  );
+}
 
 function FeesSettings({ load, save }) {
   const [v, setV] = useState(null), [err, setErr] = useState(""), [ok, setOk] = useState(false), [busy, setBusy] = useState(false);
@@ -86,7 +122,7 @@ export default function MoneyAdminPanel({ withAuth, api }) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Stat label="Opérations" value={ov.total} sub={`${ov.completed} terminées`} />
             <Stat label="Volume (équiv. USD)" value={ov.volume_usd.toLocaleString("fr-FR")} />
-            <Stat label="Frais perçus (USD)" value={ov.fees_usd.toLocaleString("fr-FR")} />
+            <Stat label="Frais perçus (USD)" value={ov.fees_usd.toLocaleString("fr-FR")} sub={`Coût PawaPay ${(ov.cost_usd || 0).toLocaleString("fr-FR")} · marge nette ${(ov.net_usd || 0).toLocaleString("fr-FR")}`} />
             <Stat label="Signalées" value={ov.flagged} />
           </div>
           <div className="rounded-2xl border border-line bg-surface overflow-x-auto">
@@ -115,6 +151,7 @@ export default function MoneyAdminPanel({ withAuth, api }) {
         </div>
       )}
 
+      {tab === "ops" && <OperatorFees load={() => withAuth((t) => M.operators(t))} save={(b) => withAuth((t) => M.setOperator(t, b))} />}
       {tab === "fees" && <FeesSettings load={() => withAuth((t) => M.settings(t))} save={(b) => withAuth((t) => M.saveSettings(t, b))} />}
       {tab === "rates" && <CorridorRates maxPct={50} load={() => withAuth((t) => M.corridorRates(t))} save={(b) => withAuth((t) => M.setCorridorRate(t, b))} />}
       {tab === "agents" && (

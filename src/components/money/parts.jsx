@@ -14,18 +14,32 @@ export function useCorridors() {
 }
 
 /** Devis en direct (anti-rebond 350 ms). mode=send : « j'envoie X » ; mode=receive : « il doit recevoir X ». */
-export function useQuote({ amount, from, to, mode = "send", withFee = true }) {
+export function useQuote({ amount, from, to, mode = "send", withFee = true, payOp = "", benOp = "" }) {
   const [q, setQ] = useState(null);
   const [err, setErr] = useState("");
   useEffect(() => {
     const n = Number(amount);
     if (!n || n <= 0) { setQ(null); setErr(""); return undefined; }
     const id = setTimeout(() => {
-      api.money.quote({ amount: n, from, to, mode, ...(mode === "send" ? { with_fee: withFee } : {}) }).then((r) => { setQ(r); setErr(""); }).catch((e) => { setQ(null); setErr(msgOf(e)); });
+      api.money.quote({ amount: n, from, to, mode, ...(mode === "send" ? { with_fee: withFee } : {}), ...(payOp ? { pay_op: payOp } : {}), ...(benOp ? { ben_op: benOp } : {}) }).then((r) => { setQ(r); setErr(""); }).catch((e) => { setQ(null); setErr(msgOf(e)); });
     }, 350);
     return () => clearTimeout(id);
-  }, [amount, from, to, mode, withFee]);
+  }, [amount, from, to, mode, withFee, payOp, benOp]);
   return { q, err };
+}
+
+/** Pour chaque opérateur de réception : frais et montant reçu (sélecteur d'opérateur). */
+export function useCompare({ amount, from, to, withFee = true, payOp = "" }) {
+  const [rows, setRows] = useState({});
+  useEffect(() => {
+    const n = Number(amount);
+    if (!n || n <= 0) { setRows({}); return undefined; }
+    const id = setTimeout(() => {
+      api.money.compare({ amount: n, from, to, with_fee: withFee, ...(payOp ? { pay_op: payOp } : {}) }).then((r) => setRows(Object.fromEntries(r.map((x) => [x.operator, x])))).catch(() => setRows({}));
+    }, 400);
+    return () => clearTimeout(id);
+  }, [amount, from, to, withFee, payOp]);
+  return rows;
 }
 
 export function Field({ label, hint, children }) {
