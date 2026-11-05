@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { translations } from "../i18n/translations.js";
+import { startAutoTranslate } from "../i18n/autoTranslate.js";
 import LanguageSwitchOverlay from "../components/ui/LanguageSwitchOverlay.jsx";
 
 const LanguageContext = createContext(null);
@@ -16,6 +17,7 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
+    if (lang === "en") return startAutoTranslate();
   }, [lang]);
 
   const setLang = useCallback((next) => {

@@ -61,7 +61,7 @@ function NavItems({ lang, rail, onNavigate }) {
 
 function SearchPalette({ fr, onClose, onGo }) {
   const [q, setQ] = useState("");
-  const all = [...GROUPS.flatMap((g) => g.items.map((i) => ({ to: i.to, l: fr ? i.fr : i.en, Icon: i.Icon }))), ...H_APPS.map((a) => ({ to: a.to, l: fr ? a.fr : a.en, app: a })), { to: "/settings", l: fr ? "Paramètres" : "Settings", Icon: Settings }, { to: "/partenaires#rejoindre", l: fr ? "Devenir partenaire" : "Become a partner", Icon: Handshake }];
+  const all = [...GROUPS.flatMap((g) => g.items.map((i) => ({ to: i.to, l: fr ? i.fr : i.en, Icon: i.Icon }))), ...H_APPS.map((a) => ({ to: a.to, l: fr ? a.fr : a.en, app: a })), { to: "/settings", l: fr ? "Paramètres" : "Settings", Icon: Settings }, { to: "/infos#rejoindre", l: fr ? "Devenir partenaire" : "Become a partner", Icon: Handshake }];
   const seen = new Set();
   const norm = (x) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const list = all.filter((i) => (seen.has(i.l) ? false : seen.add(i.l))).filter((i) => norm(i.l).includes(norm(q)));
@@ -177,7 +177,7 @@ export default function AppShell() {
           <button onClick={() => setPalette(true)} className="hidden md:flex flex-1 max-w-xl items-center gap-2.5 rounded-xl bg-latte-soft/60 hover:bg-latte-soft px-4 py-2.5 text-sm text-ink-soft text-left"><Search size={16} />{fr ? "Rechercher un service, une page…" : "Search a service, a page…"}</button>
           <div className="flex-1" />
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink-soft" title={fr ? "Modifiable en bas du site" : "Change it in the site footer"}>{region.info.flag} {region.currency}</span>
-          <Link to="/partenaires#rejoindre" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-[#2F6B3F] text-white text-sm font-medium px-4 py-2 hover:bg-[#265733] transition-colors"><Handshake size={15} />{fr ? "Devenir partenaire" : "Become a partner"}</Link>
+          <Link to="/infos#rejoindre" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-[#2F6B3F] text-white text-sm font-medium px-4 py-2 hover:bg-[#265733] transition-colors"><Handshake size={15} />{fr ? "Devenir partenaire" : "Become a partner"}</Link>
           <NotificationBell />
           <AccountMenu />
         </header>

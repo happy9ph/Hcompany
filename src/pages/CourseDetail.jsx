@@ -48,7 +48,7 @@ export default function CourseDetail() {
   if (status === "loading") {
     return <div className="min-h-screen bg-cream" />;
   }
-  if (!course) return <Navigate to="/partenaires#learning" replace />;
+  if (!course) return <Navigate to="/infos#learning" replace />;
 
   const tone = LEVEL_TONE[course.level] || "coffee";
   const hours = LEVEL_HOURS[course.level] || 8;
@@ -62,7 +62,7 @@ export default function CourseDetail() {
       <DetailHero
         image={course.photo}
         overlay={`linear-gradient(0deg, ${TONE_BG[tone]}f2 5%, ${TONE_BG[tone]}80 45%, rgba(30,26,23,0.25) 100%)`}
-        backTo="/partenaires#learning"
+        backTo="/infos#learning"
         backLabel={t("learning.heading")}
         icon={GraduationCap}
         badge={
@@ -125,7 +125,7 @@ export default function CourseDetail() {
               Certificat de complétion inclus, animé par un formateur H-learning.
             </p>
             <Link
-              to="/partenaires#rejoindre"
+              to="/infos#rejoindre"
               className="w-full flex items-center justify-center gap-2 rounded-full bg-ink text-cream text-sm font-medium py-4 hover:bg-coffee-dark hover:scale-[1.02] transition-all"
             >
               {t("learning.discover")}

@@ -31,7 +31,7 @@ export default function UstudyPage() {
       <section className="relative overflow-hidden bg-[#2E1D12] text-cream-fixed pt-28 pb-20 px-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,#4A3020,transparent_55%)]" aria-hidden="true" />
         <div className="relative max-w-content mx-auto">
-          <BackLink to="/partenaires#partenaires" className="inline-flex items-center gap-2 text-sm text-cream-fixed/70 hover:text-cream-fixed mb-8">
+          <BackLink to="/infos#partenaires" className="inline-flex items-center gap-2 text-sm text-cream-fixed/70 hover:text-cream-fixed mb-8">
             <ArrowLeft size={15} />
             {t("partners.heading")}
           </BackLink>

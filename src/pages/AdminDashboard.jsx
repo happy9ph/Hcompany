@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useUser } from "../context/Usercontext.jsx";
 import { api } from "../lib/api.js";
+import KnowledgePanel from "../components/admin/KnowledgePanel.jsx";
 import BigChart from "../components/ui/BigChart.jsx";
 import AdminSidebar from "../components/admin/AdminSidebar.jsx";
 import ApplicationsTable, { timeAgo, exportApplicationsCsv, isTyping } from "../components/admin/ApplicationsTable.jsx";
@@ -575,6 +576,15 @@ export default function AdminDashboard() {
                 <p className="text-sm text-ink-soft mt-1">Devises, taux et marges utilisés par H-Money et l'affichage des prix.</p>
               </div>
               <GeoAdminPanel withAuth={withAuth} api={api} />
+            </>
+          ) : view === "assistant" ? (
+            <>
+              <div className="mb-8">
+                <p className="text-xs text-ink-faint mb-2">Espace admin <span className="mx-1">/</span> Assistante</p>
+                <Title className="text-3xl">Assistante apprenante</Title>
+                <p className="text-sm text-ink-soft mt-1">Ce qu'elle a appris des agents et de vous.</p>
+              </div>
+              <KnowledgePanel withAuth={withAuth} api={api} />
             </>
           ) : view === "promos" ? (
             <>

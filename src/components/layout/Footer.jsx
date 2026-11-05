@@ -90,7 +90,7 @@ export default function Footer() {
             <Link to="/creer-un-compte" className="inline-flex items-center justify-center gap-2 rounded-full bg-latte text-ink-fixed text-sm font-semibold px-7 py-3.5 hover:brightness-110 transition">
               {c.ctaPrimary} <ArrowUpRight size={16} />
             </Link>
-            <Link to="/partenaires#rejoindre" className="inline-flex items-center justify-center rounded-full border border-cream-fixed/30 text-cream-fixed text-sm font-medium px-7 py-3.5 hover:bg-cream-fixed/10 transition">
+            <Link to="/infos#rejoindre" className="inline-flex items-center justify-center rounded-full border border-cream-fixed/30 text-cream-fixed text-sm font-medium px-7 py-3.5 hover:bg-cream-fixed/10 transition">
               {c.ctaSecondary}
             </Link>
           </div>
@@ -131,9 +131,9 @@ export default function Footer() {
               <li><FootLink to="/shopping">{c.svc.shop}</FootLink></li>
             </Column>
             <Column title={c.network}>
-              <li><FootLink to="/partenaires#about">{c.net.about}</FootLink></li>
-              <li><FootLink to="/partenaires#explorer">{c.net.partners}</FootLink></li>
-              <li><FootLink to="/partenaires#rejoindre">{c.net.join}</FootLink></li>
+              <li><FootLink to="/infos#about">{c.net.about}</FootLink></li>
+              <li><FootLink to="/infos#explorer">{c.net.partners}</FootLink></li>
+              <li><FootLink to="/infos#rejoindre">{c.net.join}</FootLink></li>
               <li><FootLink to="/interpretation">{c.net.interp}</FootLink></li>
             </Column>
             <Column title={c.account}>

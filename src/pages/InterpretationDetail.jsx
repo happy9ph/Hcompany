@@ -30,7 +30,7 @@ export default function InterpretationDetail() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-fixed via-ink-fixed/50 to-ink-fixed/20" />
         <div className="relative h-full max-w-content mx-auto px-6 flex flex-col justify-end pb-12">
-          <Link to="/partenaires#interpretation" className="inline-flex items-center gap-1.5 text-cream-fixed/70 text-sm hover:text-cream-fixed transition-colors mb-4 w-fit">
+          <Link to="/infos#interpretation" className="inline-flex items-center gap-1.5 text-cream-fixed/70 text-sm hover:text-cream-fixed transition-colors mb-4 w-fit">
             <ArrowLeft size={14} />
             {t("interpretation.eyebrow")}
           </Link>
@@ -76,7 +76,7 @@ export default function InterpretationDetail() {
               ))}
             </div>
             <Link
-              to="/partenaires#rejoindre"
+              to="/infos#rejoindre"
               className="w-full flex items-center justify-center gap-2 rounded-full bg-ink text-cream text-sm font-medium py-3.5 hover:bg-coffee-dark transition-colors"
             >
               {t("interpretation.cta")}

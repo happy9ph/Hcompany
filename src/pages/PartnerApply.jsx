@@ -49,7 +49,7 @@ export default function PartnerApply() {
     <div className="text-center">
       <p className="text-ink mb-2">{invite?.error || "Il manque le lien de demande."}</p>
       <p className="text-sm text-ink-soft mb-6">Écrivez-nous depuis la page d'accueil (« Parlez-nous de votre entreprise ») : nous vous envoyons un lien personnel.</p>
-      <Link to="/partenaires#contact" className="inline-block rounded-full bg-ink text-cream text-sm font-medium px-6 py-3">Nous contacter</Link>
+      <Link to="/infos#contact" className="inline-block rounded-full bg-ink text-cream text-sm font-medium px-6 py-3">Nous contacter</Link>
     </div>
   );
   else if (!isAuthenticated) body = (

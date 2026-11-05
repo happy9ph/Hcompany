@@ -73,7 +73,7 @@ export default function LearningHub() {
           <rect width="100%" height="100%" fill="url(#lh-dots)" />
         </svg>
         <div className="relative max-w-content mx-auto">
-          <BackLink to="/partenaires#partenaires" className="inline-flex items-center gap-2 text-sm text-cream-fixed/70 hover:text-cream-fixed mb-8">
+          <BackLink to="/infos#partenaires" className="inline-flex items-center gap-2 text-sm text-cream-fixed/70 hover:text-cream-fixed mb-8">
             <ArrowLeft size={15} />
             {ui.back}
           </BackLink>

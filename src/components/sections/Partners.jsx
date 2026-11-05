@@ -188,7 +188,7 @@ export default function Partners() {
               <h3 className="hc-join-title">{t("partners.yourCompany")}</h3>
               <p className="hc-join-text">{t("partners.joinText")}</p>
             </div>
-            <Link to="/partenaires#rejoindre" className="hc-join-link">
+            <Link to="/infos#rejoindre" className="hc-join-link">
               {t("partners.becomePartner")}
               <svg width="13" height="11" viewBox="0 0 13 11" aria-hidden="true">
                 <path d="M1 5.5H12M7.5 1L12 5.5L7.5 10" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />

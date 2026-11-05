@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowLeftRight, ArrowRight, Check, Copy, Loader2, MessageCircle, Send, HandCoins, History, ShieldCheck } from "lucide-react";
 import { api } from "../../lib/api.js";
+import { useLanguage } from "../../context/LanguageContext.jsx";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useRegion } from "../../context/RegionContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
@@ -53,6 +54,8 @@ function Result({ t, onAgain }) {
 }
 
 function SendForm({ cor, onDone }) {
+  const { lang } = useLanguage();
+  const fr = lang !== "en";
   const { country } = useRegion();
   const { withAuth } = useUser();
   const [from, setFrom] = useState(country === "CD" ? "CD" : "ZM");
@@ -68,7 +71,7 @@ function SendForm({ cor, onDone }) {
   const payOp = pick(ops[from], "pay", f.payOp);
   const { q, err: qErr } = useQuote({ amount: f.amount, from, to, withFee, payOp, benOp });
   const cmp = useCompare({ amount: f.amount, from, to, withFee, payOp });
-  const hints = Object.fromEntries(Object.entries(cmp).map(([k, v]) => [k, { line: `${nf(v.receive_amount, v.receive_currency)}`, sub: `Frais ${nf(v.fee, v.send_currency)}` }]));
+  const hints = Object.fromEntries(Object.entries(cmp).map(([k, v]) => [k, { line: `${nf(v.receive_amount, v.receive_currency)}`, sub: `${fr ? "Frais" : "Fee"} ${nf(v.fee, v.send_currency)}` }]));
 
   async function submit(e) {
     e.preventDefault(); setBusy(true); setErr("");

@@ -89,7 +89,7 @@ export default function ShoppingDetail() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-fixed via-ink-fixed/50 to-ink-fixed/20" />
         <div className="relative h-full max-w-content mx-auto px-6 flex flex-col justify-end pb-12">
-          <Link to="/partenaires#explorer" className="inline-flex items-center gap-1.5 text-cream-fixed/70 text-sm hover:text-cream-fixed transition-colors mb-4 w-fit">
+          <Link to="/infos#explorer" className="inline-flex items-center gap-1.5 text-cream-fixed/70 text-sm hover:text-cream-fixed transition-colors mb-4 w-fit">
             <ArrowLeft size={14} />
             {t("shopping.eyebrow")}
           </Link>

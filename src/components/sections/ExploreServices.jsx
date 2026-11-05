@@ -93,7 +93,7 @@ export default function ExploreServices() {
               <p className="font-display text-xl sm:text-2xl mb-1.5">{copy.partnerTitle}</p>
               <p className="text-sm text-cream-fixed/70 leading-relaxed">{copy.partnerBody}</p>
             </div>
-            <a href="/partenaires#rejoindre" className="shrink-0 text-center rounded-full bg-cream-fixed text-ink-fixed text-sm font-medium px-7 py-3.5 hover:opacity-90">{copy.partnerCta}</a>
+            <a href="/infos#rejoindre" className="shrink-0 text-center rounded-full bg-cream-fixed text-ink-fixed text-sm font-medium px-7 py-3.5 hover:opacity-90">{copy.partnerCta}</a>
           </div>
         </Reveal>
       </div>

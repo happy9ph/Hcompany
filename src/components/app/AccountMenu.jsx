@@ -70,7 +70,7 @@ export default function AccountMenu({ onPartner = true }) {
               <p className="text-xs text-ink-soft truncate mt-0.5">{user?.email}</p>
             </div>
             {onPartner && !role && (
-              <Link to="/partenaires#rejoindre" onClick={() => setOpen(false)} className="mx-1 my-1 flex items-center gap-3 rounded-xl bg-[#E3F0E5] text-[#1F4D2E] px-4 py-3 text-sm hover:bg-[#d7e9da]">
+              <Link to="/infos#rejoindre" onClick={() => setOpen(false)} className="mx-1 my-1 flex items-center gap-3 rounded-xl bg-[#E3F0E5] text-[#1F4D2E] px-4 py-3 text-sm hover:bg-[#d7e9da]">
                 <Handshake size={18} /><span><strong className="block font-semibold">{fr ? "Devenir partenaire" : "Become a partner"}</strong><span className="text-xs opacity-80">{fr ? "Proposez vos services sur H-Company" : "Offer your services on H-Company"}</span></span>
               </Link>
             )}

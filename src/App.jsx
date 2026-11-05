@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { useUser } from "./context/Usercontext.jsx";
 import { homeFor } from "./lib/home.js";
 import Chatbot from "./components/chatbot/Chatbot.jsx";
@@ -115,11 +115,17 @@ function OldCourseRedirect() {
 }
 
 // « / » = la nouvelle app : chacun arrive dans son espace ; sans connexion, on va à la page de connexion.
-// L'ancien site (présentation, devenir partenaire) vit sur /partenaires.
+// L'ancien site (présentation, devenir partenaire) vit sur /infos.
 function RootGate() {
   const { user, isAuthenticated, isLoading } = useUser();
   if (isLoading) return <RouteFallback />;
   return <Navigate to={isAuthenticated ? homeFor(user) : "/connexion"} replace />;
+}
+
+// Ancien lien /partenaires → /infos (en gardant l'ancre #…).
+function OldInfosRedirect() {
+  const { hash } = useLocation();
+  return <Navigate to={`/infos${hash}`} replace />;
 }
 
 export default function App() {
@@ -136,7 +142,8 @@ export default function App() {
         <div id="main-content">
         <Routes>
           <Route path="/" element={<RootGate />} />
-          <Route path="/partenaires" element={<Home />} />
+          <Route path="/infos" element={<Home />} />
+          <Route path="/partenaires" element={<OldInfosRedirect />} />
           <Route path="/dashboard" element={<PartnerDashboard />} />
           <Route path="/app" element={<AppShell />}>
             <Route index element={<AppHome />} />

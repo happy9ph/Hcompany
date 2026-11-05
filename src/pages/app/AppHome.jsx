@@ -139,7 +139,7 @@ export default function AppHome() {
 
       <section className="rounded-2xl bg-latte-soft p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
         <div><p className="font-display text-lg text-coffee-dark">{fr ? "Vous avez une entreprise ?" : "Do you run a business?"}</p><p className="text-sm text-coffee-dark/80">{fr ? "Proposez vos services à tout le réseau depuis un seul dashboard." : "Offer your services to the whole network from a single dashboard."}</p></div>
-        <Link to="/partenaires#rejoindre" className="rounded-full bg-ink text-cream text-sm font-medium px-5 py-3">{fr ? "Devenir partenaire" : "Become a partner"}</Link>
+        <Link to="/infos#rejoindre" className="rounded-full bg-ink text-cream text-sm font-medium px-5 py-3">{fr ? "Devenir partenaire" : "Become a partner"}</Link>
       </section>
     </div>
   );

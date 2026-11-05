@@ -601,6 +601,16 @@ export const api = {
   },
 
   // H-Money : envoyer ou demander de l'argent entre la Zambie et la RD Congo
+  assistant: {
+    ask: (question, lang) => request("/api/v1/assistant/ask", { method: "POST", body: { question, lang } }),
+    feedback: (entry_id, helpful) => request("/api/v1/assistant/feedback", { method: "POST", body: { entry_id, helpful } }),
+    admin: {
+      list: (token, source = "") => request(`/api/v1/assistant/admin/entries${source ? `?source=${source}` : ""}`, { token }),
+      create: (token, body) => request("/api/v1/assistant/admin/entries", { method: "POST", token, body }),
+      update: (token, id, body) => request(`/api/v1/assistant/admin/entries/${id}`, { method: "PATCH", token, body }),
+      remove: (token, id) => request(`/api/v1/assistant/admin/entries/${id}`, { method: "DELETE", token }),
+    },
+  },
   money: {
     corridors: () => request("/api/v1/money/corridors"),
     quote: (params) => request(`/api/v1/money/quote${qs(params)}`),

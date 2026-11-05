@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../ui/Logo.jsx";
-import { Megaphone, Users, ClipboardList, LogOut, ExternalLink, Search, Compass, Layers, GraduationCap, ShieldCheck, PlayCircle, ShoppingBag, BedDouble, Bus, UtensilsCrossed, Mountain, Crown, Wallet, Globe2, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Megaphone, Users, ClipboardList, LogOut, ExternalLink, Search, Compass, Layers, GraduationCap, ShieldCheck, PlayCircle, ShoppingBag, BedDouble, Bus, UtensilsCrossed, Mountain, Crown, Wallet, Globe2, ChevronsLeft, ChevronsRight, Bot } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "applications", label: "Candidatures", icon: Users },
   { key: "money", label: "H-Money", icon: Wallet },
   { key: "geo", label: "Pays & taux", icon: Globe2 },
   { key: "promos", label: "Publicités", icon: Megaphone },
+  { key: "assistant", label: "Assistante", icon: Bot },
   { key: "partnerHub", label: "Invitations & plans", icon: Crown },
   { key: "requests", label: "Toutes les demandes", icon: ClipboardList },
   { key: "serviceRequests", label: "Abonnements clients", icon: Compass },
