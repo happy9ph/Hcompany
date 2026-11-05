@@ -90,7 +90,7 @@ export function UserProvider({ children }) {
     }
     setToken(null);
     setUser(null);
-    navigate("/connexion", { replace: true }); // se déconnecter ramène toujours à la page de connexion
+    navigate("/app", { replace: true }); // la déconnexion ramène sur le new app (mode invité) ; la connexion n'est exigée que pour transactionner
   }
 
   // À utiliser autour d'un appel API protégé : si le token a expiré (401),

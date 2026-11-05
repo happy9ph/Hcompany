@@ -10,6 +10,7 @@ import { useToast } from "../../context/ToastContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import OperatorPicker from "../../components/money/OperatorPicker.jsx";
 import PhoneField from "../../components/money/PhoneField.jsx";
+import LoginGateModal from "../../components/ui/LoginGateModal.jsx";
 import RatesCard from "../../components/money/RatesCard.jsx";
 import { COUNTRY, FLAG, Field, SimulationBanner, StatusPill, input, msgOf, nf, useCompare, useCorridors, useQuote } from "../../components/money/parts.jsx";
 
@@ -202,7 +203,8 @@ export default function MoneyHome({ embedded = false }) {
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState(null);
   const load = useCallback(() => withAuth((t) => api.money.mine(t)).then(setHistory).catch(() => setHistory([])), [withAuth]);
-  useEffect(() => { if (!isLoading && !isAuthenticated) navigate("/connexion", { state: { redirectTo: embedded ? "/app/money" : "/money" } }); }, [isLoading, isAuthenticated, navigate]);
+  const [gate, setGate] = useState(false);
+  const blockGuest = (e) => { if (!isAuthenticated && !isLoading) { e.preventDefault(); e.stopPropagation(); setGate(true); } };
   useEffect(() => { if (isAuthenticated) load(); }, [isAuthenticated, load, result]);
   const body = useMemo(() => {
     if (tab === "history") return <HistoryList items={history} />;
@@ -228,8 +230,9 @@ export default function MoneyHome({ embedded = false }) {
             <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-colors ${tab === k ? "bg-ink text-cream shadow-sm" : "text-coffee-dark hover:text-ink"}`}><Icon size={15} />{label}</button>
           ))}
         </div>
-        <AnimatePresence mode="wait"><motion.div key={tab + (result ? "r" : "")} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>{body}</motion.div></AnimatePresence>
+        <div onSubmitCapture={blockGuest} onClickCapture={(e) => { if (!isAuthenticated && !isLoading && tab === "history") blockGuest(e); }}><AnimatePresence mode="wait"><motion.div key={tab + (result ? "r" : "")} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>{body}</motion.div></AnimatePresence></div>
       </div><RatesCard rates={cor?.rates} /></div></main>
+      {gate && <LoginGateModal onClose={() => setGate(false)} redirectTo={embedded ? "/app/money" : "/money"} />}
     </div>
   );
 }

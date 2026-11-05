@@ -1,6 +1,7 @@
 // Fonctions pures de H-Logement (dates, calendrier, statuts, cartes) — testées dans lodge.test.js.
 // Les dates circulent en texte ISO « AAAA-MM-JJ » (jour local), jamais en objets Date entre composants.
 
+export const RENT_TYPES = ["house", "apartment", "villa", "studio", "room"]; // location au mois
 export const STAY_TYPES = ["lodge", "hotel_room", "apartment", "house", "villa", "guesthouse", "studio", "room"];
 
 // Équipement → icône lucide (résolue côté composant).

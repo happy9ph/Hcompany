@@ -37,6 +37,8 @@ const Checkout = lazy(() => import("./pages/learning/Checkout.jsx"));
 const MySubscription = lazy(() => import("./pages/learning/MySubscription.jsx"));
 const UstudyPage = lazy(() => import("./pages/learning/UstudyPage.jsx"));
 const PartnerDetail = lazy(() => import("./pages/PartnerDetail.jsx"));
+const Invoices = lazy(() => import("./pages/money/Invoices.jsx"));
+const InvoicePay = lazy(() => import("./pages/money/InvoicePay.jsx"));
 const SignIn = lazy(() => import("./pages/auth/SignIn.jsx"));
 const Register = lazy(() => import("./pages/auth/Register.jsx"));
 const VerifyOtp = lazy(() => import("./pages/auth/VerifyOtp.jsx"));
@@ -119,7 +121,7 @@ function OldCourseRedirect() {
 function RootGate() {
   const { user, isAuthenticated, isLoading } = useUser();
   if (isLoading) return <RouteFallback />;
-  return <Navigate to={isAuthenticated ? homeFor(user) : "/connexion"} replace />;
+  return <Navigate to={isAuthenticated ? homeFor(user) : "/app"} replace />;
 }
 
 // Ancien lien /partenaires → /infos (en gardant l'ancre #…).
@@ -148,10 +150,12 @@ export default function App() {
           <Route path="/app" element={<AppShell />}>
             <Route index element={<AppHome />} />
             <Route path="money" element={<MoneyHome embedded />} />
+            <Route path="factures" element={<Invoices />} />
             <Route path="transport" element={<TransportMap />} />
             <Route path="colis" element={<ColisMap />} />
             <Route path="logement" element={<LogementMap />} />
           </Route>
+          <Route path="/money/facture/:code" element={<InvoicePay />} />
           <Route path="/money" element={<MoneyHome />} />
           <Route path="/money/demande/:code" element={<MoneyRequestPay />} />
           <Route path="/money/agent" element={<MoneyAgent />} />

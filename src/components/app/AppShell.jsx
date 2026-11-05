@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { BedDouble, Bus, ChevronsLeft, ChevronsRight, GraduationCap, Handshake, Home, Languages, LayoutGrid, LogOut, Menu, Mountain, Package, PanelLeft, Plus, Search, Settings, ShoppingBag, UtensilsCrossed, Wallet, X } from "lucide-react";
+import { BedDouble, Bus, ChevronsLeft, ChevronsRight, FileText, GraduationCap, Handshake, Home, Languages, LayoutGrid, LogOut, Menu, Mountain, Package, PanelLeft, Plus, Search, Settings, ShoppingBag, UtensilsCrossed, Wallet, X } from "lucide-react";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useRegion } from "../../context/RegionContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
@@ -18,6 +18,7 @@ const GROUPS = [
   { fr: "Principal", en: "Main", items: [
     { to: "/app", end: true, Icon: Home, fr: "Accueil", en: "Home" },
     { to: "/app/money", Icon: Wallet, fr: "H-Money", en: "H-Money" },
+    { to: "/app/factures", Icon: FileText, fr: "Factures", en: "Invoices" },
     { to: "/app/transport", Icon: Bus, fr: "Bus sur la carte", en: "Buses on the map" },
     { to: "/app/colis", Icon: Package, fr: "Colis sur la carte", en: "Parcels on the map" },
     { to: "/app/logement", Icon: BedDouble, fr: "Logements sur la carte", en: "Stays on the map" },
@@ -97,7 +98,6 @@ export default function AppShell() {
 
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch { /* ignoré */ } }, [prefs]);
   useEffect(() => { setDrawer(false); }, [location.pathname]);
-  useEffect(() => { if (!isLoading && !isAuthenticated) navigate("/connexion", { replace: true, state: { redirectTo: location.pathname } }); }, [isLoading, isAuthenticated, navigate, location.pathname]);
   // Partenaires, agents et admins ont leur propre espace.
   useEffect(() => { if (user && homeFor(user) !== "/app") navigate(homeFor(user), { replace: true }); }, [user, navigate]);
   useEffect(() => { if (!drawer) return; const k = (e) => e.key === "Escape" && setDrawer(false); window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, [drawer]);
@@ -136,7 +136,7 @@ export default function AppShell() {
             {newMenu && (<>
               <button aria-label="Fermer" className="fixed inset-0 z-40 cursor-default" onClick={() => setNewMenu(false)} />
               <div role="menu" className="absolute z-50 left-0 top-full mt-2 w-64 rounded-2xl border border-line bg-surface shadow-xl p-1.5">
-                {[["/app/money", { tab: "send" }, Wallet, fr ? "Envoyer de l'argent" : "Send money"], ["/app/transport", null, Bus, fr ? "Réserver un bus" : "Book a bus"], ["/app/colis", null, Package, fr ? "Envoyer un colis" : "Send a parcel"], ["/app/logement", null, BedDouble, fr ? "Trouver un logement" : "Find a stay"]].map(([to, st, Ic, l]) => (
+                {[["/app/money", { tab: "send" }, Wallet, fr ? "Envoyer de l'argent" : "Send money"], ["/app/factures", null, FileText, fr ? "Créer une facture" : "Create an invoice"], ["/app/transport", null, Bus, fr ? "Réserver un bus" : "Book a bus"], ["/app/colis", null, Package, fr ? "Envoyer un colis" : "Send a parcel"], ["/app/logement", null, BedDouble, fr ? "Trouver un logement" : "Find a stay"]].map(([to, st, Ic, l]) => (
                   <Link key={l} to={to} state={st} role="menuitem" onClick={() => setNewMenu(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-latte-soft"><Ic size={16} className="text-coffee" />{l}</Link>
                 ))}
               </div></>)}
@@ -147,7 +147,7 @@ export default function AppShell() {
           <button onClick={() => setInteg(true)} title={fr ? "Intégrations" : "Integrations"} className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><LayoutGrid size={18} />{!prefs.rail && (fr ? "Intégrations" : "Integrations")}</button>
           {prefs.rail && <button onClick={() => set({ rail: false })} aria-label={fr ? "Agrandir la barre latérale" : "Expand sidebar"} className="w-full flex justify-center rounded-xl py-2.5 text-ink-soft hover:bg-latte-soft"><ChevronsRight size={18} /></button>}
           <Link to="/settings" title={fr ? "Paramètres" : "Settings"} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><Settings size={18} />{!prefs.rail && (fr ? "Paramètres" : "Settings")}</Link>
-          <button onClick={() => signOut()} title={fr ? "Se déconnecter" : "Sign out"} className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><LogOut size={18} />{!prefs.rail && (fr ? "Se déconnecter" : "Sign out")}</button>
+          {isAuthenticated && <button onClick={() => signOut()} title={fr ? "Se déconnecter" : "Sign out"} className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><LogOut size={18} />{!prefs.rail && (fr ? "Se déconnecter" : "Sign out")}</button>}
         </div>
         {/* Poignée d'étirement */}
         <div role="separator" aria-orientation="vertical" aria-label={fr ? "Redimensionner la barre latérale" : "Resize sidebar"} aria-valuenow={w} aria-valuemin={RAIL} aria-valuemax={MAX} tabIndex={0}
@@ -162,7 +162,7 @@ export default function AppShell() {
           <div role="dialog" aria-modal="true" className="absolute inset-y-0 left-0 w-[82%] max-w-xs bg-surface text-ink flex flex-col">
             <div className="h-16 px-4 flex items-center justify-between border-b border-line"><span className="flex items-center gap-2.5"><Logo size={28} /><span className="font-display text-lg">H-Company</span></span><button onClick={() => setDrawer(false)} aria-label="Fermer" className="w-9 h-9 rounded-lg hover:bg-latte-soft flex items-center justify-center"><X size={18} /></button></div>
             <nav className="flex-1 overflow-y-auto px-3 py-5"><NavItems lang={lang} rail={false} onNavigate={() => setDrawer(false)} /></nav>
-            <div className="p-3 border-t border-line"><button onClick={() => signOut()} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft"><LogOut size={18} />{fr ? "Se déconnecter" : "Sign out"}</button></div>
+            {isAuthenticated && <div className="p-3 border-t border-line"><button onClick={() => signOut()} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft"><LogOut size={18} />{fr ? "Se déconnecter" : "Sign out"}</button></div>}
           </div>
         </div>
       )}
@@ -178,8 +178,10 @@ export default function AppShell() {
           <div className="flex-1" />
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink-soft" title={fr ? "Modifiable en bas du site" : "Change it in the site footer"}>{region.info.flag} {region.currency}</span>
           <Link to="/infos#rejoindre" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-[#2F6B3F] text-white text-sm font-medium px-4 py-2 hover:bg-[#265733] transition-colors"><Handshake size={15} />{fr ? "Devenir partenaire" : "Become a partner"}</Link>
-          <NotificationBell />
-          <AccountMenu />
+          {isAuthenticated ? (<><NotificationBell /><AccountMenu /></>) : (<>
+            <Link to="/connexion" state={{ redirectTo: location.pathname }} className="inline-flex items-center rounded-full border border-line text-sm font-medium px-4 py-2 hover:bg-latte-soft">{fr ? "Se connecter" : "Sign in"}</Link>
+            <Link to="/connexion" state={{ redirectTo: location.pathname }} className="inline-flex items-center rounded-full bg-ink text-cream text-sm font-medium px-4 py-2 hover:bg-coffee-dark">{fr ? "Créer un compte" : "Create account"}</Link>
+          </>)}
         </header>
         <main id="app-main" className="flex-1 min-w-0 pb-24 md:pb-10"><Outlet context={{ first }} /></main>
       </div>

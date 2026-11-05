@@ -1,6 +1,9 @@
 // Dictionnaire FR → EN des textes fixes de l'interface (dashboards admin / partenaire / agent, H-Money, espace utilisateur).
 // Utilisé par autoTranslate.js quand la langue est l'anglais : un texte absent d'ici reste en français (voir window.__hcMissing en dev).
 export const EN = {
+  "Zambie": "Zambia", "RD Congo": "DR Congo", "Montant à envoyer": "Amount to send", "Qui reçoit ?": "Who receives?", "Saisissez un montant pour voir ce que recevra le bénéficiaire exactement.": "Enter an amount to see exactly what the beneficiary will receive.",
+  "Factures": "Invoices", "Créer une facture": "Create an invoice", "Se connecter": "Sign in", "Créer un compte": "Create an account", "Envoyer": "Send", "Demander": "Request", "Historique": "History",
+  "Ajouter les frais d'envoi à mon montant": "Add the transfer fee to my amount",
   "Abonné": "Subscribed", "Acceptée": "Accepted", "Accès rapide": "Quick access", "Activer / désactiver": "Enable / disable",
   "Activer un bouquet (espèces / présentiel)": "Activate a plan (cash / in person)", "Activité": "Activity", "Activité récente": "Recent activity",
   "Activités totales": "Total activities", "Activé": "Enabled", "Actualisation impossible, nouvel essai dans une minute.": "Couldn't refresh, retrying in a minute.",

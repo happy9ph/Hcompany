@@ -71,6 +71,25 @@ function BookingWidget({ p, sel, setSel, guests, setGuests, rooms, setRooms, quo
   const today = todayISO();
   const nights = nightsBetween(sel.start, sel.end);
   const dateField = "w-full bg-transparent text-sm text-ink focus:outline-none";
+  const rt = p.rent_terms;
+  if (rt) {
+    const fr = lang !== "en";
+    const row = (l, v, strong) => <div className={`flex justify-between ${strong ? "border-t border-line pt-3 items-baseline" : ""}`}><dt className={strong ? "font-medium text-ink" : "text-ink-soft"}>{l}</dt><dd className={strong ? "font-display text-2xl text-ink" : "text-ink"}>{v}</dd></div>;
+    return (
+      <div className="rounded-3xl border border-line bg-surface p-6 shadow-lg shadow-coffee/5">
+        <p className="mb-1"><span className="font-display text-3xl text-ink">{money(rt.monthly)}</span> <span className="text-ink-soft text-sm">{fr ? "/ mois" : "/ month"}</span></p>
+        {rt.lease_min_months > 0 && <p className="text-xs text-ink-faint mb-4">{fr ? `Bail minimum : ${rt.lease_min_months} mois` : `Minimum lease: ${rt.lease_min_months} months`}</p>}
+        <p className="text-sm font-medium text-ink mt-4 mb-3">{fr ? "À payer avant d'entrer" : "To pay before moving in"}</p>
+        <dl className="space-y-2.5 text-sm">
+          {rt.advance_months > 0 && row(fr ? `${rt.advance_months} mois d'avance` : `${rt.advance_months} months up front`, money(rt.advance_total))}
+          {rt.deposit_months > 0 && row(fr ? `Garantie (${rt.deposit_months} mois)` : `Security deposit (${rt.deposit_months} mo.)`, money(rt.deposit_total))}
+          {rt.commission_amount > 0 && row(fr ? `Commission H-Company (${rt.commission_pct}% d'un loyer)` : `H-Company commission (${rt.commission_pct}% of one rent)`, money(rt.commission_amount))}
+          {row(fr ? "Total à l'entrée" : "Total at move-in", money(rt.move_in_total), true)}
+        </dl>
+        <p className="mt-4 text-xs text-ink-faint">{fr ? "Mêmes montants pour le bailleur et le locataire. La demande de location en ligne arrive bientôt." : "Same figures for the landlord and the tenant. Online rental requests are coming soon."}</p>
+      </div>
+    );
+  }
   return (
     <div className="rounded-3xl border border-line bg-surface p-6 shadow-lg shadow-coffee/5">
       <p className="mb-5">
@@ -359,7 +378,7 @@ export default function PropertyPage() {
       <div className="lg:hidden mt-10">
         <BookingWidget p={p} sel={sel} setSel={setSel} guests={guests} setGuests={setGuests} rooms={rooms} setRooms={setRooms} quote={quote} quoteError={quoteError} quoting={quoting} onReserve={reserve} money={money} />
       </div>
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-cream/95 backdrop-blur border-t border-line px-4 py-3 flex items-center justify-between gap-3">
+      {!p.rent_terms && <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-cream/95 backdrop-blur border-t border-line px-4 py-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-ink"><span className="font-display text-xl">{money(quote ? quote.total : p.price_per_night)}</span> <span className="text-xs text-ink-soft">{quote ? ui.widget.nights(quote.nights) : ui.widget.perNight}</span></p>
         </div>
@@ -368,7 +387,7 @@ export default function PropertyPage() {
         ) : (
           <button onClick={() => document.getElementById("avail")?.scrollIntoView({ behavior: "smooth" })} className="rounded-full bg-ink text-cream text-sm font-medium px-7 py-3.5">{ui.widget.addDates}</button>
         )}
-      </div>
+      </div>}
       <div className="lg:hidden h-20" />
 
       {p.similar.length > 0 && (

@@ -12,13 +12,13 @@ import { useToast } from "../../context/ToastContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { api } from "../../lib/api.js";
 import { AMENITY_GROUPS } from "../../i18n/lodgeUi.js";
-import { STAY_TYPES } from "../../lib/lodge.js";
+import { RENT_TYPES, STAY_TYPES } from "../../lib/lodge.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
 const LocationPicker = lazy(() => import("../../components/app/LocationPicker.jsx"));
 const EMPTY = {
   title: "", summary: "", description: "", type: "lodge", country: "Zambie", city: "", area: "", address: "", latitude: "", longitude: "",
-  price_per_night: "", cleaning_fee: 0, weekly_discount: 0, monthly_discount: 0, max_guests: 2, bedrooms: 1, beds: 1, bathrooms: 1, units: 1,
+  price_per_night: "", rent_per_month: "", advance_months: 2, deposit_months: 1, lease_min_months: 12, cleaning_fee: 0, weekly_discount: 0, monthly_discount: 0, max_guests: 2, bedrooms: 1, beds: 1, bathrooms: 1, units: 1,
   min_nights: 1, max_nights: 90, check_in_from: "14:00", check_out_until: "11:00", amenities: [], house_rules: "", cancellation_policy: "flexible", instant_book: false, images: [],
 };
 
@@ -27,7 +27,7 @@ const num = (v) => (v === "" || v == null ? null : Number(v));
 function toForm(p) {
   return {
     ...EMPTY, title: p.title, summary: p.summary || "", description: p.description || "", type: p.type, country: p.country || "Zambie", city: p.city, area: p.area || "", address: p.address || "",
-    latitude: p.latitude ?? "", longitude: p.longitude ?? "", price_per_night: p.price_per_night, cleaning_fee: p.cleaning_fee, weekly_discount: p.weekly_discount, monthly_discount: p.monthly_discount,
+    latitude: p.latitude ?? "", longitude: p.longitude ?? "", price_per_night: p.price_per_night, rent_per_month: p.rent_terms?.monthly ?? "", advance_months: p.rent_terms?.advance_months ?? 2, deposit_months: p.rent_terms?.deposit_months ?? 1, lease_min_months: p.rent_terms?.lease_min_months ?? 12, cleaning_fee: p.cleaning_fee, weekly_discount: p.weekly_discount, monthly_discount: p.monthly_discount,
     max_guests: p.max_guests, bedrooms: p.bedrooms, beds: p.beds, bathrooms: p.bathrooms, units: p.units, min_nights: p.min_nights, max_nights: p.max_nights,
     check_in_from: p.check_in_from, check_out_until: p.check_out_until, amenities: p.amenity_keys || [], house_rules: p.house_rules || "", cancellation_policy: p.cancellation_policy,
     instant_book: !!p.instant_book, images: p.image_paths || [],
@@ -36,7 +36,7 @@ function toForm(p) {
 
 function payload(f) {
   return {
-    ...f, latitude: num(f.latitude), longitude: num(f.longitude), price_per_night: Number(f.price_per_night) || 0, cleaning_fee: Number(f.cleaning_fee) || 0,
+    ...f, latitude: num(f.latitude), longitude: num(f.longitude), price_per_night: RENT_TYPES.includes(f.type) ? 0 : Number(f.price_per_night) || 0, rent_per_month: RENT_TYPES.includes(f.type) ? Number(f.rent_per_month) || 0 : 0, advance_months: Number(f.advance_months) || 0, deposit_months: Number(f.deposit_months) || 0, lease_min_months: Number(f.lease_min_months) || 0, cleaning_fee: Number(f.cleaning_fee) || 0,
     weekly_discount: Number(f.weekly_discount) || 0, monthly_discount: Number(f.monthly_discount) || 0, max_guests: Number(f.max_guests), bedrooms: Number(f.bedrooms),
     beds: Number(f.beds), bathrooms: Number(f.bathrooms), units: Number(f.units), min_nights: Number(f.min_nights), max_nights: Number(f.max_nights),
   };
@@ -62,6 +62,7 @@ function Content() {
   const { token, withAuth } = useUser();
   const amen = useAmenities();
   const { lang } = useLanguage();
+  const fr = lang !== "en";
   const formRef = useRef(null);
   const labels = { title: t.title, summary: t.summary, description: t.description, city: t.city, area: t.area, address: t.address, country: t.country, latitude: t.latitude, longitude: t.longitude, price_per_night: t.price, cleaning_fee: t.cleaning, weekly_discount: t.weekly, monthly_discount: t.monthly, max_guests: t.maxGuests, bedrooms: t.bedrooms, beds: t.beds, bathrooms: t.bathrooms, units: t.units, min_nights: t.minNights, max_nights: t.maxNights, check_in_from: t.checkIn, check_out_until: t.checkOut, house_rules: t.rulesLabel };
   usePageMeta({ title: isNew ? t.newTitle : t.editTitle });
@@ -95,8 +96,8 @@ function Content() {
 
   const hasPhone = !!(host && (host.phone || host.whatsapp));
   const checks = useMemo(() => [
-    [t.ok.photos, f.images.length >= 3], [t.ok.description, f.description.trim().length >= 60], [t.ok.price, Number(f.price_per_night) > 0], [t.ok.phone, hasPhone],
-  ], [f.images.length, f.description, f.price_per_night, hasPhone, t.ok]);
+    [t.ok.photos, f.images.length >= 3], [t.ok.description, f.description.trim().length >= 60], [t.ok.price, (RENT_TYPES.includes(f.type) ? Number(f.rent_per_month) : Number(f.price_per_night)) > 0], [t.ok.phone, hasPhone],
+  ], [f.images.length, f.description, f.price_per_night, f.rent_per_month, f.type, hasPhone, t.ok]);
   const ready = checks.every(([, ok]) => ok);
 
   async function save(submit) {
@@ -197,6 +198,20 @@ function Content() {
           ))}
         </Section>
 
+        {RENT_TYPES.includes(f.type) ? (
+          <Section n={6} title={fr ? "Loyer et conditions d'entrée" : "Rent and move-in terms"}>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label={`${fr ? "Loyer par mois" : "Rent per month"} (ZMW)`} htmlFor="e-rent"><input id="e-rent" type="number" required min="1" step="any" className={inputCls} value={f.rent_per_month} onChange={set("rent_per_month")} /></Field>
+              <Field label={fr ? "Durée minimale du bail (mois)" : "Minimum lease (months)"} htmlFor="e-lease"><input id="e-lease" type="number" min="0" max="60" className={inputCls} value={f.lease_min_months} onChange={set("lease_min_months")} /></Field>
+              <Field label={fr ? "Mois à payer avant d'entrer" : "Months to pay before moving in"} hint={fr ? "Ex. 2 = deux loyers d'avance" : "E.g. 2 = two months up front"} htmlFor="e-adv"><input id="e-adv" type="number" min="0" max="12" className={inputCls} value={f.advance_months} onChange={set("advance_months")} /></Field>
+              <Field label={fr ? "Garantie / caution (en mois de loyer)" : "Security deposit (in months of rent)"} htmlFor="e-dep"><input id="e-dep" type="number" min="0" max="12" step="0.5" className={inputCls} value={f.deposit_months} onChange={set("deposit_months")} /></Field>
+            </div>
+            {Number(f.rent_per_month) > 0 && (() => {
+              const r = Number(f.rent_per_month), adv = r * (Number(f.advance_months) || 0), dep = r * (Number(f.deposit_months) || 0);
+              return <p className="rounded-2xl bg-latte-soft text-sm text-coffee-dark p-4">{fr ? "Le locataire paiera avant d'entrer" : "The tenant pays before moving in"} : <b>{adv.toLocaleString()} ZMW</b> {fr ? "d'avance" : "up front"} + <b>{dep.toLocaleString()} ZMW</b> {fr ? "de garantie" : "deposit"} + {fr ? "la commission H-Company (affichée sur l'annonce, visible par vous et par le locataire)." : "the H-Company commission (shown on the listing, visible to you and the tenant)."}</p>;
+            })()}
+          </Section>
+        ) : (
         <Section n={6} title={t.sections.pricing}>
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label={`${t.price} (ZMW)`} htmlFor="e-p"><input id="e-p" type="number" required min="1" step="any" className={inputCls} value={f.price_per_night} onChange={set("price_per_night")} /></Field>
@@ -209,6 +224,7 @@ function Content() {
             <Field label={t.checkOut} htmlFor="e-co"><input id="e-co" type="time" required className={inputCls} value={f.check_out_until} onChange={set("check_out_until")} /></Field>
           </div>
         </Section>
+        )}
 
         <Section n={7} title={t.sections.rules}>
           <label className={`flex items-start gap-3 rounded-2xl border p-4 cursor-pointer ${f.instant_book ? "border-coffee bg-latte-soft" : "border-line"}`}>
