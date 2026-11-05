@@ -9,6 +9,7 @@ import BackButton from "../ui/BackButton.jsx";
 import { homeFor } from "../../lib/home.js";
 import NotificationBell from "../layout/NotificationBell.jsx";
 import AccountMenu, { displayName } from "./AccountMenu.jsx";
+import LoginGateModal from "../ui/LoginGateModal.jsx";
 import IntegrationsModal from "./IntegrationsModal.jsx";
 import { AppLogo, H_APPS } from "./AppLogos.jsx";
 
@@ -93,6 +94,7 @@ export default function AppShell() {
   const [integ, setInteg] = useState(false);
   const [palette, setPalette] = useState(false);
   const [newMenu, setNewMenu] = useState(false);
+  const [gate, setGate] = useState(false);
   const [dragging, setDragging] = useState(false);
   const aside = useRef(null);
 
@@ -137,7 +139,7 @@ export default function AppShell() {
               <button aria-label="Fermer" className="fixed inset-0 z-40 cursor-default" onClick={() => setNewMenu(false)} />
               <div role="menu" className="absolute z-50 left-0 top-full mt-2 w-64 rounded-2xl border border-line bg-surface shadow-xl p-1.5">
                 {[["/app/money", { tab: "send" }, Wallet, fr ? "Envoyer de l'argent" : "Send money"], ["/app/factures", null, FileText, fr ? "Créer une facture" : "Create an invoice"], ["/app/transport", null, Bus, fr ? "Réserver un bus" : "Book a bus"], ["/app/colis", null, Package, fr ? "Envoyer un colis" : "Send a parcel"], ["/app/logement", null, BedDouble, fr ? "Trouver un logement" : "Find a stay"]].map(([to, st, Ic, l]) => (
-                  <Link key={l} to={to} state={st} role="menuitem" onClick={() => setNewMenu(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-latte-soft"><Ic size={16} className="text-coffee" />{l}</Link>
+                  <Link key={l} to={to} state={st} role="menuitem" onClick={(e) => { setNewMenu(false); if (!isAuthenticated) { e.preventDefault(); setGate(true); } }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-latte-soft"><Ic size={16} className="text-coffee" />{l}</Link>
                 ))}
               </div></>)}
           </div>
@@ -186,6 +188,7 @@ export default function AppShell() {
         <main id="app-main" className="flex-1 min-w-0 pb-24 md:pb-10"><Outlet context={{ first }} /></main>
       </div>
 
+      {gate && <LoginGateModal onClose={() => setGate(false)} redirectTo={location.pathname} />}
       <IntegrationsModal open={integ} onClose={() => setInteg(false)} fr={fr} />
       {palette && <SearchPalette fr={fr} onClose={() => setPalette(false)} onGo={(to) => { setPalette(false); navigate(to); }} />}
 

@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, BedDouble, Bus, GraduationCap, HandCoins, Languages, Mountain, Package, Send, ShoppingBag, TrendingUp, UtensilsCrossed, Wallet, Ticket } from "lucide-react";
+import { FileText, ArrowRight, BedDouble, Bus, GraduationCap, HandCoins, Languages, Mountain, Package, Send, ShoppingBag, TrendingUp, UtensilsCrossed, Wallet, Ticket } from "lucide-react";
 import { api } from "../../lib/api.js";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
+import LoginGateModal from "../../components/ui/LoginGateModal.jsx";
 import { StatusPill, nf } from "../../components/money/parts.jsx";
 
 const ACCESS = [
   { to: "/app/money", Icon: Wallet, fr: "H-Money", en: "H-Money" },
+  { to: "/app/factures", Icon: FileText, fr: "Facture", en: "Invoice" },
   { to: "/app/transport", Icon: Bus, fr: "Bus", en: "Bus" },
   { to: "/app/colis", Icon: Package, fr: "Colis", en: "Parcels" },
   { to: "/app/logement", Icon: BedDouble, fr: "Logement", en: "Stays" },
@@ -21,6 +23,7 @@ const ACCESS = [
 ];
 const ACTIONS = [
   { to: "/app/money", state: { tab: "send" }, Icon: Send, fr: "Envoyer de l'argent", en: "Send money", d: "ZM ⇄ RDC" },
+  { to: "/app/factures", Icon: FileText, fr: "Créer une facture", en: "Create an invoice", d: "Se faire payer" },
   { to: "/app/money", state: { tab: "request" }, Icon: HandCoins, fr: "Demander de l'argent", en: "Request money", d: "Par lien ou code" },
   { to: "/app/transport", Icon: Ticket, fr: "Réserver un bus", en: "Book a bus", d: "Choisir sur la carte" },
   { to: "/app/colis", Icon: Package, fr: "Envoyer un colis", en: "Send a parcel", d: "Suivi en direct" },
@@ -34,6 +37,7 @@ export default function AppHome() {
   const { isAuthenticated, withAuth } = useUser();
   const { lang } = useLanguage();
   const fr = lang !== "en";
+  const [gate, setGate] = useState(false);
   const [tx, setTx] = useState(null), [trips, setTrips] = useState(null), [cargo, setCargo] = useState(null);
 
   useEffect(() => {
@@ -128,7 +132,7 @@ export default function AppHome() {
           <h2 className="text-sm font-semibold mb-3">{fr ? "Actions rapides" : "Quick actions"}</h2>
           <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
             {ACTIONS.map(({ to, state, Icon, ...t }) => (
-              <Link key={t.fr} to={to} state={state} className="group rounded-2xl border border-line bg-surface p-4 flex items-center gap-3 hover:border-coffee/50 transition-colors">
+              <Link key={t.fr} to={to} state={state} onClick={(e) => { if (!isAuthenticated) { e.preventDefault(); setGate(true); } }} className="group rounded-2xl border border-line bg-surface p-4 flex items-center gap-3 hover:border-coffee/50 transition-colors">
                 <span className="w-10 h-10 shrink-0 rounded-xl bg-latte-soft text-coffee-dark flex items-center justify-center group-hover:bg-ink group-hover:text-[#C89A3D] transition-colors"><Icon size={18} /></span>
                 <span className="min-w-0"><span className="block text-sm font-medium truncate">{t[lang] || t.fr}</span><span className="block text-xs text-ink-faint truncate">{t.d}</span></span>
               </Link>
@@ -141,6 +145,7 @@ export default function AppHome() {
         <div><p className="font-display text-lg text-coffee-dark">{fr ? "Vous avez une entreprise ?" : "Do you run a business?"}</p><p className="text-sm text-coffee-dark/80">{fr ? "Proposez vos services à tout le réseau depuis un seul dashboard." : "Offer your services to the whole network from a single dashboard."}</p></div>
         <Link to="/infos#rejoindre" className="rounded-full bg-ink text-cream text-sm font-medium px-5 py-3">{fr ? "Devenir partenaire" : "Become a partner"}</Link>
       </section>
+      {gate && <LoginGateModal onClose={() => setGate(false)} redirectTo="/app" />}
     </div>
   );
 }
