@@ -1,30 +1,21 @@
+import { mem } from "../lib/memStore.js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cartAdd, cartCount, cartRemove, cartSetQty, cartSubtotal, sanitizeCart } from "../lib/shop.js";
 
-// Le panier vit sur l'appareil (localStorage, jamais bloquant) : il n'exige
+// Le panier vit sur l'appareil (en mémoire de l'onglet : rien n'est écrit dans le navigateur) : il n'exige
 // pas de compte pour parcourir et remplir. Le serveur recalcule prix et
 // stock à chaque devis, donc rien de ce qui est stocké ici n'est « cru ».
 const KEY = "hc_shop_cart_v1";
 const CartContext = createContext(null);
 
 function load() {
-  try {
-    return sanitizeCart(JSON.parse(localStorage.getItem(KEY) || "[]"));
-  } catch {
-    return [];
-  }
+  return sanitizeCart(mem.get(KEY, []));
 }
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(load);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(items));
-    } catch {
-      /* stockage refusé : le panier reste en mémoire */
-    }
-  }, [items]);
+  useEffect(() => { mem.set(KEY, items); }, [items]);
 
   // Synchronise plusieurs onglets ouverts en même temps.
   useEffect(() => {

@@ -25,22 +25,10 @@ const STORE_KEY = "hc_scroll_positions_v1";
 const MAX_ENTRIES = 60;
 const HEADER_OFFSET = 88; // hauteur approximative de la barre fixe en haut
 
-function loadStore() {
-  try {
-    return new Map(JSON.parse(sessionStorage.getItem(STORE_KEY) || "[]"));
-  } catch {
-    return new Map();
-  }
-}
-
-const positions = loadStore();
+const positions = new Map(); // en mémoire seulement
 
 function persist() {
-  try {
-    sessionStorage.setItem(STORE_KEY, JSON.stringify([...positions.entries()].slice(-MAX_ENTRIES)));
-  } catch {
-    // stockage indisponible (navigation privée...) — on garde la mémoire vive.
-  }
+  while (positions.size > MAX_ENTRIES) positions.delete(positions.keys().next().value);
 }
 
 /** Clé de l'entrée d'historique courante, telle que React Router la pose. */

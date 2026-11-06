@@ -67,7 +67,7 @@ function CreateForm({ onCreated, fr }) {
   );
 }
 
-export default function Invoices() {
+export default function Invoices({ inline = false }) {
   usePageMeta({ title: "Factures" });
   const { isAuthenticated, isLoading, withAuth } = useUser();
   const { lang } = useLanguage();
@@ -84,8 +84,8 @@ export default function Invoices() {
   const linkOf = (i) => `${window.location.origin}${i.link}`;
   const guard = (fn) => () => (isAuthenticated ? fn() : setGate(true));
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="font-display text-3xl sm:text-4xl">{fr ? "Factures" : "Invoices"}</h1>
+    <div className={inline ? "" : "max-w-3xl mx-auto px-4 sm:px-6 py-8"}>
+      {!inline && <h1 className="font-display text-3xl sm:text-4xl">{fr ? "Factures" : "Invoices"}</h1>}
       <p className="text-sm text-ink-soft mt-2 mb-6">{fr ? "Générez une facture, envoyez le lien à votre client et recevez le paiement en mobile money. Réglez aussi les factures qu'on vous envoie." : "Generate an invoice, send the link to your client and get paid by mobile money. Pay the invoices you receive too."}</p>
       <div role="tablist" className="grid grid-cols-3 rounded-2xl bg-latte-soft p-1 mb-7">
         {[["mine", fr ? "Émises" : "Issued"], ["pay", fr ? "À payer" : "To pay"], ["new", fr ? "Nouvelle" : "New"]].map(([k, l]) => (

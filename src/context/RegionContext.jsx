@@ -1,3 +1,4 @@
+import { cookie } from "../lib/memStore.js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api.js";
 import { useLanguage } from "./LanguageContext.jsx";
@@ -21,7 +22,7 @@ export const regionInfo = (code) => FALLBACK[code] || { name: { fr: code, en: co
 const TZ = { "Africa/Lusaka": "ZM", "Africa/Lubumbashi": "CD", "Africa/Kinshasa": "CD", "Africa/Johannesburg": "ZA", "Europe/Paris": "FR", "Europe/Brussels": "BE", "Europe/London": "GB", "America/New_York": "US" };
 
 function readStored() {
-  try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; }
+  try { return JSON.parse(cookie.get(KEY) || "null"); } catch { return null; }
 }
 
 export function RegionProvider({ children }) {
@@ -51,7 +52,7 @@ export function RegionProvider({ children }) {
 
   useEffect(() => { api.geo.rates().then((r) => setRates(r?.rates || null)).catch(() => {}); }, []);
 
-  const persist = (next) => { try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* ignoré */ } };
+  const persist = (next) => { cookie.set(KEY, JSON.stringify(next)); };
   const setCountry = useCallback((code) => {
     const cur = regionInfo(code).currency;
     setCountryState(code); setCurrencyState(cur); setManual(true); persist({ country: code, currency: cur, manual: true });

@@ -1,3 +1,4 @@
+import { mem } from "../lib/memStore.js";
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { LayoutGrid, FileText, Activity, Tag, Boxes, Compass, Blocks, Megaphone, QrCode as QrIcon } from "lucide-react";
@@ -72,7 +73,7 @@ export default function PartnerDashboard() {
   const [activeTab, setActiveTab] = useState("hub");
   const modules = useModules();
   const [hub, setHub] = useState(null);
-  const [splash, setSplash] = useState(() => { try { return !sessionStorage.getItem("hc_splash"); } catch { return false; } });
+  const [splash, setSplash] = useState(() => !mem.get("hc_splash"));
   const toast = useToast();
 
   const load = useCallback(async () => {
@@ -124,7 +125,7 @@ export default function PartnerDashboard() {
 
   useEffect(() => {
     if (!splash) return undefined;
-    const id = setTimeout(() => { setSplash(false); try { sessionStorage.setItem("hc_splash", "1"); } catch { /* ignoré */ } }, 1500);
+    const id = setTimeout(() => { setSplash(false); mem.set("hc_splash", true); }, 1500);
     return () => clearTimeout(id);
   }, [splash]);
 

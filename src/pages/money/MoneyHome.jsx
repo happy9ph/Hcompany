@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowLeftRight, ArrowRight, Check, Copy, Loader2, MessageCircle, Send, HandCoins, History, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, ArrowRight, Check, Copy, Loader2, MessageCircle, Send, HandCoins, History, ShieldCheck, FileText, Repeat2 } from "lucide-react";
 import { api } from "../../lib/api.js";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { useUser } from "../../context/Usercontext.jsx";
@@ -10,11 +10,13 @@ import { useToast } from "../../context/ToastContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import OperatorPicker from "../../components/money/OperatorPicker.jsx";
 import PhoneField from "../../components/money/PhoneField.jsx";
+import ChangeForm from "../../components/money/ChangeForm.jsx";
+import Invoices from "./Invoices.jsx";
 import LoginGateModal from "../../components/ui/LoginGateModal.jsx";
 import RatesCard from "../../components/money/RatesCard.jsx";
 import { COUNTRY, FLAG, Field, SimulationBanner, StatusPill, input, msgOf, nf, useCompare, useCorridors, useQuote } from "../../components/money/parts.jsx";
 
-const TABS = [{ k: "send", label: "Envoyer", Icon: Send }, { k: "request", label: "Demander", Icon: HandCoins }, { k: "history", label: "Historique", Icon: History }];
+const TABS = [{ k: "send", label: "Envoyer", Icon: Send }, { k: "request", label: "Demander", Icon: HandCoins }, { k: "invoice", label: "Facture", Icon: FileText }, { k: "change", label: "Change", Icon: Repeat2 }, { k: "history", label: "Historique", Icon: History }];
 
 function OperatorSelect({ list, value, onChange }) {
   return <select className={input} value={value} onChange={(e) => onChange(e.target.value)}>{(list || []).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}</select>;
@@ -129,7 +131,14 @@ function RequestForm({ cor }) {
   const ops = cor?.operators || {};
   const rl = (ops[mine] || []).filter((o) => o.receive);
   const op = f.op && rl.some((o) => o.key === f.op) ? f.op : rl.find((o) => o.cheapest_receive)?.key || rl[0]?.key || "";
-  const { q } = useQuote({ amount: f.amount, from: payer, to: mine, mode: "receive", benOp: op });
+  const [local, setLocal] = useState(""); // équivalent du montant en dollars dans la devise de réception (pour l'aperçu)
+  useEffect(() => {
+    const v = Number(f.amount);
+    if (!v || v <= 0) { setLocal(""); return undefined; }
+    const t = setTimeout(() => { api.money.change(v, "USD", cor?.currencies?.[mine] || "ZMW").then((r) => setLocal(String(r.mid_rate ? Math.round((v * r.mid_rate) * 100) / 100 : ""))).catch(() => setLocal("")); }, 250);
+    return () => clearTimeout(t);
+  }, [f.amount, mine, cor]);
+  const { q } = useQuote({ amount: local, from: payer, to: mine, mode: "receive", benOp: op });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(null);
@@ -137,7 +146,7 @@ function RequestForm({ cor }) {
 
   async function submit(e) {
     e.preventDefault(); setBusy(true); setErr("");
-    try { setDone(await withAuth((t) => api.money.request(t, { payer_country: payer, receiver_country: mine, amount: Number(f.amount), receive_phone: f.phone, receive_operator: op, payer_name: f.payer, note: f.note }))); }
+    try { setDone(await withAuth((t) => api.money.request(t, { payer_country: payer, receiver_country: mine, amount_usd: Number(f.amount), receive_phone: f.phone, receive_operator: op, payer_name: f.payer, note: f.note }))); }
     catch (x) { setErr(msgOf(x)); } finally { setBusy(false); }
   }
   if (done) return (
@@ -160,8 +169,8 @@ function RequestForm({ cor }) {
         <button type="button" onClick={() => setMine(payer)} aria-label="Inverser le sens" className="w-11 h-11 rounded-full bg-ink text-cream flex items-center justify-center hover:bg-coffee-dark transition-transform hover:rotate-180 duration-300"><ArrowLeftRight size={17} /></button>
         <div className="flex-1 rounded-2xl border border-line bg-surface p-4"><p className="text-[11px] uppercase tracking-wider text-ink-faint">Il paie depuis</p><p className="font-medium text-ink mt-0.5">{FLAG[payer]} {COUNTRY[payer].fr}</p></div>
       </div>
-      <Field label={`Montant que je veux recevoir (${cor?.currencies?.[mine] || ""})`}><input required type="number" min="0" step="0.01" inputMode="decimal" className={`${input} text-2xl font-display py-4`} value={f.amount} onChange={set("amount")} placeholder="0" /></Field>
-      {q && <p className="rounded-xl bg-latte-soft px-4 py-3 text-sm text-coffee-dark">Votre proche paiera environ <strong>{nf(q.total_paid, q.send_currency)}</strong> (frais inclus) pour que vous receviez exactement {nf(q.receive_amount, q.receive_currency)}.</p>}
+      <Field label="Montant que je veux recevoir (en dollars, USD)"><input required type="number" min="0" step="0.01" inputMode="decimal" className={`${input} text-2xl font-display py-4`} value={f.amount} onChange={set("amount")} placeholder="0" /></Field>
+      {q && <p className="rounded-xl bg-latte-soft px-4 py-3 text-sm text-coffee-dark">Votre proche paiera environ <strong>{nf(q.total_paid, q.send_currency)}</strong> (frais inclus) pour que vous receviez {nf(Number(f.amount), "USD")}, soit environ {nf(q.receive_amount, q.receive_currency)}.</p>}
       <div className="grid sm:grid-cols-2 gap-4">
         <Field label="Votre numéro de réception"><PhoneField country={mine} value={f.phone} onChange={(v) => setF((p) => ({ ...p, phone: v }))} /></Field>
         </div>
@@ -209,6 +218,8 @@ export default function MoneyHome({ embedded = false }) {
   const body = useMemo(() => {
     if (tab === "history") return <HistoryList items={history} />;
     if (tab === "request") return <RequestForm cor={cor} />;
+    if (tab === "invoice") return <Invoices inline />;
+    if (tab === "change") return <ChangeForm cor={cor} />;
     return result ? <Result t={result} onAgain={() => setResult(null)} /> : <SendForm cor={cor} onDone={setResult} />;
   }, [tab, history, result, cor]);
 
@@ -225,9 +236,9 @@ export default function MoneyHome({ embedded = false }) {
         <h1 className="font-display text-3xl sm:text-4xl text-ink">Zambie <ArrowRight className="inline -mt-1 text-coffee" size={26} /> RD Congo</h1>
         <p className="text-sm text-ink-soft mt-2 mb-6">Envoyez ou demandez de l'argent. Chacun paie et reçoit dans son pays, en mobile money, au taux affiché avant de payer.</p>
         <SimulationBanner show={cor?.simulated} />
-        <div role="tablist" className="mt-5 mb-7 grid grid-cols-3 rounded-2xl bg-latte-soft p-1">
+        <div role="tablist" className="mt-5 mb-7 grid grid-cols-5 rounded-2xl bg-latte-soft p-1">
           {TABS.map(({ k, label, Icon }) => (
-            <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-colors ${tab === k ? "bg-ink text-cream shadow-sm" : "text-coffee-dark hover:text-ink"}`}><Icon size={15} />{label}</button>
+            <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`inline-flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl py-2 sm:py-2.5 text-[11px] sm:text-sm font-medium transition-colors ${tab === k ? "bg-ink text-cream shadow-sm" : "text-coffee-dark hover:text-ink"}`}><Icon size={15} />{label}</button>
           ))}
         </div>
         <div onSubmitCapture={blockGuest} onClickCapture={(e) => { if (!isAuthenticated && !isLoading && tab === "history") blockGuest(e); }}><AnimatePresence mode="wait"><motion.div key={tab + (result ? "r" : "")} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>{body}</motion.div></AnimatePresence></div>

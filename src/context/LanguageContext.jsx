@@ -1,3 +1,4 @@
+import { cookie } from "../lib/memStore.js";
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { translations } from "../i18n/translations.js";
 import { startAutoTranslate } from "../i18n/autoTranslate.js";
@@ -6,7 +7,7 @@ import LanguageSwitchOverlay from "../components/ui/LanguageSwitchOverlay.jsx";
 const LanguageContext = createContext(null);
 
 function getInitialLang() {
-  const stored = typeof window !== "undefined" ? localStorage.getItem("hc_lang") : null;
+  const stored = cookie.get("hc_lang");
   if (stored === "fr" || stored === "en") return stored;
   const browserLang = typeof navigator !== "undefined" ? navigator.language : "fr";
   return browserLang.startsWith("en") ? "en" : "fr";
@@ -22,12 +23,7 @@ export function LanguageProvider({ children }) {
 
   const setLang = useCallback((next) => {
     setLangState(next);
-    try {
-      localStorage.setItem("hc_lang", next);
-    } catch {
-      // stockage indisponible (mode privé...) — pas bloquant, la langue
-      // reste active pour la session en cours.
-    }
+    cookie.set("hc_lang", next);
   }, []);
 
   // Utilisé par le bouton de bascule dans le footer : sauvegarde la langue
@@ -39,11 +35,7 @@ export function LanguageProvider({ children }) {
   const switchLanguage = useCallback((next) => {
     if (next === lang) return;
     setSwitching(true);
-    try {
-      localStorage.setItem("hc_lang", next);
-    } catch {
-      // ignoré — voir setLang ci-dessus
-    }
+    cookie.set("hc_lang", next);
     setTimeout(() => window.location.reload(), 450);
   }, [lang]);
 

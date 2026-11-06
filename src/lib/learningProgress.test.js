@@ -1,10 +1,11 @@
+import { mem } from "./memStore.js";
 import { beforeEach, describe, expect, it } from "vitest";
 import { countDone, getLocalProgress, mergeServerProgress, nextLesson, setLocalProgress } from "./learningProgress.js";
 import { formatDuration } from "../data/courses.js";
 import { answer } from "../i18n/chatbotEngine.js";
 
 describe("progression H-Learning", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => mem.clear());
 
   it("garde une leçon terminée terminée, même si on revoit le début", () => {
     setLocalProgress(1, { done: true, t: 0 });

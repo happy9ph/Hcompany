@@ -1,3 +1,4 @@
+import { mem } from "../lib/memStore.js";
 import { useEffect, useState } from "react";
 import { api } from "../lib/api.js";
 
@@ -39,16 +40,8 @@ export function usePlans() {
 /** Devise choisie, mémorisée sur l'appareil (jamais bloquant si le stockage est refusé). */
 const CURRENCY_KEY = "hc_learning_currency";
 export function loadCurrency(fallback = "ZMW") {
-  try {
-    return localStorage.getItem(CURRENCY_KEY) || fallback;
-  } catch {
-    return fallback;
-  }
+  return mem.get(CURRENCY_KEY, fallback);
 }
 export function saveCurrency(code) {
-  try {
-    localStorage.setItem(CURRENCY_KEY, code);
-  } catch {
-    /* stockage indisponible : on garde la valeur en mémoire seulement */
-  }
+  mem.set(CURRENCY_KEY, code);
 }

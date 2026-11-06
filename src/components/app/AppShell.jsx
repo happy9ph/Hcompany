@@ -1,3 +1,4 @@
+import { mem } from "../../lib/memStore.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { BedDouble, Bus, ChevronsLeft, ChevronsRight, FileText, GraduationCap, Handshake, Home, Languages, LayoutGrid, LogOut, Menu, Mountain, Package, PanelLeft, Plus, Search, Settings, ShoppingBag, UtensilsCrossed, Wallet, X } from "lucide-react";
@@ -35,7 +36,7 @@ const GROUPS = [
 const MOBILE_TABS = [GROUPS[0].items[0], GROUPS[0].items[1], GROUPS[0].items[2], GROUPS[0].items[4]];
 
 function loadPrefs() {
-  try { const v = JSON.parse(localStorage.getItem(KEY) || "{}"); return { width: Math.min(MAX, Math.max(MIN, Number(v.width) || DEF)), rail: !!v.rail, hidden: !!v.hidden }; } catch { return { width: DEF, rail: false, hidden: false }; }
+  try { const v = mem.get(KEY, {}); return { width: Math.min(MAX, Math.max(MIN, Number(v.width) || DEF)), rail: !!v.rail, hidden: !!v.hidden }; } catch { return { width: DEF, rail: false, hidden: false }; }
 }
 
 function NavItems({ lang, rail, onNavigate }) {
@@ -98,7 +99,7 @@ export default function AppShell() {
   const [dragging, setDragging] = useState(false);
   const aside = useRef(null);
 
-  useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch { /* ignoré */ } }, [prefs]);
+  useEffect(() => { mem.set(KEY, prefs); }, [prefs]);
   useEffect(() => { setDrawer(false); }, [location.pathname]);
   // Partenaires, agents et admins ont leur propre espace.
   useEffect(() => { if (user && homeFor(user) !== "/app") navigate(homeFor(user), { replace: true }); }, [user, navigate]);

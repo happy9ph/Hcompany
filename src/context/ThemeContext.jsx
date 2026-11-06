@@ -1,3 +1,4 @@
+import { cookie } from "../lib/memStore.js";
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 const ThemeContext = createContext(null);
@@ -13,13 +14,7 @@ function computeEffective(mode) {
 }
 
 export function ThemeProvider({ children }) {
-  const [mode, setModeState] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) || "system";
-    } catch {
-      return "system";
-    }
-  });
+  const [mode, setModeState] = useState(() => cookie.get(STORAGE_KEY) || "system");
   const [effective, setEffective] = useState(() => computeEffective(mode));
 
   // Applique la classe .dark sur <html> — c'est ce qui fait basculer
@@ -48,11 +43,7 @@ export function ThemeProvider({ children }) {
 
   const setMode = useCallback((next) => {
     setModeState(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // stockage indisponible — le thème reste actif pour la session en cours.
-    }
+    cookie.set(STORAGE_KEY, next);
   }, []);
 
   return (

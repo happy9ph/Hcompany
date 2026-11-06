@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api.js";
 
 // L'access_token vit uniquement en mémoire (state React), jamais en
-// localStorage : c'est le refresh_token (cookie httpOnly, non lisible en
+// localStorage ni sessionStorage : c'est le refresh_token (cookie httpOnly, non lisible en
 // JS) qui assure la persistance de session entre deux visites, via
 // /auth/refresh appelé au montage de l'app.
 const UserContext = createContext(null);

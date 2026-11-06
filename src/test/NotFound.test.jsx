@@ -17,7 +17,7 @@ describe("page 404", () => {
     // La langue par défaut suit celle du navigateur (comportement voulu) —
     // pour un test déterministe, on fixe explicitement le français plutôt
     // que de dépendre de la locale par défaut de l'environnement de test.
-    localStorage.setItem("hc_lang", "fr");
+    document.cookie = "hc_lang=fr; Path=/";
   });
 
   it("s'affiche sans planter et propose un retour à l'accueil", () => {

@@ -1,3 +1,4 @@
+import { mem } from "../../lib/memStore.js";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../ui/Logo.jsx";
@@ -34,8 +35,8 @@ const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigat
  */
 export default function AdminSidebar({ user, onSignOut, view, onViewChange, counts = {}, onOpenPalette }) {
   const displayName = user?.full_name || (user?.email || "").split("@")[0] || "Administrateur";
-  const [rail, setRail] = useState(() => { try { return localStorage.getItem("hc_admin_rail") === "1"; } catch { return false; } });
-  const toggle = () => setRail((r) => { const n = !r; try { localStorage.setItem("hc_admin_rail", n ? "1" : "0"); } catch { /* ignoré */ } return n; });
+  const [rail, setRail] = useState(() => mem.get("hc_admin_rail", false));
+  const toggle = () => setRail((r) => { const n = !r; mem.set("hc_admin_rail", n); return n; });
   const initial = displayName ? displayName[0].toUpperCase() : "A";
 
   return (

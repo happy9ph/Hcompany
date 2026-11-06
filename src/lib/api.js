@@ -1,10 +1,12 @@
+import { mem } from "./memStore.js";
 // Client API léger pour communiquer avec le backend FastAPI de H-Company.
 // L'URL de base se configure via la variable d'environnement VITE_API_URL
 // (voir .env.example). Aucune dépendance externe : fetch natif du navigateur.
 
 // Exporté pour construire des URL absolues vers des fichiers servis par le
 // backend (logos de services uploadés, etc.) — voir data/hServices.js.
-export const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// Vide ou « / » = même domaine que le site (API servie via le proxy Vercel, voir SECURITY.md).
+export const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000").replace(/\/+$/, "");
 
 // Les navigateurs modernes bloquent de plus en plus les cookies tiers dès
 // que le site et l'API vivent sur deux domaines différents (Vercel +
@@ -14,16 +16,18 @@ export const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 // (qui reste posé par le serveur, mais n'est plus la source fiable).
 const REFRESH_TOKEN_KEY = "hc_refresh_token";
 
+// Jamais écrit dans le navigateur (ni localStorage ni sessionStorage) : le jeton ne vit qu'en mémoire.
+// La persistance de session repose sur le cookie httpOnly posé par le serveur (voir SECURITY.md : proxy Vercel).
 function saveRefreshToken(token) {
-  if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  if (token) mem.set(REFRESH_TOKEN_KEY, token);
 }
 
 function getRefreshToken() {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+  return mem.get(REFRESH_TOKEN_KEY);
 }
 
 function clearRefreshToken() {
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  mem.del(REFRESH_TOKEN_KEY);
 }
 
 // Construit une query string en ignorant les valeurs vides.
@@ -62,18 +66,13 @@ class NetworkError extends Error {
 // Confirmation par mot de passe de l'admin (jeton de 10 min, gardé en mémoire d'onglet uniquement).
 const ADMIN_CONFIRM_KEY = "hc_admin_confirm";
 export function getAdminConfirm() {
-  try {
-    const raw = sessionStorage.getItem(ADMIN_CONFIRM_KEY);
-    if (!raw) return null;
-    const { token, exp } = JSON.parse(raw);
-    if (Date.now() > exp) { sessionStorage.removeItem(ADMIN_CONFIRM_KEY); return null; }
-    return { token, exp };
-  } catch { return null; }
+  const v = mem.get(ADMIN_CONFIRM_KEY);
+  if (!v) return null;
+  if (Date.now() > v.exp) { mem.del(ADMIN_CONFIRM_KEY); return null; }
+  return v;
 }
-export function setAdminConfirm(token, expiresInSec) {
-  try { sessionStorage.setItem(ADMIN_CONFIRM_KEY, JSON.stringify({ token, exp: Date.now() + expiresInSec * 1000 - 5000 })); } catch { /* ignoré */ }
-}
-export function clearAdminConfirm() { try { sessionStorage.removeItem(ADMIN_CONFIRM_KEY); } catch { /* ignoré */ } }
+export function setAdminConfirm(token, expiresInSec) { mem.set(ADMIN_CONFIRM_KEY, { token, exp: Date.now() + expiresInSec * 1000 - 5000 }); }
+export function clearAdminConfirm() { mem.del(ADMIN_CONFIRM_KEY); }
 
 async function request(path, { method = "GET", body, token, headers = {} } = {}) {
   const confirm = path.includes("/admin") ? getAdminConfirm() : null;
@@ -142,13 +141,9 @@ export const api = {
     // veille) avant que la personne n'ait fini de remplir le formulaire.
     // Sans effet de bord ; au plus un appel toutes les 4 minutes.
     warmup: () => {
-      try {
-        const last = Number(sessionStorage.getItem("hc_warm_at") || 0);
-        if (Date.now() - last < 4 * 60 * 1000) return Promise.resolve();
-        sessionStorage.setItem("hc_warm_at", String(Date.now()));
-      } catch {
-        // stockage indisponible : on réveille quand même
-      }
+      const last = Number(mem.get("hc_warm_at", 0));
+      if (Date.now() - last < 4 * 60 * 1000) return Promise.resolve();
+      mem.set("hc_warm_at", Date.now());
       return request("/api/v1/auth/warmup").catch(() => {});
     },
     // Renouvelle l'access_token à partir du jeton de rafraîchissement
@@ -620,6 +615,7 @@ export const api = {
     request: (token, body) => request("/api/v1/money/requests", { method: "POST", token, body }),
     viewRequest: (token, code, payOp = "") => request(`/api/v1/money/requests/${encodeURIComponent(code)}${payOp ? `?pay_op=${encodeURIComponent(payOp)}` : ""}`, { token }),
     payRequest: (token, code, body) => request(`/api/v1/money/requests/${encodeURIComponent(code)}/pay`, { method: "POST", token, body }),
+    change: (amount, from, to) => request(`/api/v1/money/change${qs({ amount, from, to })}`),
     invoices: {
       list: (token) => request("/api/v1/money/invoices", { token }),
       create: (token, body) => request("/api/v1/money/invoices", { method: "POST", token, body }),

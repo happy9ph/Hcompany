@@ -1,3 +1,4 @@
+import { mem } from "../lib/memStore.js";
 import { useEffect, useState, useRef } from "react";
 import NavBar from "../components/layout/NavBar.jsx";
 import Footer from "../components/layout/Footer.jsx";
@@ -28,13 +29,7 @@ export default function Home() {
   // tout premier chargement du site pour cette session — pas à chaque retour
   // sur la home, ce qui deviendrait vite lassant.
   const firstVisit = useRef(
-    (() => {
-      try {
-        return !sessionStorage.getItem("hc_home_seen");
-      } catch {
-        return true;
-      }
-    })()
+    !mem.get("hc_home_seen")
   ).current;
   const [minTimeElapsed, setMinTimeElapsed] = useState(!firstVisit);
 
@@ -43,11 +38,7 @@ export default function Home() {
     // Marque le site comme "déjà vu" pour cette session — les prochains
     // montages de cette page (retour depuis une autre page, après
     // connexion...) sauteront directement les squelettes.
-    try {
-      sessionStorage.setItem("hc_home_seen", "1");
-    } catch {
-      // stockage indisponible — au pire, le squelette réapparaît, rien de grave.
-    }
+    mem.set("hc_home_seen", true);
   }, []);
 
   useEffect(() => {

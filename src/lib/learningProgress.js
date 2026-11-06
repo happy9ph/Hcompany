@@ -1,21 +1,14 @@
+import { mem } from "./memStore.js";
 // Progression H-Learning. Les visiteurs sans compte la gardent dans le
 // navigateur ; connectés, elle est aussi envoyée au serveur et fusionnée.
 const KEY = "hc_learning_progress_v1";
 
 function readAll() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || "{}") || {};
-  } catch {
-    return {};
-  }
+  return mem.get(KEY, {});
 }
 
 function writeAll(data) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(data));
-  } catch {
-    // stockage indisponible : la progression vit alors le temps de la page
-  }
+  mem.set(KEY, data); // en mémoire : sans compte, la progression ne survit pas au rechargement ; connecté, elle est sur le serveur
 }
 
 /** { [lessonId]: { done: bool, t: seconds } } */
