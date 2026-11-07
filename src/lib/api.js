@@ -74,6 +74,8 @@ export function getAdminConfirm() {
 export function setAdminConfirm(token, expiresInSec) { mem.set(ADMIN_CONFIRM_KEY, { token, exp: Date.now() + expiresInSec * 1000 - 5000 }); }
 export function clearAdminConfirm() { mem.del(ADMIN_CONFIRM_KEY); }
 
+let refreshInFlight = null;
+
 async function request(path, { method = "GET", body, token, headers = {} } = {}) {
   const confirm = path.includes("/admin") ? getAdminConfirm() : null;
   // Un FormData (upload de fichier) ne doit pas être JSON.stringify()'d, et
@@ -150,13 +152,19 @@ export const api = {
     // stocké localement — le cookie httpOnly est envoyé aussi (au cas où),
     // mais ce corps JSON est la source réellement fiable désormais (voir
     // commentaire sur REFRESH_TOKEN_KEY plus haut).
-    refresh: () =>
-      request("/api/v1/auth/refresh", { method: "POST", body: { refresh_token: getRefreshToken() } }).then(
-        (data) => {
+    // Un seul /auth/refresh à la fois : le jeton de rafraîchissement tourne à chaque usage, donc deux appels
+    // simultanés (restauration au chargement + un écran qui appelle l'API avant d'avoir son jeton) feraient
+    // rejeter le second et déconnecteraient la personne à chaque rechargement.
+    refresh: () => {
+      if (refreshInFlight) return refreshInFlight;
+      refreshInFlight = request("/api/v1/auth/refresh", { method: "POST", body: { refresh_token: getRefreshToken() } })
+        .then((data) => {
           saveRefreshToken(data?.refresh_token);
           return data;
-        }
-      ),
+        })
+        .finally(() => { refreshInFlight = null; });
+      return refreshInFlight;
+    },
     logout: () => {
       clearRefreshToken();
       return request("/api/v1/auth/logout", { method: "POST" });
@@ -616,7 +624,9 @@ export const api = {
     viewRequest: (token, code, payOp = "") => request(`/api/v1/money/requests/${encodeURIComponent(code)}${payOp ? `?pay_op=${encodeURIComponent(payOp)}` : ""}`, { token }),
     payRequest: (token, code, body) => request(`/api/v1/money/requests/${encodeURIComponent(code)}/pay`, { method: "POST", token, body }),
     change: (amount, from, to) => request(`/api/v1/money/change${qs({ amount, from, to })}`),
+    profile: (token, body) => request("/api/v1/money/profile", { method: "POST", token, body }),
     invoices: {
+      clients: (token, q) => request(`/api/v1/money/invoices/clients${qs({ q })}`, { token }),
       list: (token) => request("/api/v1/money/invoices", { token }),
       create: (token, body) => request("/api/v1/money/invoices", { method: "POST", token, body }),
       view: (token, code, payOp = "") => request(`/api/v1/money/invoices/${encodeURIComponent(code)}${payOp ? `?pay_op=${encodeURIComponent(payOp)}` : ""}`, { token }),

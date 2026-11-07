@@ -9,6 +9,18 @@ export const mem = {
   clear: () => m.clear(),
 };
 
+// Choix de la personne sur les cookies : "all" (essentiels + préférences) ou "essential" (session seulement).
+// Les cookies d'analyse / publicité n'existent pas dans H-Company : il n'y a donc rien d'autre à accepter.
+const CONSENT = "hc_consent";
+const PREFS = ["hc_lang", "hc_theme", "hc_region", "theme", "region"];
+export const consent = {
+  get() { return cookie.get(CONSENT); },
+  set(v) {
+    cookie.set(CONSENT, v, 180);
+    if (v === "essential" && typeof document !== "undefined") PREFS.forEach((n) => { document.cookie = `${n}=; Max-Age=0; Path=/; SameSite=Lax`; });
+  },
+};
+
 export const cookie = {
   get(name) {
     if (typeof document === "undefined") return null;
@@ -18,6 +30,7 @@ export const cookie = {
   },
   set(name, value, days = 365) {
     if (typeof document === "undefined") return;
+    if (name !== CONSENT && PREFS.includes(name) && cookie.get(CONSENT) === "essential") return; // préférences refusées : on ne les écrit pas
     const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : "";
     document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${days * 86400}; Path=/; SameSite=Lax${secure}`;
   },

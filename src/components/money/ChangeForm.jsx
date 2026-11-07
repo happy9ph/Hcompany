@@ -4,9 +4,9 @@ import { api } from "../../lib/api.js";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { input, nf } from "./parts.jsx";
 
-const CUR = ["ZMW", "CDF"];
+const CUR = ["ZMW"];
 
-/** Change de monnaie en dollars : USD → kwacha / franc congolais, et l'inverse. Taux H-Money affiché, aucun frais caché. */
+/** Change de monnaie en dollars : USD ⇄ kwacha, et l'inverse. Taux H-Money affiché, aucun frais caché. */
 export default function ChangeForm() {
   const { lang } = useLanguage();
   const fr = lang !== "en";

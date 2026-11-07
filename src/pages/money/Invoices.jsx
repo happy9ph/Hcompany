@@ -19,6 +19,13 @@ function CreateForm({ onCreated, fr }) {
   const [items, setItems] = useState([{ label: "", qty: 1, unit_price: "" }]);
   const [busy, setBusy] = useState(false), [err, setErr] = useState("");
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
+  const [q, setQ] = useState(""), [found, setFound] = useState([]), [picked, setPicked] = useState(null);
+  useEffect(() => {
+    if (picked || q.trim().length < 3) { setFound([]); return undefined; }
+    let on = true;
+    const t = setTimeout(() => { withAuth((tk) => api.money.invoices.clients(tk, q.trim())).then((r) => on && setFound(r)).catch(() => on && setFound([])); }, 300);
+    return () => { on = false; clearTimeout(t); };
+  }, [q, picked, withAuth]);
   const ops = (cor?.operators?.[f.receive_country] || []).filter((o) => o.receive);
   const op = f.receive_operator && ops.some((o) => o.key === f.receive_operator) ? f.receive_operator : ops[0]?.key || "";
   const total = useMemo(() => items.reduce((s, i) => s + (Number(i.qty) || 0) * (Number(i.unit_price) || 0), 0), [items]);
@@ -27,15 +34,26 @@ function CreateForm({ onCreated, fr }) {
   async function submit(e) {
     e.preventDefault(); setBusy(true); setErr("");
     try {
-      const out = await withAuth((t) => api.money.invoices.create(t, { ...f, receive_operator: op, due_days: Number(f.due_days) || 14, items: items.map((i) => ({ label: i.label, qty: Number(i.qty) || 1, unit_price: Number(i.unit_price) })) }));
+      const out = await withAuth((t) => api.money.invoices.create(t, { ...f, ...(picked ? { client_user_id: picked.id, client_name: picked.name } : {}), receive_operator: op, due_days: Number(f.due_days) || 14, items: items.map((i) => ({ label: i.label, qty: Number(i.qty) || 1, unit_price: Number(i.unit_price) })) }));
       onCreated(out);
     } catch (x) { setErr(msgOf(x)); } finally { setBusy(false); }
   }
   return (
     <form onSubmit={submit} className="space-y-6">
+      <div className="rounded-2xl border border-line p-4">
+        <p className="text-sm font-medium text-ink">{fr ? "Cibler un client H-Company" : "Target an H-Company client"}</p>
+        <p className="text-xs text-ink-faint mb-3">{fr ? "Il verra la dette dans son compte et pourra la régler en mobile money (Zambie ou RDC)." : "They'll see the debt in their account and can pay by mobile money (Zambia or DRC)."}</p>
+        {picked ? (
+          <div className="flex items-center justify-between rounded-lg bg-latte-soft/70 px-3 py-2.5 text-sm"><span><strong>{picked.name}</strong> <span className="text-ink-faint">{picked.email || picked.phone}</span></span><button type="button" onClick={() => { setPicked(null); setQ(""); }} className="text-coffee-dark text-xs font-semibold">{fr ? "Changer" : "Change"}</button></div>
+        ) : (<>
+          <input className={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder={fr ? "Nom, e-mail ou téléphone (3 caractères min.)" : "Name, email or phone (min. 3 characters)"} />
+          {found.length > 0 && <ul className="mt-2 rounded-lg border border-line divide-y divide-line bg-surface">{found.map((u) => <li key={u.id}><button type="button" onClick={() => { setPicked(u); setFound([]); }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-latte-soft/60"><strong>{u.name}</strong> <span className="text-ink-faint">{u.email} {u.phone}</span></button></li>)}</ul>}
+          {q.trim().length >= 3 && found.length === 0 && <p className="text-xs text-ink-faint mt-2">{fr ? "Aucun résultat : saisissez ses informations ci-dessous, il recevra un lien." : "No match: enter their details below, they'll get a link."}</p>}
+        </>)}
+      </div>
       <div className="grid sm:grid-cols-2 gap-4">
-        <label className="block"><span className="text-xs text-ink-soft">{fr ? "Nom du client" : "Client name"}</span><input required className={input} value={f.client_name} onChange={set("client_name")} /></label>
-        <label className="block"><span className="text-xs text-ink-soft">{fr ? "E-mail du client (il verra la facture dans son compte)" : "Client email (they'll see the invoice in their account)"}</span><input type="email" className={input} value={f.client_email} onChange={set("client_email")} /></label>
+        {!picked && <label className="block"><span className="text-xs text-ink-soft">{fr ? "Nom du client" : "Client name"}</span><input required className={input} value={f.client_name} onChange={set("client_name")} /></label>}
+        {!picked && <label className="block"><span className="text-xs text-ink-soft">{fr ? "E-mail du client (il verra la facture dans son compte)" : "Client email (they'll see the invoice in their account)"}</span><input type="email" className={input} value={f.client_email} onChange={set("client_email")} /></label>}
         <label className="block"><span className="text-xs text-ink-soft">{fr ? "Le client paie depuis" : "Client pays from"}</span><select className={input} value={f.client_country} onChange={set("client_country")}>{["ZM", "CD"].map((c) => <option key={c} value={c}>{FLAG[c]} {COUNTRY[c].fr}</option>)}</select></label>
         <label className="block"><span className="text-xs text-ink-soft">{fr ? "Je reçois en" : "I receive in"}</span><select className={input} value={f.receive_country} onChange={set("receive_country")}>{["ZM", "CD"].map((c) => <option key={c} value={c}>{FLAG[c]} {COUNTRY[c].fr}</option>)}</select></label>
         <label className="block"><span className="text-xs text-ink-soft">{fr ? "Mon numéro mobile money" : "My mobile money number"}</span><input required className={input} value={f.receive_phone} onChange={set("receive_phone")} inputMode="tel" /></label>
@@ -67,13 +85,13 @@ function CreateForm({ onCreated, fr }) {
   );
 }
 
-export default function Invoices({ inline = false }) {
+export default function Invoices({ inline = false, initial = "mine" }) {
   usePageMeta({ title: "Factures" });
   const { isAuthenticated, isLoading, withAuth } = useUser();
   const { lang } = useLanguage();
   const fr = lang !== "en";
   const toast = useToast();
-  const [tab, setTab] = useState("mine");
+  const [tab, setTab] = useState(initial);
   const [list, setList] = useState(null);
   const [made, setMade] = useState(null);
   const [gate, setGate] = useState(false);

@@ -17,12 +17,14 @@ export function UserProvider({ children }) {
   const navigate = useNavigate();
   const tokenRef = useRef(null);
   tokenRef.current = token;
+  const restoreRef = useRef(null); // promesse de la restauration de session au chargement
 
   // Tente de restaurer la session via le cookie refresh_token au chargement.
   useEffect(() => {
-    (async () => {
+    restoreRef.current = (async () => {
       try {
         const data = await api.auth.refresh();
+        tokenRef.current = data.access_token; // disponible tout de suite pour les écrans qui attendent
         setToken(data.access_token);
         setUser(data.user);
       } catch {
@@ -96,6 +98,7 @@ export function UserProvider({ children }) {
   // À utiliser autour d'un appel API protégé : si le token a expiré (401),
   // tente un refresh silencieux puis rejoue l'appel une seule fois.
   const withAuth = useCallback(async (fn) => {
+    if (restoreRef.current) await restoreRef.current; // on attend la restauration de session avant le premier appel protégé
     try {
       return await fn(tokenRef.current);
     } catch (err) {

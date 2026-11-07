@@ -11,6 +11,7 @@ import { HeadManager } from "./components/ui/HeadManager.jsx";
 // chargement du site — réduit sensiblement le poids initial.
 const Home = lazy(() => import("./pages/Home.jsx"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard.jsx"));
+const CookieNotice = lazy(() => import("./components/ui/CookieNotice.jsx"));
 const FloatingPromo = lazy(() => import("./components/app/FloatingPromo.jsx"));
 const AppShell = lazy(() => import("./components/app/AppShell.jsx"));
 const AppHome = lazy(() => import("./pages/app/AppHome.jsx"));
@@ -253,6 +254,7 @@ export default function App() {
         </div>
         <FloatingPromo />
       </Suspense>
+      <Suspense fallback={null}><CookieNotice /></Suspense>
       <Chatbot />
     </HeadManager>
   );

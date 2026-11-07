@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import Landing from "../../components/money/r/Landing.jsx";
 import { motion } from "framer-motion";
 import { FileText, ArrowRight, BedDouble, Bus, GraduationCap, HandCoins, Languages, Mountain, Package, Send, ShoppingBag, TrendingUp, UtensilsCrossed, Wallet, Ticket } from "lucide-react";
 import { api } from "../../lib/api.js";
@@ -38,6 +39,7 @@ export default function AppHome() {
   const { lang } = useLanguage();
   const fr = lang !== "en";
   const [gate, setGate] = useState(false);
+  const navigate = useNavigate();
   const [tx, setTx] = useState(null), [trips, setTrips] = useState(null), [cargo, setCargo] = useState(null);
 
   useEffect(() => {
@@ -86,6 +88,11 @@ export default function AppHome() {
         </div>
       </section>
 
+      {/* H-Money : même présentation que la page de transfert */}
+      <section aria-label="H-Money" className="rounded-3xl border border-line bg-surface p-5 sm:p-8">
+        <h2 className="font-bold text-xl text-ink mb-6">H-Money <span className="text-sm font-normal text-ink-soft">· {fr ? "Zambie ⇄ RD Congo" : "Zambia ⇄ DR Congo"}</span></h2>
+        <Landing compact onStart={(k, sub) => navigate("/app/money", { state: { tab: k, sub } })} />
+      </section>
 
       {/* Performances */}
       <section aria-label={fr ? "Aperçu" : "Overview"}>
