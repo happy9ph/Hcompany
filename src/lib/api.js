@@ -6,7 +6,9 @@ import { mem } from "./memStore.js";
 // Exporté pour construire des URL absolues vers des fichiers servis par le
 // backend (logos de services uploadés, etc.) — voir data/hServices.js.
 // Vide ou « / » = même domaine que le site (API servie via le proxy Vercel, voir SECURITY.md).
-export const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000").replace(/\/+$/, "");
+export // En production l'API est jointe via le MÊME domaine que le site (réécriture dans vercel.json → Render) : le cookie de session
+// devient « first-party » et survit au rechargement sur tous les navigateurs. VITE_DIRECT_API=1 force l'appel direct (cas particulier).
+const BASE_URL = (import.meta.env.PROD && import.meta.env.VITE_DIRECT_API !== "1" ? "" : (import.meta.env.VITE_API_URL ?? "http://localhost:8000")).replace(/\/+$/, "");
 
 // Les navigateurs modernes bloquent de plus en plus les cookies tiers dès
 // que le site et l'API vivent sur deux domaines différents (Vercel +

@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "/api/proxy?__p=/api/v1/:path*"
+      "destination": "https://hcompany-backend-1.onrender.com/api/v1/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "/api/proxy?__p=/uploads/:path*"
+      "destination": "https://hcompany-backend-1.onrender.com/uploads/:path*"
     },
     {
       "source": "/(.*)",
