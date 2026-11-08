@@ -113,6 +113,14 @@ async function request(path, { method = "GET", body, token, headers = {} } = {})
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const data = isJson ? await res.json().catch(() => null) : null;
 
+  // Réponse qui n'est pas du JSON de l'API (page HTML d'un mauvais service, passerelle en panne…) :
+  // on le dit clairement au lieu d'afficher un faux « mot de passe incorrect ».
+  const isHtml = res.headers.get("content-type")?.includes("text/html");
+  if (path.startsWith("/api/") && (isHtml || (!res.ok && !isJson && [405, 502, 503, 504].includes(res.status)))) {
+    const detail = "Le service est momentanément indisponible. Réessayez dans un instant.";
+    throw new ApiError(detail, res.status >= 400 ? res.status : 503, { detail });
+  }
+
   if (!res.ok) {
     if (res.status === 428 && typeof window !== "undefined") {
       clearAdminConfirm();
