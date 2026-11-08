@@ -1,0 +1,820 @@
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from app.models import (
+    AccountStatus,
+    ActivityCategory,
+    AgentReviewStatus,
+    AppStatus,
+    ContractStatus,
+    OfferStatus,
+    OTPChannel,
+    OTPPurpose,
+    PartnerStatus,
+    PaymentMode,
+    SubscriptionStatus,
+)
+
+
+# --- Auth ---
+
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Le mot de passe doit contenir au moins 8 caractères.")
+        return v
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class RefreshPayload(BaseModel):
+    # Uniquement pour les clients mobile/desktop (voir _is_mobile_client) —
+    # un client web n'envoie jamais ce champ, son jeton de rafraîchissement
+    # vit dans un cookie httpOnly, pas accessible en JavaScript de toute façon.
+    refresh_token: Optional[str] = None
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Le nouveau mot de passe doit contenir au moins 8 caractères.")
+        return v
+
+
+class PasswordReset(BaseModel):
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Le nouveau mot de passe doit contenir au moins 8 caractères.")
+        return v
+
+
+class UserRead(BaseModel):
+    id: int
+    email: EmailStr
+    full_name: Optional[str] = None
+    role: str
+    is_verified: bool
+
+    class Config:
+        from_attributes = True
+
+
+class AccessTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserRead
+    # Toujours rempli, web comme mobile/desktop — les navigateurs modernes
+    # bloquent de plus en plus les cookies tiers entre domaines différents
+    # (constaté en production avec Vercel + Render), le corps JSON est
+    # devenu la source fiable pour tous les clients, pas seulement mobile.
+    refresh_token: Optional[str] = None
+
+
+# --- OTP ---
+
+class OTPRequest(BaseModel):
+    identifier: str  # email ou numéro de téléphone
+    channel: OTPChannel
+    purpose: OTPPurpose = OTPPurpose.login
+
+
+class OTPVerify(BaseModel):
+    identifier: str
+    channel: OTPChannel
+    purpose: OTPPurpose = OTPPurpose.login
+    code: str
+
+
+# --- Partenaires ---
+
+class PartnerApplicationCreate(BaseModel):
+    company: str
+    contactName: str
+    category: str
+    message: Optional[str] = None
+    # --- Dossier KYC — formulaire unique de candidature ---
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    id_document_type: Optional[str] = None  # national_id | voter_card | passport
+    id_document_number: Optional[str] = None
+
+
+class PartnerApplicationRead(BaseModel):
+    id: int
+    company: str
+    contact_name: str
+    email: EmailStr
+    category: str
+    message: Optional[str] = None
+    status: PartnerStatus
+    created_at: datetime
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    id_document_type: Optional[str] = None
+    id_document_number: Optional[str] = None
+    agent_review_status: AgentReviewStatus = AgentReviewStatus.pending
+    agent_review_note: Optional[str] = None
+    agent_reviewed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# Vue agent/admin — construite explicitement (jamais via from_attributes
+# direct sur l'ORM) pour ajouter `id_document_available` sans dépendre d'un
+# attribut qui n'existe pas sur PartnerApplication, et sans jamais exposer
+# le chemin de stockage réel du document.
+class PartnerApplicationAgentRead(PartnerApplicationRead):
+    id_document_available: bool = False
+
+
+class PartnerStatusUpdate(BaseModel):
+    status: PartnerStatus
+
+
+class AgentReviewDecision(BaseModel):
+    decision: AgentReviewStatus  # forwarded | rejected (pending n'est pas une décision valide ici)
+    note: Optional[str] = None
+
+
+class AccountStatusUpdate(BaseModel):
+    status: AccountStatus
+
+
+class AccountStatusRead(BaseModel):
+    account_status: AccountStatus
+    partner_code: Optional[str] = None
+    trial_ends_at: Optional[datetime] = None
+    trial_days_left: Optional[int] = None
+    # Ajoutés pour l'espace "Gérer mon compte" — évite un second aller-retour
+    # réseau juste pour afficher l'identité du compte.
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    member_since: Optional[datetime] = None
+
+
+class ContractRead(BaseModel):
+    id: int
+    content: str
+    status: ContractStatus
+    duration_months: Optional[int] = None
+    payment_mode: Optional[PaymentMode] = None
+    signed_by_name: Optional[str] = None
+    signed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ContractSign(BaseModel):
+    signed_by_name: str
+
+
+class ContractUpdate(BaseModel):
+    content: str
+
+
+class OfferCreate(BaseModel):
+    title: str
+    price: float
+    duration_months: int
+    payment_mode: PaymentMode = PaymentMode.monthly
+    description: Optional[str] = None
+
+
+class OfferRead(BaseModel):
+    id: int
+    public_id: str
+    title: str
+    price: float
+    duration_months: int
+    payment_mode: PaymentMode
+    description: Optional[str] = None
+    status: OfferStatus
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PartnerActivityRead(BaseModel):
+    id: int
+    category: ActivityCategory
+    label: str
+    detail: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ActivityCategoryCount(BaseModel):
+    category: ActivityCategory
+    count: int
+
+
+class PartnerStats(BaseModel):
+    application_status: PartnerStatus
+    contract_status: Optional[ContractStatus] = None
+    partner_since: Optional[datetime] = None  # date d'approbation
+    total_activities: int
+    activities_by_category: list[ActivityCategoryCount]
+    activities_last_30_days: int
+
+
+# --- Apprentissage ---
+
+def _lines(value: Optional[str]) -> list[str]:
+    return [ln.strip() for ln in (value or "").splitlines() if ln.strip()]
+
+
+class CourseRead(BaseModel):
+    id: int
+    title: str
+    level: str
+    description: str
+    category: str = "Numérique"
+    image_url: Optional[str] = None
+    lesson_count: int = 0
+    total_seconds: int = 0
+    members_only: bool = False
+
+    class Config:
+        from_attributes = True
+
+
+class LessonRead(BaseModel):
+    id: int
+    section: str = ""
+    title: str
+    description: str = ""
+    youtube_id: str
+    thumbnail_url: Optional[str] = None
+    duration_seconds: Optional[int] = None
+    position: int = 0
+    published_at: Optional[datetime] = None
+    members_only: bool = False
+    locked: bool = False
+
+    class Config:
+        from_attributes = True
+
+
+class CourseDetailRead(CourseRead):
+    outcomes: list[str] = []
+    requirements: list[str] = []
+    youtube_playlist_id: Optional[str] = None
+    lessons: list[LessonRead] = []
+    has_exclusive_access: bool = False
+
+
+class CourseAdminRead(CourseRead):
+    outcomes: str = ""
+    requirements: str = ""
+    youtube_playlist_id: Optional[str] = None
+    sort_order: int = 0
+    is_published: bool = True
+    synced_at: Optional[datetime] = None
+
+
+class CourseAdminWrite(BaseModel):
+    title: str = Field(min_length=2, max_length=200)
+    level: str = Field(default="Tous niveaux", max_length=60)
+    description: str = Field(default="", max_length=2000)
+    category: str = Field(default="Numérique", max_length=80)
+    image_url: Optional[str] = Field(default=None, max_length=500)
+    # Lien de playlist YouTube ou identifiant ; vide = pas de playlist.
+    youtube_playlist: Optional[str] = Field(default=None, max_length=300)
+    outcomes: str = Field(default="", max_length=3000)
+    requirements: str = Field(default="", max_length=3000)
+    sort_order: int = 0
+    is_published: bool = True
+    members_only: bool = False
+
+
+class LessonAdminPatch(BaseModel):
+    title: Optional[str] = Field(default=None, min_length=1, max_length=250)
+    section: Optional[str] = Field(default=None, max_length=120)
+    members_only: Optional[bool] = None
+    is_published: Optional[bool] = None
+
+
+class LessonAdminWrite(BaseModel):
+    title: str = Field(min_length=1, max_length=250)
+    description: str = Field(default="", max_length=1000)
+    section: str = Field(default="", max_length=120)
+    youtube_url: str = Field(max_length=300)  # lien YouTube ou ID de la vidéo
+    position: Optional[int] = None
+    is_published: bool = True
+    members_only: bool = False
+
+
+class LessonProgressWrite(BaseModel):
+    completed: bool = False
+    position_seconds: int = Field(default=0, ge=0, le=86400)
+
+
+class LessonProgressRead(BaseModel):
+    lesson_id: int
+    completed: bool
+    position_seconds: int
+
+    class Config:
+        from_attributes = True
+
+
+class TrainingRegistrationCreate(BaseModel):
+    full_name: str = Field(min_length=2, max_length=120)
+    email: EmailStr
+    phone: Optional[str] = Field(default=None, max_length=40)
+    city: Optional[str] = Field(default=None, max_length=80)
+    course_id: Optional[int] = None
+    availability: Optional[str] = Field(default=None, max_length=200)
+    message: Optional[str] = Field(default=None, max_length=2000)
+
+
+class TrainingRegistrationRead(BaseModel):
+    id: int
+    full_name: str
+    email: str
+    phone: Optional[str] = None
+    city: Optional[str] = None
+    course_id: Optional[int] = None
+    course_title: Optional[str] = None
+    availability: Optional[str] = None
+    message: Optional[str] = None
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TrainingRegistrationStatusUpdate(BaseModel):
+    status: str
+
+
+# Prix mensuel par employé selon la formule choisie — même grille que celle
+# affichée sur la page "Formation d'équipe" (teamTraining.plan*Price côté
+# frontend). Recalculé ici pour ne jamais faire confiance à un total envoyé
+# par le client.
+TRAINING_PLAN_PRICES = {"1": 300.0, "6": 250.0, "12": 200.0}
+
+
+class CompanyTrainingRequestCreate(BaseModel):
+    company: str
+    contact_name: str
+    contact_email: EmailStr
+    employee_count: int = Field(gt=0)
+    domains: list[str] = []
+    plan: str
+    message: Optional[str] = None
+
+
+class CompanyTrainingRequestRead(BaseModel):
+    id: int
+    company: str
+    contact_name: str
+    contact_email: str
+    employee_count: int
+    domains: str
+    plan: str
+    monthly_price_per_employee: float
+    estimated_total: float
+    message: Optional[str] = None
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CompanyTrainingRequestStatusUpdate(BaseModel):
+    status: str
+
+
+# --- Produits ---
+
+class ProductRead(BaseModel):
+    id: int
+    name: str
+    category: str
+    description: str
+    partner_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# --- Contact ---
+
+class ContactCreate(BaseModel):
+    name: str
+    email: EmailStr
+    message: str
+
+
+class ContactRead(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    message: str
+    status: str
+    admin_reply: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ContactAdminReply(BaseModel):
+    admin_reply: str
+
+
+# --- Onboarding ---
+
+ONBOARDING_SERVICES = {"money", "invoice", "logement", "transport", "colis", "shopping", "restaurant", "tourisme", "learning", "translate"}
+ONBOARDING_PURPOSES = {"send_money", "invoice", "stay", "travel", "shop", "learn", "sell", "other"}
+
+
+class OnboardingSubmit(BaseModel):
+    company_size: Optional[str] = Field(default=None, max_length=20)
+    primary_interest: Optional[str] = Field(default=None, max_length=80)
+    referral_source: Optional[str] = Field(default=None, max_length=80)
+    account_type: Optional[str] = Field(default=None, pattern="^(individual|business)$")
+    company_name: Optional[str] = Field(default=None, max_length=120)
+    country: Optional[str] = Field(default=None, min_length=2, max_length=2)
+    city: Optional[str] = Field(default=None, max_length=80)
+    phone: Optional[str] = Field(default=None, max_length=24)
+    language: Optional[str] = Field(default=None, pattern="^(fr|en)$")
+    interests: list[str] = Field(default_factory=list, max_length=12)
+    purposes: list[str] = Field(default_factory=list, max_length=8)
+    wants_partner: bool = False
+
+
+class OnboardingSuggestion(BaseModel):
+    title: str
+    description: str
+    cta_label: str
+    cta_href: str
+
+
+class OnboardingRead(BaseModel):
+    completed: bool
+    company_size: Optional[str] = None
+    primary_interest: Optional[str] = None
+    account_type: Optional[str] = None
+    company_name: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    language: Optional[str] = None
+    interests: list[str] = []
+    purposes: list[str] = []
+    wants_partner: bool = False
+    suggestions: list[OnboardingSuggestion] = []
+
+
+# --- Apps partenaire & revenus ---
+
+class PartnerAppCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class PartnerAppStatusUpdate(BaseModel):
+    status: AppStatus
+
+
+class RevenueEntryCreate(BaseModel):
+    amount: float
+    commission_amount: float
+    description: Optional[str] = None
+
+
+class RevenueEntryRead(BaseModel):
+    id: int
+    amount: float
+    commission_amount: float
+    description: Optional[str] = None
+    paid: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PartnerAppRead(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    status: AppStatus
+    created_at: datetime
+    activated_at: Optional[datetime] = None
+    total_revenue: float = 0
+    total_owed: float = 0
+
+    class Config:
+        from_attributes = True
+
+
+class BillingSummary(BaseModel):
+    subscribed: bool
+    plan_name: Optional[str] = None
+    total_revenue: float
+    total_owed: float
+    apps_count: int
+    active_apps_count: int
+
+
+# --- Catalogue des services H-Company (gérable depuis l'admin) ---
+
+class ServiceCatalogItemCreate(BaseModel):
+    key: str
+    label_fr: str
+    label_en: str
+    description_fr: str = ""
+    description_en: str = ""
+    disabled: bool = False
+    sort_order: int = 0
+
+
+class ServiceCatalogItemUpdate(BaseModel):
+    label_fr: Optional[str] = None
+    label_en: Optional[str] = None
+    description_fr: Optional[str] = None
+    description_en: Optional[str] = None
+    disabled: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
+class ServiceCatalogItemRead(BaseModel):
+    id: int
+    key: str
+    label_fr: str
+    label_en: str
+    description_fr: str = ""
+    description_en: str = ""
+    logo_url: Optional[str] = None
+    disabled: bool
+    sort_order: int
+
+    class Config:
+        from_attributes = True
+
+
+# --- Abonnements clients aux services H-Company ---
+
+class ServiceSubscriptionCreate(BaseModel):
+    service_key: str
+    message: Optional[str] = None
+
+
+class ServiceSubscriptionStatusUpdate(BaseModel):
+    status: SubscriptionStatus
+    admin_note: Optional[str] = None
+
+
+class ServiceSubscriptionRead(BaseModel):
+    id: int
+    service_key: str
+    message: Optional[str] = None
+    status: SubscriptionStatus
+    admin_note: Optional[str] = None
+    created_at: datetime
+    reviewed_at: Optional[datetime] = None
+    activated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ServiceSubscriptionAdminRead(ServiceSubscriptionRead):
+    user_id: int
+    user_full_name: Optional[str] = None
+    user_email: Optional[str] = None
+
+
+class MyServicesSummary(BaseModel):
+    active_count: int
+    total_count: int
+    subscriptions: list[ServiceSubscriptionRead] = []
+
+
+# --- Notifications (in-app + push) ---
+
+class NotificationRead(BaseModel):
+    id: int
+    title: str
+    body: str
+    channel: str
+    read: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminSendNotification(BaseModel):
+    user_id: int
+    title: str
+    body: str
+    also_email: bool = False
+
+
+class UserLookupRead(BaseModel):
+    id: int
+    email: str
+    full_name: Optional[str] = None
+    role: str = "client"
+
+    class Config:
+        from_attributes = True
+
+
+class UserRoleUpdate(BaseModel):
+    role: str  # "agent" | "client" uniquement — voir admin_set_user_role
+
+
+# --- Paiement d'une offre (simulé — pas de vrai processeur branché) ---
+
+class PaymentCreate(BaseModel):
+    # Reçoit l'identifiant public opaque de l'offre (Offer.public_id), pas
+    # sa clé primaire interne — voir _generate_public_offer_id dans
+    # app/models.py.
+    offer_public_id: str
+    method: str  # "card" | "airtel_money" | "mtn_momo"
+    phone_number: Optional[str] = None  # requis pour airtel_money / mtn_momo
+
+
+class PaymentRead(BaseModel):
+    id: int
+    offer_id: int
+    amount: float
+    method: str
+    status: str
+    phone_number: Optional[str] = None
+    reference: str
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# --- H-Learning : bouquets -------------------------------------------------
+
+class PlanRead(BaseModel):
+    id: int
+    code: str
+    name: str
+    audience: str
+    tagline: str = ""
+    features: list[str] = []
+    price_monthly: float
+    price_yearly: float
+    yearly_saving_pct: int = 0
+    per_seat: bool = False
+    min_seats: int = 1
+    max_seats: int = 1
+    includes_inperson: bool = True
+    includes_exclusive: bool = True
+    highlight: bool = False
+
+
+class CurrencyRead(BaseModel):
+    code: str
+    label: str = ""
+    symbol: str = ""
+    rate: float
+
+
+class PlansResponse(BaseModel):
+    pivot: str
+    test_mode: bool = True  # vrai tant qu'aucun fournisseur de paiement réel n'est configuré
+    currencies: list[CurrencyRead]
+    plans: list[PlanRead]
+
+
+class PlanAdminWrite(BaseModel):
+    code: str = Field(min_length=2, max_length=40, pattern=r"^[a-z0-9_-]+$")
+    name: str = Field(min_length=2, max_length=80)
+    audience: str = Field(default="individual", pattern=r"^(individual|pro|team)$")
+    tagline: str = Field(default="", max_length=200)
+    features: str = Field(default="", max_length=3000)  # une entrée par ligne
+    price_monthly: float = Field(ge=0)
+    price_yearly: float = Field(ge=0)
+    per_seat: bool = False
+    min_seats: int = Field(default=1, ge=1, le=10000)
+    max_seats: int = Field(default=1, ge=1, le=10000)
+    includes_inperson: bool = True
+    includes_exclusive: bool = True
+    highlight: bool = False
+    is_active: bool = True
+    sort_order: int = 0
+
+
+class PlanAdminRead(PlanAdminWrite):
+    id: int
+    subscribers: int = 0
+
+
+class CurrencyWrite(BaseModel):
+    code: str = Field(min_length=3, max_length=3)
+    label: str = Field(default="", max_length=60)
+    symbol: str = Field(default="", max_length=8)
+    rate: float = Field(gt=0)
+
+
+class CurrenciesWrite(BaseModel):
+    currencies: list[CurrencyWrite]
+
+
+class CheckoutCreate(BaseModel):
+    plan_code: str
+    period: str = Field(default="month", pattern=r"^(month|year)$")
+    seats: int = Field(default=1, ge=1, le=10000)
+    org_name: Optional[str] = Field(default=None, max_length=160)
+    method: str = Field(pattern=r"^(zamtel_money|mtn_momo|airtel_money|card)$")
+    phone: Optional[str] = Field(default=None, max_length=30)
+    currency: str = Field(default="ZMW", min_length=3, max_length=3)
+
+
+class SubscriptionMemberRead(BaseModel):
+    id: int
+    email: str
+
+    class Config:
+        from_attributes = True
+
+
+class SubscriptionRead(BaseModel):
+    id: int
+    reference: str
+    plan_code: str
+    plan_name: str
+    period: str
+    seats: int = 1
+    org_name: Optional[str] = None
+    amount_pivot: float
+    pivot_currency: str
+    display_currency: str = "ZMW"
+    includes_inperson: bool = True
+    includes_exclusive: bool = True
+    method: str
+    status: str
+    simulated: bool = True
+    failure_reason: Optional[str] = None
+    created_at: datetime
+    paid_at: Optional[datetime] = None
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
+    days_left: Optional[int] = None
+    members: list[SubscriptionMemberRead] = []
+    is_owner: bool = True
+
+    class Config:
+        from_attributes = True
+
+
+class MemberAdd(BaseModel):
+    email: EmailStr
+
+
+class AdminSubscriptionRead(SubscriptionRead):
+    user_email: Optional[str] = None
+    user_name: Optional[str] = None
+
+
+class AdminManualSubscription(BaseModel):
+    user_email: EmailStr
+    plan_code: str
+    period: str = Field(default="month", pattern=r"^(month|year)$")
+    seats: int = Field(default=1, ge=1, le=10000)
+    org_name: Optional[str] = Field(default=None, max_length=160)
+    note: Optional[str] = Field(default=None, max_length=200)
+
+
+class AdminSubscriptionStatus(BaseModel):
+    status: str = Field(pattern=r"^(active|cancelled|expired)$")
