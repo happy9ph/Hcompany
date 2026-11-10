@@ -125,7 +125,7 @@ export function SendFlow({ cor, onExit, onDone, requireAuth, preset }) {
         )}
         <label className="flex items-start gap-3 mt-4 text-sm text-ink-soft cursor-pointer">
           <input type="checkbox" checked={withFee} onChange={(e) => setWithFee(e.target.checked)} className="mt-0.5 w-4 h-4" style={{ accentColor: NAVY }} />
-          <span>Ajouter les frais à mon montant. {withFee ? "Je paie le montant + les frais ; le bénéficiaire reçoit le montant saisi." : "Les frais sont retirés du montant saisi : je paie exactement ce montant."}</span>
+          <span>Ajouter les frais à mon montant. {withFee ? "Je paie le montant + les frais ; les frais ne réduisent pas ce que reçoit le bénéficiaire (au taux de change affiché)." : "Les frais sont retirés du montant saisi : je paie exactement ce montant."}</span>
         </label>
         <div className="mt-6"><Primary type="button" disabled={!q} onClick={() => go(steps[1])}>Continuer</Primary></div>
         <div className="mt-5"><SoonChips /></div>
