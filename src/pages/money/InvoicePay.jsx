@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import PayPanel from "../../components/money/r/PayPanel.jsx";
@@ -6,7 +6,8 @@ import { api } from "../../lib/api.js";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
-import { msgOf, nf, useCorridors } from "../../components/money/parts.jsx";
+import { msgOf, newKey, nf, useCorridors } from "../../components/money/parts.jsx";
+import TransferStatus from "../../components/money/r/TransferStatus.jsx";
 import { InvoicePill } from "./Invoices.jsx";
 
 /** Lien reçu par le client : détail de la facture et paiement en mobile money. */
@@ -21,6 +22,8 @@ export default function InvoicePay() {
   const [inv, setInv] = useState(undefined);
   const [op, setOp] = useState("");
   const [busy, setBusy] = useState(false), [err, setErr] = useState("");
+  const keyRef = useRef(newKey()); // clé d'idempotence de la tentative de paiement
+  const [track, setTrack] = useState(null);
 
   useEffect(() => { if (!isLoading && !isAuthenticated) navigate("/connexion", { state: { redirectTo: `/money/facture/${code}` } }); }, [isLoading, isAuthenticated, navigate, code]);
   useEffect(() => { if (isAuthenticated) withAuth((t) => api.money.invoices.view(t, code)).then(setInv).catch((e) => setInv({ error: msgOf(e) })); }, [isAuthenticated, withAuth, code]);
@@ -36,9 +39,14 @@ export default function InvoicePay() {
   const opKey = op && payable.some((o) => o.key === op) ? op : payable[0]?.key || "";
   async function pay(phone) {
     setBusy(true); setErr("");
-    try { const out = await withAuth((t) => api.money.invoices.pay(t, code, { pay_phone: phone, pay_operator: opKey })); setInv({ ...inv, ...out, quote: undefined }); }
-    catch (x) { setErr(msgOf(x)); } finally { setBusy(false); }
+    try {
+      const out = await withAuth((t) => api.money.invoices.pay(t, code, { pay_phone: phone, pay_operator: opKey }, keyRef.current));
+      keyRef.current = newKey();
+      setInv({ ...inv, ...out, quote: undefined });
+      if (out.transfer_code) withAuth((t) => api.money.transfer(t, out.transfer_code)).then(setTrack).catch(() => {});
+    } catch (x) { if (x?.status) keyRef.current = newKey(); setErr(msgOf(x)); } finally { setBusy(false); }
   }
+  if (track) return <div className="min-h-screen bg-cream px-4 py-8"><div className="max-w-[520px] mx-auto"><TransferStatus initial={track} onClose={() => navigate("/app/factures")} /></div></div>;
   const canPay = inv.status === "open" && inv.role === "client" && q;
   return (
     <PayPanel head={<>{fr ? "Facture de" : "Invoice from"} {inv.issuer_name || "—"} · {inv.code}</>} amount={nf(inv.total, inv.currency)} sub={inv.note ? `« ${inv.note} »` : null}

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Copy, MessageCircle, ShieldCheck } from "lucide-react";
 import { api } from "../../../lib/api.js";
 import { useUser } from "../../../context/Usercontext.jsx";
 import { useToast } from "../../../context/ToastContext.jsx";
 import PhoneField from "../PhoneField.jsx";
-import { COUNTRY, FLAG, msgOf, nf, useQuote } from "../parts.jsx";
+import { COUNTRY, FLAG, msgOf, newKey, nf, useQuote } from "../parts.jsx";
 import { Frame, H, NAVY, OpRow, Primary, Row, SoonChips, bare, field } from "./ui.jsx";
 
 const CC = ["ZM", "CD"];
@@ -60,6 +60,8 @@ export function SendFlow({ cor, onExit, onDone, requireAuth, preset }) {
   const [myName, setMyName] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [fixed, setFixed] = useState(null); // devis CONFIRMÉ et conservé par le serveur (montants entiers, taux, expiration)
+  const keyRef = useRef(newKey()); // clé d'idempotence de cette tentative : un nouvel essai réseau rejoue la même opération, jamais une seconde
   const curFrom = cor?.currencies?.[from] || "ZMW";
   const local = useUsdLocal(curFrom, usd);
   const { q, err: qErr } = useQuote({ amount: local, from, to, withFee, payOp, benOp });
@@ -70,14 +72,28 @@ export function SendFlow({ cor, onExit, onDone, requireAuth, preset }) {
   const back = () => (idx <= 0 ? onExit() : go(steps[idx - 1]));
   const effRate = q ? (from === "ZM" ? q.send_amount / q.receive_amount : q.receive_amount / q.send_amount) : null;
 
+  const fresh = (x) => x && new Date(x.expires_at).getTime() > Date.now() + 5000;
+  const view = fresh(fixed) ? fixed : q; // le récapitulatif affiché est celui qui sera réellement débité
+  const viewRate = view ? (from === "ZM" ? view.send_amount / view.receive_amount : view.receive_amount / view.send_amount) : null;
   async function confirm() {
     if (!requireAuth()) return;
     setBusy(true); setErr("");
+    const base = { from_country: from, to_country: to, amount: Number(local), with_fee: withFee, pay_operator: payOp, beneficiary_operator: benOp };
     try {
-      const t = await withAuth((tk) => api.money.send(tk, { from_country: from, to_country: to, amount: Number(local), with_fee: withFee, beneficiary_name: `${first} ${last}`.trim(), beneficiary_phone: phone, beneficiary_operator: benOp, pay_phone: payPhone, pay_operator: payOp, note: "" }));
+      let qr = fresh(fixed) ? fixed : null;
+      if (!qr) {
+        qr = await withAuth((tk) => api.money.quotes(tk, base)); // le récapitulatif confirmé est enregistré ici
+        setFixed(qr);
+        if (qr.total_paid !== q?.total_paid || qr.receive_amount !== q?.receive_amount) { setErr("Le tarif vient d'être mis à jour. Vérifiez le nouveau récapitulatif, puis confirmez."); return; }
+      }
+      const t = await withAuth((tk) => api.money.send(tk, { ...base, beneficiary_name: `${first} ${last}`.trim(), beneficiary_phone: phone, pay_phone: payPhone, note: "", quote_id: qr.quote_id }, keyRef.current));
       if (needName || !user?.phone) withAuth((tk) => api.money.profile(tk, { full_name: myName || user?.full_name || `${first}`.trim() || "Client", phone: payPhone, country: from })).catch(() => {});
+      keyRef.current = newKey(); setFixed(null);
       onDone(t);
-    } catch (x) { setErr(msgOf(x)); } finally { setBusy(false); }
+    } catch (x) {
+      if (x?.status) { keyRef.current = newKey(); setFixed(null); } // réponse du serveur : on repart d'un devis neuf ; coupure réseau : on garde la clé (rejeu sûr)
+      setErr(msgOf(x));
+    } finally { setBusy(false); }
   }
 
   return (
@@ -148,22 +164,22 @@ export function SendFlow({ cor, onExit, onDone, requireAuth, preset }) {
         <div className="mt-6"><Primary>Continuer</Primary></div>
       </form>)}
 
-      {step === "review" && q && (<>
-        <H>Vérifiez votre envoi</H>
+      {step === "review" && view && (<>
+        <H sub="Vous validerez ensuite le paiement avec votre PIN dans l'interface de votre opérateur. H-Money ne le demande jamais.">Vérifiez votre envoi</H>
         <div className="rounded-xl border border-line p-4 text-sm space-y-0.5">
           <Row k="Vous envoyez" v={nf(Number(usd), "USD")} />
           <Row k="Bénéficiaire" v={`${first} ${last}`} />
           <Row k="Reçoit sur" v={`${(cor?.operators?.[to] || []).find((o) => o.key === benOp)?.label || benOp} · ${phone}`} />
-          <Row k="Il reçoit" v={nf(q.receive_amount, q.receive_currency)} strong />
+          <Row k="Il reçoit" v={nf(view.receive_amount, view.receive_currency)} strong />
           <div className="border-t border-line my-2" />
-          <Row k="Frais H-Money" v={nf(q.fee, q.send_currency)} />
-          <Row k="Taux" v={`1 USD = ${effRate?.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ZMW`} />
-          <Row k="Vous payez" v={nf(q.total_paid, q.send_currency)} strong />
+          <Row k="Frais H-Money" v={nf(view.fee, view.send_currency)} />
+          <Row k="Taux" v={`1 USD = ${viewRate?.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ZMW`} />
+          <Row k="Vous payez" v={nf(view.total_paid, view.send_currency)} strong />
           <Row k="Depuis" v={`${(cor?.operators?.[from] || []).find((o) => o.key === payOp)?.label || payOp} · ${payPhone}`} />
         </div>
         {cor?.simulated && <p role="note" className="mt-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs px-4 py-3"><strong>Mode démonstration.</strong> Aucun argent réel n'est encaissé ni versé tant que le partenaire de paiement n'est pas branché.</p>}
         {err && <p role="alert" className="text-sm text-red-600 mt-4">{err}</p>}
-        <div className="mt-6"><Primary type="button" busy={busy} onClick={confirm}><ShieldCheck size={18} />Confirmer et payer {nf(q.total_paid, q.send_currency)}</Primary></div>
+        <div className="mt-6"><Primary type="button" busy={busy} onClick={confirm}><ShieldCheck size={18} />Confirmer et payer {nf(view.total_paid, view.send_currency)}</Primary></div>
       </>)}
     </Frame>
   );
@@ -183,8 +199,10 @@ export function RequestFlow({ cor, onExit, requireAuth }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false), [err, setErr] = useState("");
   const [done, setDone] = useState(null);
-  const local = useUsdLocal(cor?.currencies?.[mine] || "ZMW", usd);
-  const { q } = useQuote({ amount: local, from: payer, to: mine, mode: "receive", benOp: op });
+  // Type A (je reçois en RDC) : je reçois EXACTEMENT X USD, la personne en Zambie paie l'équivalent en ZMW + frais.
+  // Type B (je reçois en Zambie) : la personne en RDC paie EXACTEMENT X USD (+ frais) ; je reçois l'équivalent en ZMW, figé à son paiement.
+  const typeA = mine === "CD";
+  const { q } = useQuote(typeA ? { amount: usd, from: payer, to: mine, mode: "receive", benOp: op } : { amount: usd, from: payer, to: mine, withFee: true, benOp: op });
   const needName = !!user && !(user.full_name || "").trim();
   const steps = ["amount", "op", ...(needName ? ["me"] : []), "phone"];
   const idx = steps.indexOf(step);
@@ -207,7 +225,7 @@ export function RequestFlow({ cor, onExit, requireAuth }) {
       <div className="text-center">
         <span className="mx-auto w-14 h-14 rounded-full flex items-center justify-center text-white" style={{ background: "#2F8F83" }}><Check size={26} /></span>
         <h2 className="font-bold text-2xl text-ink mt-4">Votre lien est prêt</h2>
-        <p className="text-sm text-ink-soft mt-2">Partagez-le : la personne ({COUNTRY[payer].fr}) saisit son numéro et paie. Vous recevez <strong>{nf(Number(usd), "USD")}</strong> sur {(cor?.operators?.[mine] || []).find((o) => o.key === op)?.label} ({phone}).</p>
+        <p className="text-sm text-ink-soft mt-2">Partagez-le : la personne ({COUNTRY[payer].fr}) saisit son numéro et valide le paiement dans l'application de son opérateur. {typeA ? <>Vous recevez exactement <strong>{nf(Number(usd), "USD")}</strong></> : <>Elle paie exactement <strong>{nf(Number(usd), "USD")}</strong> (frais en plus) et vous recevez l'équivalent en ZMW</>} sur {(cor?.operators?.[mine] || []).find((o) => o.key === op)?.label} ({phone}). Vous serez notifié dès que le paiement est confirmé.</p>
         <div className="mt-5 rounded-2xl border border-line p-5 text-left">
           <p className="text-sm text-ink-soft">{user?.full_name || "Vous"}</p>
           <p className="font-bold text-3xl text-ink tabular-nums mt-1">{nf(Number(usd), "USD")}</p>
@@ -226,14 +244,14 @@ export function RequestFlow({ cor, onExit, requireAuth }) {
     <Frame onBack={() => (idx <= 0 ? onExit() : go(steps[idx - 1]))} progress={(idx + 1) / (steps.length + 1)}>
       {step === "amount" && (<>
         <CountryPick from={mine} setFrom={(c) => { setMine(c); setOp(""); }} label="Je reçois en" />
-        <label className="block text-sm text-ink mb-1.5">Montant demandé</label>
+        <label className="block text-sm text-ink mb-1.5">{typeA ? "Je veux recevoir exactement" : "La personne doit payer exactement"}</label>
         <div className="flex items-center rounded-lg border-2 h-14 px-3 gap-3 bg-surface" style={{ borderColor: NAVY }}>
           <span className="text-xl">🇺🇸</span>
           <input autoFocus inputMode="decimal" type="number" min="0" step="0.01" value={usd} onChange={(e) => setUsd(e.target.value)} placeholder="0" className={bare} />
           <span className="font-bold text-ink">USD</span>
         </div>
-        <p className="text-xs text-ink-faint mt-2">Toujours en dollars. Vous recevez exactement ce montant (converti si besoin) : les frais sont à la charge de la personne qui paie.</p>
-        {q && <div className="mt-5 rounded-lg bg-latte-soft/70 px-4 py-3 text-sm text-ink">La personne ({COUNTRY[payer].fr}) paiera <strong>{nf(q.total_paid, q.send_currency)}</strong>, frais inclus.</div>}
+        <p className="text-xs text-ink-faint mt-2">{typeA ? "Toujours en dollars. Vous recevez exactement ce montant : les frais sont toujours payés en plus par la personne qui paie." : "Toujours en dollars. Les frais s'ajoutent à ce montant, payés par la personne qui paie ; vous recevez l'équivalent en ZMW (taux figé au moment de son paiement)."}</p>
+        {q && <div className="mt-5 rounded-lg bg-latte-soft/70 px-4 py-3 text-sm text-ink">La personne ({COUNTRY[payer].fr}) paiera <strong>{nf(q.total_paid, q.send_currency)}</strong>, frais inclus.{!typeA && <> Vous recevrez environ <strong>{nf(q.receive_amount, q.receive_currency)}</strong>.</>}</div>}
         <div className="mt-6"><Primary type="button" disabled={!Number(usd)} onClick={() => go("op")}>Continuer</Primary></div>
         <div className="mt-5"><SoonChips /></div>
       </>)}
@@ -250,21 +268,6 @@ export function RequestFlow({ cor, onExit, requireAuth }) {
         {err && <p role="alert" className="text-sm text-red-600 mt-4">{err}</p>}
         <div className="mt-6"><Primary busy={busy} disabled={!phone}>Créer mon lien</Primary></div>
       </form>)}
-    </Frame>
-  );
-}
-
-export function SendDone({ t, onAgain }) {
-  const review = t.status === "under_review", ok = t.status === "completed";
-  return (
-    <Frame onBack={onAgain} progress={1}>
-      <div className="text-center">
-        <span className="mx-auto w-14 h-14 rounded-full flex items-center justify-center text-white" style={{ background: ok || review ? "#2F8F83" : "#B45309" }}><Check size={26} /></span>
-        <h2 className="font-bold text-2xl text-ink mt-4">{review ? "Envoi enregistré" : ok ? "Envoi effectué" : "Envoi non abouti"}</h2>
-        <p className="text-sm text-ink-soft mt-2 max-w-sm mx-auto">{review ? `Votre paiement est reçu. Un contrôle rapide est en cours : ${t.counterpart_name} recevra ${nf(t.receive_amount, t.receive_currency)} dès la confirmation. En cas de refus, vous êtes remboursé.` : ok ? `${t.counterpart_name} reçoit ${nf(t.receive_amount, t.receive_currency)}.` : t.failure_reason}</p>
-        <p className="text-xs text-ink-faint mt-3">Référence <strong className="text-ink">{t.code}</strong>{t.simulated && " · démonstration"}</p>
-        <div className="mt-6 max-w-xs mx-auto"><Primary type="button" onClick={onAgain}>Terminer</Primary></div>
-      </div>
     </Frame>
   );
 }

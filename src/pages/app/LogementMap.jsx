@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { BedDouble, Star } from "lucide-react";
 import { api } from "../../lib/api.js";
 import { coordOf } from "../../lib/cities.js";
+import { nearCity } from "../../lib/cityAreas.js";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useLoad, useShopMoney } from "../../data/shop.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
-import MapView from "../../components/app/MapView.jsx";
+import CityMap from "../../components/app/CityMap.jsx";
 import MapLayout, { Empty, Modal, Skel } from "../../components/app/MapLayout.jsx";
 
 const Interior3D = lazy(() => import("../../components/lodge/Interior3D.jsx"));
@@ -16,23 +17,27 @@ export default function LogementMap() {
   const { money } = useShopMoney();
   const { token } = useUser();
   const { data, loading } = useLoad(() => api.lodge.search({ per_page: 48 }, token), [token]);
-  const items = data?.items || data || [];
+  const all = data?.items || data || [];
+  const cities = useMemo(() => Object.entries(all.reduce((a, p) => ({ ...a, [p.city]: (a[p.city] || 0) + 1 }), {})).sort((a, b) => b[1] - a[1]).map(([c]) => c), [all]);
+  const [cityPick, setCityPick] = useState(null);
+  const city = cityPick || cities[0] || "Lusaka";
+  const items = all.filter((p) => p.city === city);
   const [sel, setSel] = useState(null);
   const [tour, setTour] = useState(null);
   // Position exacte si l'hôte l'a donnée ; sinon le centre de la ville, décalé de façon stable pour que les annonces ne se superposent pas.
   const spot = (p) => {
-    if (p.latitude != null && p.longitude != null) return [p.latitude, p.longitude];
+    if (p.latitude != null && p.longitude != null && nearCity(p.city, p.latitude, p.longitude)) return [p.latitude, p.longitude]; // un point hors de la ville est ignoré
     const c = coordOf(p.city); if (!c) return null;
     const a = (p.id * 2654435761) % 360, r = 0.012 + ((p.id * 40503) % 100) / 100 * 0.03;
     return [c[0] + Math.sin((a * Math.PI) / 180) * r, c[1] + Math.cos((a * Math.PI) / 180) * r];
   };
   const located = items.map((p) => ({ p, pos: spot(p) })).filter((x) => x.pos).map((x) => ({ ...x.p, latitude: x.pos[0], longitude: x.pos[1] }));
   const markers = useMemo(() => located.map((p) => ({ id: String(p.id), lat: p.latitude, lng: p.longitude, label: money(p.price_per_night), emoji: "🏠", active: sel?.id === p.id })), [located.length, sel, money]); // eslint-disable-line react-hooks/exhaustive-deps
-  const fit = useMemo(() => { const x = sel && located.find((l) => l.id === sel.id); return x ? [[x.latitude, x.longitude]] : undefined; }, [sel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <MapLayout title="Logements sur la carte" lead="Touchez une maison pour voir le logement, faire la visite 3D de l'intérieur, puis réserver."
-      map={<MapView markers={markers} fitTo={fit} onSelect={(id) => setSel(items.find((p) => String(p.id) === id) || null)} center={[-15.4, 28.3]} zoom={11} />}>
+      map={<CityMap city={city} className="w-full h-full" markers={markers} onSelect={(id) => setSel(items.find((p) => String(p.id) === id) || null)} />}>
+      {cities.length > 1 && <div className="flex flex-wrap gap-1.5 mb-1" role="tablist">{cities.map((c) => <button key={c} role="tab" aria-selected={c === city} onClick={() => { setCityPick(c); setSel(null); }} className={`rounded-full border text-xs px-3 py-1.5 ${c === city ? "bg-ink text-cream border-ink" : "border-line text-ink-soft"}`}>{c}</button>)}</div>}
       {loading ? <Skel /> : !items.length ? <Empty>Aucun logement pour le moment.</Empty> : items.map((p) => (
         <div key={p.id} className={`rounded-2xl border bg-surface overflow-hidden ${sel?.id === p.id ? "border-[#C89A3D]" : "border-line"}`}>
           <button onClick={() => setSel(p)} className="w-full text-left flex gap-3 p-3">

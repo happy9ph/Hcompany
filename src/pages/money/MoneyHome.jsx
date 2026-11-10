@@ -8,7 +8,9 @@ import ChangeForm from "../../components/money/ChangeForm.jsx";
 import Invoices from "./Invoices.jsx";
 import LoginGateModal from "../../components/ui/LoginGateModal.jsx";
 import Landing from "../../components/money/r/Landing.jsx";
-import { RequestFlow, SendDone, SendFlow } from "../../components/money/r/flows.jsx";
+import { RequestFlow, SendFlow } from "../../components/money/r/flows.jsx";
+import TransferModal from "../../components/money/r/TransferModal.jsx";
+import TransferStatus from "../../components/money/r/TransferStatus.jsx";
 import { Frame, H } from "../../components/money/r/ui.jsx";
 import { FLAG, StatusPill, nf, useCorridors } from "../../components/money/parts.jsx";
 
@@ -63,10 +65,12 @@ export default function MoneyHome({ embedded = false }) {
   }, [history]);
 
   const start = (k, sub) => { setResult(null); setPreset(null); setInvTab(sub || "mine"); setView(k); };
-  let body;
-  if (result) body = <SendDone t={result} onAgain={home} />;
-  else if (view === "send") body = <SendFlow key={preset?.key || "new"} cor={cor} preset={preset} onExit={home} onDone={setResult} requireAuth={requireAuth} />;
-  else if (view === "request") body = <RequestFlow cor={cor} onExit={home} requireAuth={requireAuth} />;
+  // Send Money et Request Money s'ouvrent dans une fenêtre modale ; le reste de H-Money reste en page.
+  let body, modal = null;
+  if (result) modal = <TransferModal title="Suivi du transfert" onClose={home}><TransferStatus initial={result} onClose={home} /></TransferModal>;
+  else if (view === "send") modal = <TransferModal title="Envoyer de l'argent" onClose={home}><SendFlow key={preset?.key || "new"} cor={cor} preset={preset} onExit={home} onDone={setResult} requireAuth={requireAuth} /></TransferModal>;
+  else if (view === "request") modal = <TransferModal title="Demander de l'argent" onClose={home}><RequestFlow cor={cor} onExit={home} requireAuth={requireAuth} /></TransferModal>;
+  if (modal) body = <Landing onStart={start} recent={recent} dueCount={dueCount} onContact={(c) => { setPreset({ ...c, key: c.key }); setView("send"); }} />;
   else if (view === "invoice") body = <Frame onBack={home} progress={0} wide><Invoices inline initial={invTab} /></Frame>;
   else if (view === "change") body = (
     <Frame onBack={home} progress={0} wide>
@@ -82,6 +86,7 @@ export default function MoneyHome({ embedded = false }) {
     <div className={embedded ? "pb-6" : "min-h-screen bg-cream pb-16"}>
       {!embedded && <header className="border-b border-line bg-surface/80 backdrop-blur sticky top-0 z-20"><div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between"><Link to="/app" className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"><ArrowLeft size={15} />Accueil</Link><p className="font-display text-lg text-ink">H-Money</p><span className="w-16" /></div></header>}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">{body}</main>
+      {modal}
       {gate && <LoginGateModal onClose={() => setGate(false)} redirectTo={embedded ? "/app/money" : "/money"} />}
     </div>
   );

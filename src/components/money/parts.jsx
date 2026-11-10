@@ -7,6 +7,9 @@ export const input = "w-full rounded-xl border border-line bg-surface px-4 py-3 
 export const msgOf = (e) => e?.data?.detail || e?.message || "Une erreur est survenue.";
 export const nf = (n, cur) => `${Number(n || 0).toLocaleString("fr-FR", { maximumFractionDigits: cur === "CDF" ? 0 : 2, minimumFractionDigits: 0 })} ${cur || ""}`.trim();
 
+/** Clé d'idempotence d'une opération (une par tentative : la même clé rejoue la même opération, jamais une seconde). */
+export const newKey = () => (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`);
+
 export function useCorridors() {
   const [d, setD] = useState(null);
   useEffect(() => { api.money.corridors().then(setD).catch(() => setD(false)); }, []);
@@ -52,8 +55,8 @@ export function Field({ label, hint, children }) {
   );
 }
 
-const TONE = { completed: "bg-emerald-50 text-emerald-700 border-emerald-200", awaiting_payer: "bg-amber-50 text-amber-700 border-amber-200", under_review: "bg-violet-50 text-violet-700 border-violet-200", rejected: "bg-red-50 text-red-700 border-red-200", refunded: "bg-sky-50 text-sky-700 border-sky-200", cancelled: "bg-red-50 text-red-700 border-red-200", declined: "bg-red-50 text-red-700 border-red-200", expired: "bg-stone-100 text-stone-600 border-stone-200" };
-const LABEL = { under_review: "En contrôle", rejected: "Refusé après contrôle", completed: "Terminé", awaiting_payer: "En attente de paiement", refunded: "Remboursé", cancelled: "Annulé", declined: "Refusé", expired: "Expiré", collected: "En cours", created: "En cours" };
+const TONE = { collecting: "bg-amber-50 text-amber-700 border-amber-200", payout_pending: "bg-violet-50 text-violet-700 border-violet-200", refund_pending: "bg-sky-50 text-sky-700 border-sky-200", completed: "bg-emerald-50 text-emerald-700 border-emerald-200", awaiting_payer: "bg-amber-50 text-amber-700 border-amber-200", under_review: "bg-violet-50 text-violet-700 border-violet-200", rejected: "bg-red-50 text-red-700 border-red-200", refunded: "bg-sky-50 text-sky-700 border-sky-200", cancelled: "bg-red-50 text-red-700 border-red-200", declined: "bg-red-50 text-red-700 border-red-200", expired: "bg-stone-100 text-stone-600 border-stone-200" };
+const LABEL = { under_review: "En contrôle", rejected: "Refusé après contrôle", completed: "Terminé", awaiting_payer: "En attente de paiement", refunded: "Remboursé", cancelled: "Annulé", declined: "Refusé", expired: "Expiré", collected: "Paiement reçu", created: "En cours", collecting: "Attente du réseau", payout_pending: "Versement en cours", refund_pending: "Remboursement en cours" };
 export function StatusPill({ status }) {
   return <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${TONE[status] || "bg-latte-soft text-coffee-dark border-latte"}`}>{LABEL[status] || status}</span>;
 }

@@ -32,7 +32,7 @@ export default function PayPanel({ head, amount, sub, children, q, payCountry, o
               <div className="mt-6"><Primary busy={busy} disabled={!phone || !opKey}><ShieldCheck size={18} />Payer {nf(q.total_paid, q.send_currency)}</Primary></div>
               {onDecline && <button type="button" onClick={onDecline} className="w-full text-center text-xs text-ink-faint hover:text-ink mt-4">Refuser cette demande</button>}
               {simulated && <p role="note" className="mt-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs px-4 py-3"><strong>Mode démonstration.</strong> Aucun argent réel n'est encaissé.</p>}
-              <p className="text-xs text-ink-faint mt-4 flex gap-2" style={{ color: NAVY }}><ShieldCheck size={14} className="shrink-0 mt-0.5" />L'argent est gardé jusqu'au contrôle, puis versé.</p>
+              <p className="text-xs text-ink-faint mt-4 flex gap-2" style={{ color: NAVY }}><ShieldCheck size={14} className="shrink-0 mt-0.5" />Après avoir cliqué, vous validez le paiement avec votre PIN dans l'application de votre opérateur. H-Money ne demande jamais votre PIN.</p>
             </form>
           )}
         </div>
