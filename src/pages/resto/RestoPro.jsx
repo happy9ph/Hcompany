@@ -7,25 +7,27 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { api } from "../../lib/api.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
+import { isIndividual, proTabs } from "../../lib/resto.js";
+import { TypePicker, useProT } from "../../components/restaurant/ProUi.jsx";
 
 const Tabs = lazy(() => import("./RestoProTabs.jsx"));
-const TAB_KEYS = ["overview", "reservations", "menu", "room", "info"];
 
-function Create({ onCreated }) {
+function Create({ onCreated, type, setType }) {
   const ui = useRestoUi();
-  const t = ui.pro;
+  const t = useProT(type);
   const { withAuth } = useUser();
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   async function go(e) {
     e.preventDefault(); setBusy(true); setErr(null);
-    try { onCreated(await withAuth((tk) => api.resto.owner.create(tk, { name }))); } catch (x) { setErr({ msg: errMessage(x, ui.common.error), module: x?.status === 403 }); } finally { setBusy(false); }
+    try { onCreated(await withAuth((tk) => api.resto.owner.create(tk, { name, seller_type: type }))); } catch (x) { setErr({ msg: errMessage(x, ui.common.error), module: x?.status === 403 }); } finally { setBusy(false); }
   }
   return (
     <Card className="max-w-xl">
       <h2 className="font-display text-2xl text-ink mb-4">{t.newTitle}</h2>
-      <form onSubmit={go} className="space-y-4">
+      <form onSubmit={go} className="space-y-5">
+        <TypePicker value={type} onChange={setType} name="create_type" />
         <Field label={t.name} htmlFor="rn"><input id="rn" value={name} onChange={(e) => setName(e.target.value)} minLength={2} maxLength={80} required className={inputCls} /></Field>
         {err && <div role="alert" className="text-sm text-red-600">{err.module ? t.needModule : err.msg}{err.module && <Link to="/dashboard" className="block mt-2 underline text-coffee">{t.openModules}</Link>}</div>}
         <button disabled={busy || name.trim().length < 2} className="inline-flex items-center gap-2 rounded-full bg-ink text-cream text-sm font-medium px-6 py-3.5 disabled:opacity-50"><Plus size={16} />{t.create}</button>
@@ -44,12 +46,16 @@ function Inner() {
   const { data, error, loading, reload } = useLoad(() => withAuth((tk) => api.resto.owner.list(tk)), []);
   const [list, setList] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [newType, setNewType] = useState("restaurant");
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (data) setList(data); }, [data]);
 
   const rid = Number(sp.get("r")) || list?.[0]?.id;
   const r = list?.find((x) => x.id === rid);
-  const tab = TAB_KEYS.includes(sp.get("tab")) ? sp.get("tab") : "overview";
+  const tabKeys = proTabs(r);
+  const tab = tabKeys.includes(sp.get("tab")) ? sp.get("tab") : "overview";
+  const T = useProT(r?.seller_type);
+  const ind = isIndividual(r);
   const setParam = (k, v) => { const n = new URLSearchParams(sp); n.set(k, v); setSp(n, { replace: true }); };
 
   const refresh = async () => { const fresh = await withAuth((tk) => api.resto.owner.list(tk)); setList(fresh); return fresh; };
@@ -64,9 +70,9 @@ function Inner() {
   if (!list?.length || creating) return (
     <RestoLayout width="max-w-4xl">
       <p className="text-xs uppercase tracking-[0.2em] text-coffee mb-3">{t.eyebrow}</p>
-      <h1 className="font-display text-4xl text-ink mb-3">{t.title}</h1>
-      <p className="text-ink-soft mb-8 max-w-xl">{t.lead}</p>
-      <Create onCreated={async (c) => { setCreating(false); await refresh(); setSp({ r: String(c.id), tab: "info" }, { replace: true }); }} />
+      <h1 className="font-display text-3xl sm:text-4xl text-ink mb-3">{t.by[newType].createTitle}</h1>
+      <p className="text-ink-soft mb-8 max-w-xl">{t.by[newType].createLead}</p>
+      <Create type={newType} setType={setNewType} onCreated={async (c) => { setCreating(false); await refresh(); setSp({ r: String(c.id), tab: "info" }, { replace: true }); }} />
     </RestoLayout>
   );
   if (!r) return null;
@@ -77,21 +83,22 @@ function Inner() {
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-coffee mb-2">{t.eyebrow}</p>
           <div className="flex flex-wrap items-center gap-3"><h1 className="font-display text-3xl sm:text-4xl text-ink">{r.name}</h1><StatusPill status={r.status} kind="resto" /></div>
-          <p className="text-sm text-ink-soft mt-2 max-w-xl">{r.status_reason ? `${r.status_reason} — ` : ""}{t.statusHint[r.status]}</p>
+          <p className="text-sm text-ink-soft mt-2 max-w-xl">{r.status_reason ? `${r.status_reason} — ` : ""}{T.statusHint[r.status]}</p>
+          {!ind && r.status !== "draft" && r.accepts_reservations === false && <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 max-w-xl" role="status">{t.type.reservationsClosed}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
           {list.length > 1 && <select aria-label={t.mine} value={r.id} onChange={(e) => setParam("r", e.target.value)} className={`${inputCls} !w-auto`}>{list.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>}
-          {r.status === "active" && <Link to={`/restaurant/r/${r.slug}`} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm"><Eye size={15} />{ui.page.reserve}</Link>}
+          {r.status === "active" && <Link to={`/restaurant/r/${r.slug}`} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm"><Eye size={15} />{T.viewPublic}</Link>}
           {["draft", "rejected"].includes(r.status) && <button disabled={busy} onClick={() => act("submit")} className="inline-flex items-center gap-2 rounded-full bg-ink text-cream px-5 py-2.5 text-sm disabled:opacity-50"><Send size={15} />{t.submit}</button>}
           {r.status === "active" && <button disabled={busy} onClick={() => act("pause")} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm"><Pause size={15} />{t.pause}</button>}
           {r.status === "paused" && <button disabled={busy} onClick={() => act("resume")} className="inline-flex items-center gap-2 rounded-full bg-ink text-cream px-5 py-2.5 text-sm"><Play size={15} />{t.resume}</button>}
-          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm"><Store size={15} />{t.newTitle}</button>
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm"><Store size={15} />{t.newAnother[ind ? "individual" : "restaurant"]}</button>
         </div>
       </div>
-      <nav className="flex gap-1 overflow-x-auto border-b border-line mb-8" aria-label="tabs">
-        {TAB_KEYS.map((k) => (
-          <button key={k} onClick={() => setParam("tab", k)} aria-current={tab === k} className={`relative px-4 py-3 text-sm whitespace-nowrap border-b-2 -mb-px ${tab === k ? "border-coffee text-ink" : "border-transparent text-ink-soft hover:text-ink"}`}>
-            {t.tabs[k]}{k === "reservations" && r.pending_reservations > 0 && <span className="ml-2 rounded-full bg-coffee text-cream text-[11px] px-1.5 py-0.5">{r.pending_reservations}</span>}
+      <nav className="flex flex-wrap gap-x-1 border-b border-line mb-8" aria-label="tabs">
+        {tabKeys.map((k) => (
+          <button key={k} onClick={() => setParam("tab", k)} aria-current={tab === k} className={`relative px-3 sm:px-4 py-3 text-sm border-b-2 -mb-px ${tab === k ? "border-coffee text-ink" : "border-transparent text-ink-soft hover:text-ink"}`}>
+            {T.tabs[k]}{k === "reservations" && r.pending_reservations > 0 && <span className="ml-2 rounded-full bg-coffee text-cream text-[11px] px-1.5 py-0.5">{r.pending_reservations}</span>}
           </button>
         ))}
       </nav>

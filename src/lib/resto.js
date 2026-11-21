@@ -47,3 +47,26 @@ export function nextLabel(tables) {
   const nums = tables.map((t) => parseInt(String(t.label).replace(/\D/g, ""), 10)).filter(Number.isFinite);
   return `T${(nums.length ? Math.max(...nums) : 0) + 1}`;
 }
+
+/* ───────────────────────────── A2 : vendeurs individuels, livraison, contact direct ───────────────────────────── */
+export const SELLER_TYPES = ["restaurant", "individual"];
+export const isIndividual = (r) => (r?.seller_type || "restaurant") === "individual";
+/** Onglets de l'espace pro : un vendeur individuel n'a ni réservations ni salle. */
+export const proTabs = (r) => (isIndividual(r) ? ["overview", "menu", "info"] : ["overview", "reservations", "menu", "room", "info"]);
+/** Chiffres seulement (wa.me n'accepte ni « + » ni espaces). */
+export const waDigits = (v) => String(v || "").replace(/\D/g, "");
+export const waLink = (number, text) => { const d = waDigits(number); return d ? `https://wa.me/${d}${text ? `?text=${encodeURIComponent(text)}` : ""}` : null; };
+export const telLink = (v) => { const t = String(v || "").replace(/[^\d+]/g, ""); return t ? `tel:${t}` : null; };
+/** Frais de livraison : null = à convenir · 0 = gratuite · n = montant. */
+export function feeKind(d) { if (!d?.offers) return "none"; if (d.fee == null) return "tbd"; return Number(d.fee) === 0 ? "free" : "amount"; }
+/** Peut-on réserver ? (le serveur reste l'autorité : 409 sinon) */
+export const canReserve = (r) => !!r && r.accepts_reservations === true;
+/** Catégories (et plats) filtrés par une recherche texte ; une catégorie sans résultat disparaît. */
+export function filterMenu(menu, q) {
+  const s = String(q || "").trim().toLowerCase();
+  if (!s) return menu || [];
+  return (menu || []).map((c) => ({ ...c, items: c.items.filter((i) => `${i.name} ${i.description || ""}`.toLowerCase().includes(s)) })).filter((c) => c.items.length);
+}
+export const menuAnchor = (c, i) => `cat-${c.id ?? `x${i}`}`;
+/** Titre / compteur de la recherche selon le filtre de type. */
+export const searchKind = (type) => (type === "individual" ? "individual" : type === "restaurant" ? "restaurant" : "mixed");
