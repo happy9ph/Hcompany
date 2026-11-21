@@ -1,7 +1,7 @@
 import { PageBack } from "../ui/BackButton.jsx";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { CalendarDays, ImageIcon, Loader2, Search, Star, Store, Utensils, Zap } from "lucide-react";
+import { CalendarDays, ImageIcon, Loader2, Search, Star, Store, Truck, Utensils, Zap } from "lucide-react";
 import NavBar from "../layout/NavBar.jsx";
 import Footer from "../layout/Footer.jsx";
 import { RESTO_UI } from "../../i18n/restoUi.js";
@@ -9,7 +9,7 @@ import { useLanguage } from "../../context/LanguageContext.jsx";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { api } from "../../lib/api.js";
-import { priceSigns, resTone, restoTone } from "../../lib/resto.js";
+import { isIndividual, priceSigns, resTone, restoTone } from "../../lib/resto.js";
 import { LodgeImage as RestoImage, Spinner, ErrorState, EmptyState, Pagination } from "../lodge/Shared.jsx";
 import { Card, Field, Modal, inputCls } from "../lodge/HostUi.jsx";
 
@@ -111,20 +111,25 @@ export function RestoAuthGate({ children, message, width = "max-w-xl" }) {
 export function RestoCard({ r, query = "", index = 0 }) {
   const ui = useRestoUi();
   const cuisine = (r.cuisines || []).slice(0, 2).map((c) => ui.cuisines[c] || c).join(" · ");
+  const ind = isIndividual(r);
   return (
     <Link to={`/restaurant/r/${r.slug}${query}`} className="group block rounded-3xl border border-line bg-surface overflow-hidden hover:border-coffee-light transition-colors" style={{ contentVisibility: index > 8 ? "auto" : undefined }}>
       <div className="relative">
         <RestoImage path={r.image} alt={r.name} ratio="aspect-[4/3]" className="group-hover:scale-[1.02] transition-transform duration-500" />
-        {r.instant_confirm && <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/92 text-black text-[11px] font-medium px-2.5 py-1"><Zap size={11} />{ui.search.instant}</span>}
+        <div className="absolute top-3 left-3 right-3 flex flex-wrap gap-1.5">
+          {ind && <span className="inline-flex items-center gap-1 rounded-full bg-white/92 text-black text-[11px] font-medium px-2.5 py-1"><Store size={11} aria-hidden="true" />{ui.search.individualBadge}</span>}
+          {!ind && r.instant_confirm && <span className="inline-flex items-center gap-1 rounded-full bg-white/92 text-black text-[11px] font-medium px-2.5 py-1"><Zap size={11} aria-hidden="true" />{ui.search.instant}</span>}
+          {r.offers_delivery && <span className="inline-flex items-center gap-1 rounded-full bg-white/92 text-black text-[11px] font-medium px-2.5 py-1"><Truck size={11} aria-hidden="true" />{ui.search.deliveryBadge}</span>}
+        </div>
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <h3 className="font-display text-lg text-ink leading-tight">{r.name}</h3>
-          <Rating value={r.rating_avg} count={r.rating_count} className="shrink-0 mt-0.5" />
+          {!ind && <Rating value={r.rating_avg} count={r.rating_count} className="shrink-0 mt-0.5" />}
         </div>
-        <p className="text-sm text-ink-soft mt-1">{[cuisine, priceSigns(r.price_level), r.area || r.city].filter(Boolean).join(" · ")}</p>
+        <p className="text-sm text-ink-soft mt-1">{[cuisine, !ind && priceSigns(r.price_level), r.area || r.city].filter(Boolean).join(" · ")}</p>
         {r.summary && <p className="text-sm text-ink-faint mt-2 line-clamp-2">{r.summary}</p>}
-        {r.free_tables != null && <p className={`text-xs font-medium mt-3 ${r.free_tables ? "text-emerald-700 dark:text-emerald-300" : "text-red-600"}`}>{ui.search.freeTables(r.free_tables)}</p>}
+        {ind ? <p className="text-xs font-medium mt-3 text-coffee">{ui.search.contactOnly}</p> : r.free_tables != null && <p className={`text-xs font-medium mt-3 ${r.free_tables ? "text-emerald-700 dark:text-emerald-300" : "text-red-600"}`}>{ui.search.freeTables(r.free_tables)}</p>}
       </div>
     </Link>
   );

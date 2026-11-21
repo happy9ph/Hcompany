@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowUpRight, Megaphone, Minus } from "lucide-react";
 import { api } from "../../lib/api.js";
+import { consent } from "../../lib/memStore.js";
 
 const THEME = { coffee: "linear-gradient(135deg,#4A3020,#2A1A10)", gold: "linear-gradient(135deg,#D9B05A,#B8862C)", ink: "linear-gradient(135deg,#2A1A10,#120A05)", cream: "linear-gradient(135deg,#F3E9D6,#E4D3B3)" };
 const SHOW_ON = ["/app", "/shopping", "/transport", "/logement", "/restaurant", "/tourisme", "/formations", "/interpretation", "/money"];
 const REAPPEAR_MS = 45000; // une pub réduite revient d'elle-même, avec l'annonce suivante
 const FIRST_MS = 1200;
+const MOBILE_OPEN_MS = 6000; // mobile (V8) : l'annonce se réduit seule après quelques secondes pour ne pas masquer formulaires et boutons
 const HOUSE = [
   { id: "h1", theme: "gold", title: "Votre pub ici", body: "Touchez des clients à Lusaka et Kinshasa.", cta_label: "Devenir partenaire", link: "/infos#rejoindre" },
   { id: "h2", theme: "coffee", title: "Facturez et soyez payé", body: "Générez une facture, payez en mobile money.", cta_label: "H-Money", link: "/app/factures" },
@@ -27,14 +29,24 @@ export default function FloatingPromo() {
   const placement = placementFor(pathname);
   const [ads, setAds] = useState([]), [idx, setIdx] = useState(0), [open, setOpen] = useState(false), [ready, setReady] = useState(false);
   const counted = useRef(new Set());
+  // la pub attend la réponse au bandeau cookies : jamais deux fenêtres l'une sur l'autre
+  const [answered, setAnswered] = useState(() => !!consent.get());
+  useEffect(() => { const on = () => setAnswered(true); window.addEventListener("hc:consent", on); return () => window.removeEventListener("hc:consent", on); }, []);
 
   useEffect(() => {
     setOpen(false); setReady(false); setIdx(0);
-    if (!eligible) return undefined;
+    if (!eligible || !answered) return undefined;
     let on = true, t;
     api.promos.serve(placement, 6).then((rows) => on && setAds(rows.length ? rows : HOUSE)).catch(() => on && setAds(HOUSE)).finally(() => { t = setTimeout(() => on && (setReady(true), setOpen(true)), FIRST_MS); });
     return () => { on = false; clearTimeout(t); };
-  }, [eligible, placement]);
+  }, [eligible, placement, answered]);
+
+  // mobile : réduction automatique (la pastille reste là, la pub revient plus tard) — on ne retire rien
+  useEffect(() => {
+    if (!open || typeof window === "undefined" || !window.matchMedia?.("(max-width: 639px)").matches) return undefined;
+    const t = setTimeout(() => setOpen(false), MOBILE_OPEN_MS);
+    return () => clearTimeout(t);
+  }, [open, idx]);
 
   // réduite → revient après un moment, avec la pub suivante
   useEffect(() => {
@@ -53,11 +65,11 @@ export default function FloatingPromo() {
   const real = !String(ad.id).startsWith("h");
   const click = () => real && api.promos.clicked(ad.id);
   const cta = `inline-flex items-center gap-1.5 rounded-full text-xs font-semibold px-4 py-2 ${light ? "bg-[#2A1A10] text-[#FBF6EC]" : "bg-[#C89A3D] text-[#2A1A10]"}`;
-  const body = (<><span className="block font-display text-base leading-snug pr-6">{ad.title}</span>{ad.body && <span className="block text-xs opacity-80 mt-1 line-clamp-2">{ad.body}</span>}<span className={`${cta} mt-3`}>{ad.cta_label}<ArrowUpRight size={12} /></span></>);
-  const cls = `block rounded-2xl p-4 shadow-2xl ${light ? "text-[#2A1A10]" : "text-[#FBF6EC]"}`;
-  const pos = "fixed z-[45] bottom-[76px] md:bottom-5";
+  const body = (<><span className="block font-display text-[15px] sm:text-base leading-snug pr-6">{ad.title}</span>{ad.body && <span className="hidden sm:block text-xs opacity-80 mt-1 line-clamp-2">{ad.body}</span>}<span className={`${cta} mt-2 sm:mt-3`}>{ad.cta_label}<ArrowUpRight size={12} /></span></>);
+  const cls = `block rounded-2xl p-3 sm:p-4 shadow-2xl ${light ? "text-[#2A1A10]" : "text-[#FBF6EC]"}`;
+  const pos = "fixed z-[45] bottom-[calc(var(--hc-bar,0px)+76px)] sm:bottom-[calc(var(--hc-bar,0px)+96px)]"; // au-dessus de la bulle de chat et de la barre de contact (--hc-bar) ; sm+ : au-dessus des notifications
   if (!open) return (
-    <button onClick={() => setOpen(true)} aria-label="Afficher la publicité" className={`${pos} right-24 sm:right-24 inline-flex items-center gap-2 rounded-full bg-surface border border-line shadow-lg px-3.5 py-2 text-xs text-ink-soft hover:text-ink`}><Megaphone size={14} className="text-[#C89A3D]" />{ad.sponsored ? "Sponsorisé" : "H-Company"}</button>
+    <button onClick={() => setOpen(true)} aria-label="Afficher la publicité" className={`${pos} right-3 sm:right-24 inline-flex items-center gap-2 rounded-full bg-surface border border-line shadow-lg px-3.5 py-2 text-xs text-ink-soft hover:text-ink`}><Megaphone size={14} className="text-[#C89A3D]" />{ad.sponsored ? "Sponsorisé" : "H-Company"}</button>
   );
   return (
     <aside aria-label="Publicité" role="complementary" className={`${pos} right-3 left-3 sm:left-auto sm:right-24 sm:w-80 animate-[hcfloat_.35s_ease-out]`}>

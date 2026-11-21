@@ -7,7 +7,8 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { api } from "../../lib/api.js";
-import { CUISINES, DISH_TAGS, RES_STATUSES, TABLE_SHAPES, TABLE_ZONES, fmtDay, isoToday, nextLabel } from "../../lib/resto.js";
+import { CUISINES, DISH_TAGS, RES_STATUSES, TABLE_SHAPES, TABLE_ZONES, fmtDay, isIndividual, isoToday, nextLabel } from "../../lib/resto.js";
+import { TypePicker, useProT } from "../../components/restaurant/ProUi.jsx";
 
 const DiningRoom3D = lazy(() => import("../../components/restaurant/DiningRoom3D.jsx"));
 
@@ -17,7 +18,9 @@ export function payloadOf(r, over = {}) {
     name: r.name, summary: r.summary || "", description: r.description || "", cuisines: r.cuisines || [], city: r.city || "", area: r.area || "", address: r.address || "",
     latitude: r.latitude ?? null, longitude: r.longitude ?? null, phone: r.phone || "", whatsapp: r.whatsapp || "", price_level: r.price_level, open_time: r.open_time, close_time: r.close_time,
     closed_days: r.closed_days || [], slot_minutes: r.slot_minutes, max_party: r.max_party, instant_confirm: !!r.instant_confirm, accepts_preorder: !!r.accepts_preorder, has_terrace: !!r.has_terrace,
-    room_w: r.room_w, room_d: r.room_d, images: r.images || [], ...over,
+    room_w: r.room_w, room_d: r.room_d, images: r.images || [],
+    seller_type: r.seller_type || "restaurant", offers_delivery: !!r.offers_delivery, delivery_zones: r.delivery_zones || "", delivery_fee: r.delivery_fee ?? null,
+    delivery_fee_note: r.delivery_fee_note || "", delivery_terms: r.delivery_terms || "", sale_notes: r.sale_notes || "", ...over,
   };
 }
 
@@ -38,15 +41,21 @@ function Overview({ r, goTab }) {
   const [days, setDays] = useState(30);
   const { withAuth } = useUser();
   const { data } = useLoad(() => withAuth((t) => api.resto.owner.stats(t, r.id, days)), [r.id, days]);
-  const checks = [
-    [ui.pro.checklist.photo, r.images.length > 0, "info"], [ui.pro.checklist.menu, r.menu.some((c) => c.items.length), "menu"],
-    [ui.pro.checklist.tables, r.tables.some((t) => t.is_active), "room"], [ui.pro.checklist.info, !!(r.summary && r.city && r.address), "info"],
+  const T = useProT(r.seller_type);
+  const ind = isIndividual(r);
+  const checks = ind ? [
+    [T.checklist.photo, r.images.length > 0, "info"], [T.checklist.menu, r.menu.some((c) => c.items.length), "menu"],
+    [T.checklist.info, !!(r.summary && r.city && (r.phone || r.whatsapp)), "info"],
+    ...(r.offers_delivery ? [[T.checklist.delivery, !!(r.delivery_zones || "").trim(), "info"]] : []),
+  ] : [
+    [T.checklist.photo, r.images.length > 0, "info"], [T.checklist.menu, r.menu.some((c) => c.items.length), "menu"],
+    [T.checklist.tables, r.tables.some((t) => t.is_active), "room"], [T.checklist.info, !!(r.summary && r.city && r.address), "info"],
   ];
   const max = Math.max(1, ...(data?.series || []).map((x) => x.value));
   return (
     <div className="space-y-8">
       {["draft", "rejected"].includes(r.status) && (
-        <Card><h2 className="font-display text-xl text-ink mb-4">{ui.pro.checklistTitle}</h2>
+        <Card><h2 className="font-display text-xl text-ink mb-4">{T.checklistTitle}</h2>
           <ul className="space-y-2">{checks.map(([l, ok, tab]) => <li key={l}><button onClick={() => goTab(tab)} className="inline-flex items-center gap-2 text-sm text-ink-soft hover:text-ink">{ok ? <Check size={16} className="text-emerald-600" /> : <Circle size={16} className="text-ink-faint" />}{l}</button></li>)}</ul></Card>
       )}
       <div className="flex gap-2">{[7, 30, 90].map((d) => <button key={d} onClick={() => setDays(d)} aria-pressed={days === d} className={`rounded-full border px-4 py-2 text-sm ${days === d ? "border-coffee bg-latte-soft" : "border-line text-ink-soft"}`}>{s.days(d)}</button>)}</div>
@@ -169,7 +178,7 @@ function MenuTab({ r, refresh }) {
   const cats = r.menu;
   return (
     <div className="space-y-8 max-w-3xl">
-      <form onSubmit={addCat} className="flex gap-3"><input value={catName} onChange={(e) => setCatName(e.target.value)} placeholder={m.categoryName} maxLength={60} aria-label={m.categoryName} className={inputCls} /><button className="inline-flex items-center gap-2 rounded-full bg-ink text-cream text-sm px-5 py-2.5 whitespace-nowrap"><Plus size={15} />{m.addCategory}</button></form>
+      <form onSubmit={addCat} className="flex flex-col sm:flex-row gap-3"><input value={catName} onChange={(e) => setCatName(e.target.value)} placeholder={m.categoryName} maxLength={60} aria-label={m.categoryName} className={inputCls} /><button className="inline-flex items-center justify-center gap-2 rounded-full bg-ink text-cream text-sm px-5 py-2.5 whitespace-nowrap"><Plus size={15} />{m.addCategory}</button></form>
       {cats.length === 0 && <EmptyState title={m.empty} />}
       {cats.map((c) => (
         <section key={c.id ?? "x"}>
@@ -263,22 +272,36 @@ function RoomTab({ r, refresh }) {
 /* ------------------------------- Informations ------------------------------- */
 function InfoTab({ r, refresh }) {
   const ui = useRestoUi();
-  const t = ui.pro.info;
+  const ind0 = isIndividual(r);
+  const T = useProT(r.seller_type);
   const call = useCall();
-  const [f, setF] = useState(() => payloadOf(r));
+  const [f, setF] = useState(() => ({ ...payloadOf(r), delivery_fee: r.delivery_fee == null ? "" : String(r.delivery_fee) }));
   const [busy, setBusy] = useState(false);
+  const ind = f.seller_type === "individual";
+  const t = ind ? { ...ui.pro.info, ...ui.pro.infoBy.individual } : ui.pro.info;
+  const dl = ui.pro.delivery;
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
   const toggle = (k, v) => setF((s) => ({ ...s, [k]: s[k].includes(v) ? s[k].filter((x) => x !== v) : [...s[k], v] }));
   const num = (v) => (v === "" || v == null ? null : Number(v));
+  // F1 (écran) : changer de type ne publie rien et ne crée rien ; passer en vendeur individuel est refusé si des réservations attendent
+  const typeChanged = f.seller_type !== (r.seller_type || "restaurant");
+  const blocked = { individual: !ind0 && r.pending_reservations > 0 ? ui.pro.type.blockedPending : "" };
   async function save(e) {
-    e.preventDefault(); setBusy(true);
-    try { await call((tk) => api.resto.owner.update(tk, r.id, { ...f, latitude: num(f.latitude), longitude: num(f.longitude), slot_minutes: Number(f.slot_minutes), max_party: Number(f.max_party), price_level: Number(f.price_level) }), ui.common.saved); await refresh(); } catch { /* toast */ } finally { setBusy(false); }
+    e.preventDefault();
+    if (typeChanged && !window.confirm(ui.pro.type.switchWarn)) return;
+    setBusy(true);
+    try {
+      await call((tk) => api.resto.owner.update(tk, r.id, { ...f, latitude: num(f.latitude), longitude: num(f.longitude), slot_minutes: Number(f.slot_minutes), max_party: Number(f.max_party), price_level: Number(f.price_level), delivery_fee: num(f.delivery_fee) }), ui.common.saved);
+      await refresh();
+    } catch { /* toast (dont le 409 du serveur) */ } finally { setBusy(false); }
   }
   const chip = (on) => `rounded-full border px-3.5 py-2 text-sm ${on ? "border-coffee bg-latte-soft text-ink" : "border-line text-ink-soft hover:border-coffee-light"}`;
   return (
     <form onSubmit={save} className="space-y-6 max-w-3xl">
+      <Card><TypePicker value={f.seller_type} onChange={(v) => setF((s) => ({ ...s, seller_type: v }))} disabled={blocked} name="info_type" />
+        {typeChanged && <p role="status" className="text-sm text-amber-700 dark:text-amber-300 mt-3">{ui.pro.type.switchWarn}</p>}</Card>
       <Card className="space-y-4">
-        <Field label={ui.pro.name} htmlFor="in"><input id="in" required minLength={2} maxLength={80} value={f.name} onChange={set("name")} className={inputCls} /></Field>
+        <Field label={t.name || ui.pro.name} htmlFor="in"><input id="in" required minLength={2} maxLength={80} value={f.name} onChange={set("name")} className={inputCls} /></Field>
         <Field label={t.summary} htmlFor="isu"><input id="isu" maxLength={160} value={f.summary} onChange={set("summary")} className={inputCls} /></Field>
         <Field label={t.description} htmlFor="ide"><textarea id="ide" rows={5} maxLength={4000} value={f.description} onChange={set("description")} className={inputCls} /></Field>
         <div><p className="text-sm font-medium text-ink mb-2">{t.cuisines}</p><div className="flex flex-wrap gap-2">{CUISINES.map((c) => <button type="button" key={c} onClick={() => toggle("cuisines", c)} aria-pressed={f.cuisines.includes(c)} className={chip(f.cuisines.includes(c))}>{ui.cuisines[c]}</button>)}</div></div>
@@ -288,29 +311,50 @@ function InfoTab({ r, refresh }) {
           <Field label={t.city} htmlFor="ic"><input id="ic" value={f.city} onChange={set("city")} className={inputCls} /></Field>
           <Field label={t.area} htmlFor="ia"><input id="ia" value={f.area} onChange={set("area")} className={inputCls} /></Field>
         </div>
-        <Field label={t.address} htmlFor="iad"><input id="iad" value={f.address} onChange={set("address")} className={inputCls} /></Field>
+        {!ind && <Field label={t.address} htmlFor="iad"><input id="iad" value={f.address} onChange={set("address")} className={inputCls} /></Field>}
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label={t.phone} htmlFor="ip"><input id="ip" value={f.phone} onChange={set("phone")} inputMode="tel" className={inputCls} /></Field>
           <Field label={t.whatsapp} htmlFor="iw"><input id="iw" value={f.whatsapp} onChange={set("whatsapp")} inputMode="tel" className={inputCls} /></Field>
         </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Field label={`${t.mapHelp} — lat`} htmlFor="ila"><input id="ila" inputMode="decimal" value={f.latitude ?? ""} onChange={set("latitude")} className={inputCls} /></Field>
-          <Field label="lng" htmlFor="ilo"><input id="ilo" inputMode="decimal" value={f.longitude ?? ""} onChange={set("longitude")} className={inputCls} /></Field>
-        </div>
+        {ind && <p className="text-xs text-ink-soft">{t.contactHint}</p>}
+        {!ind && (
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label={`${t.mapHelp} — lat`} htmlFor="ila"><input id="ila" inputMode="decimal" value={f.latitude ?? ""} onChange={set("latitude")} className={inputCls} /></Field>
+            <Field label="lng" htmlFor="ilo"><input id="ilo" inputMode="decimal" value={f.longitude ?? ""} onChange={set("longitude")} className={inputCls} /></Field>
+          </div>
+        )}
       </Card>
       <Card className="space-y-4">
-        <div className="grid sm:grid-cols-3 gap-4">
-          <Field label={t.price} htmlFor="ipr"><select id="ipr" value={f.price_level} onChange={set("price_level")} className={inputCls}>{[1, 2, 3].map((n) => <option key={n} value={n}>{"$".repeat(n)}</option>)}</select></Field>
-          <Field label={t.open} htmlFor="io"><input id="io" type="time" value={f.open_time} onChange={set("open_time")} className={inputCls} /></Field>
-          <Field label={t.close} htmlFor="icl"><input id="icl" type="time" value={f.close_time} onChange={set("close_time")} className={inputCls} /></Field>
-          <Field label={t.slot} htmlFor="isl"><input id="isl" type="number" min="30" max="240" step="15" value={f.slot_minutes} onChange={set("slot_minutes")} className={inputCls} /></Field>
-          <Field label={t.maxParty} htmlFor="imp"><input id="imp" type="number" min="1" max="40" value={f.max_party} onChange={set("max_party")} className={inputCls} /></Field>
-        </div>
-        <div><p className="text-sm font-medium text-ink mb-2">{t.closedDays}</p><div className="flex flex-wrap gap-2">{ui.daysShort.map((d, i) => <button type="button" key={d} onClick={() => toggle("closed_days", i)} aria-pressed={f.closed_days.includes(i)} className={chip(f.closed_days.includes(i))}>{d}</button>)}</div></div>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
-          {[["instant_confirm", t.instant], ["accepts_preorder", t.preorder], ["has_terrace", t.terrace]].map(([k, l]) => <label key={k} className="inline-flex items-center gap-2"><input type="checkbox" checked={f[k]} onChange={set(k)} />{l}</label>)}
-        </div>
+        <h2 className="font-display text-xl text-ink">{dl.title}</h2>
+        <label className="inline-flex items-center gap-2 text-sm text-ink"><input type="checkbox" checked={f.offers_delivery} onChange={set("offers_delivery")} />{dl.offers}</label>
+        {f.offers_delivery && (
+          <div className="space-y-4">
+            <Field label={dl.zones} htmlFor="dz"><input id="dz" maxLength={300} value={f.delivery_zones} onChange={set("delivery_zones")} placeholder={dl.zonesPh} className={inputCls} /></Field>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label={dl.fee} htmlFor="df"><input id="df" inputMode="decimal" value={f.delivery_fee} onChange={(e) => setF((s) => ({ ...s, delivery_fee: e.target.value.replace(/[^\d.]/g, "") }))} className={inputCls} /><span className="block text-xs text-ink-faint mt-1">{dl.feeHint}</span></Field>
+              <Field label={dl.feeNote} htmlFor="dn"><input id="dn" maxLength={160} value={f.delivery_fee_note} onChange={set("delivery_fee_note")} placeholder={dl.feeNotePh} className={inputCls} /></Field>
+            </div>
+            <Field label={dl.terms} htmlFor="dt"><textarea id="dt" rows={3} maxLength={1500} value={f.delivery_terms} onChange={set("delivery_terms")} placeholder={dl.termsPh} className={inputCls} /></Field>
+          </div>
+        )}
+        <Field label={dl.sale} htmlFor="ds"><textarea id="ds" rows={3} maxLength={1500} value={f.sale_notes} onChange={set("sale_notes")} placeholder={dl.salePh} className={inputCls} /></Field>
+        <p className="text-xs text-ink-faint">{dl.manual}</p>
       </Card>
+      {!ind && (
+        <Card className="space-y-4">
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Field label={t.price} htmlFor="ipr"><select id="ipr" value={f.price_level} onChange={set("price_level")} className={inputCls}>{[1, 2, 3].map((n) => <option key={n} value={n}>{"$".repeat(n)}</option>)}</select></Field>
+            <Field label={t.open} htmlFor="io"><input id="io" type="time" value={f.open_time} onChange={set("open_time")} className={inputCls} /></Field>
+            <Field label={t.close} htmlFor="icl"><input id="icl" type="time" value={f.close_time} onChange={set("close_time")} className={inputCls} /></Field>
+            <Field label={t.slot} htmlFor="isl"><input id="isl" type="number" min="30" max="240" step="15" value={f.slot_minutes} onChange={set("slot_minutes")} className={inputCls} /></Field>
+            <Field label={t.maxParty} htmlFor="imp"><input id="imp" type="number" min="1" max="40" value={f.max_party} onChange={set("max_party")} className={inputCls} /></Field>
+          </div>
+          <div><p className="text-sm font-medium text-ink mb-2">{t.closedDays}</p><div className="flex flex-wrap gap-2">{ui.daysShort.map((d, i) => <button type="button" key={d} onClick={() => toggle("closed_days", i)} aria-pressed={f.closed_days.includes(i)} className={chip(f.closed_days.includes(i))}>{d}</button>)}</div></div>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
+            {[["instant_confirm", t.instant], ["accepts_preorder", t.preorder], ["has_terrace", t.terrace]].map(([k, l]) => <label key={k} className="inline-flex items-center gap-2"><input type="checkbox" checked={f[k]} onChange={set(k)} />{l}</label>)}
+          </div>
+        </Card>
+      )}
       <Card>
         <p className="text-sm font-medium text-ink mb-3">{t.photos}</p>
         <div className="flex flex-wrap gap-3 mb-4">{f.images.map((im, i) => (
