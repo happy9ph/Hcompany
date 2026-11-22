@@ -59,14 +59,24 @@ export default function FloatingPromo() {
   useEffect(() => { if (open && ad && !String(ad.id).startsWith("h") && !counted.current.has(ad.id)) { counted.current.add(ad.id); api.promos.seen(ad.id); } }, [open, ad]);
   if (!eligible || !ad || !ready) return null;
 
-  const light = (ad.theme === "cream" || ad.theme === "gold") && !ad.image_url;
-  const style = { background: ad.image_url ? `linear-gradient(0deg,rgba(18,10,5,.85),rgba(18,10,5,.3)), url(${ad.image_url}) center/cover` : THEME[ad.theme] || THEME.coffee };
+  const accent = THEME[ad.theme] || THEME.coffee;
   const ext = /^https?:/.test(ad.link);
   const real = !String(ad.id).startsWith("h");
   const click = () => real && api.promos.clicked(ad.id);
-  const cta = `inline-flex items-center gap-1.5 rounded-full text-xs font-semibold px-4 py-2 ${light ? "bg-[#2A1A10] text-[#FBF6EC]" : "bg-[#C89A3D] text-[#2A1A10]"}`;
-  const body = (<><span className="block font-display text-[15px] sm:text-base leading-snug pr-6">{ad.title}</span>{ad.body && <span className="hidden sm:block text-xs opacity-80 mt-1 line-clamp-2">{ad.body}</span>}<span className={`${cta} mt-2 sm:mt-3`}>{ad.cta_label}<ArrowUpRight size={12} /></span></>);
-  const cls = `block rounded-2xl p-3 sm:p-4 shadow-2xl ${light ? "text-[#2A1A10]" : "text-[#FBF6EC]"}`;
+  const body = (
+    <>
+      <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5 rounded-l-2xl" style={{ background: accent }} />
+      <span className="flex items-start gap-3 pl-2">
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold leading-snug text-ink pr-7">{ad.title}</span>
+          {ad.body && <span className="hidden sm:block text-xs text-ink-soft mt-1 line-clamp-2">{ad.body}</span>}
+          <span className="mt-2 sm:mt-3 inline-flex items-center gap-1.5 rounded-full bg-ink text-cream text-xs font-semibold px-4 py-2">{ad.cta_label}<ArrowUpRight size={12} /></span>
+        </span>
+        {ad.image_url && <span aria-hidden="true" className="hidden sm:block h-16 w-16 shrink-0 rounded-xl bg-latte-soft" style={{ background: `url(${ad.image_url}) center/cover` }} />}
+      </span>
+    </>
+  );
+  const cls = "relative block rounded-2xl border border-line bg-surface p-3.5 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,.14)] hover:shadow-[0_10px_34px_rgba(0,0,0,.18)] transition-shadow";
   const pos = "fixed z-[45] bottom-[calc(var(--hc-bar,0px)+76px)] sm:bottom-[calc(var(--hc-bar,0px)+96px)]"; // au-dessus de la bulle de chat et de la barre de contact (--hc-bar) ; sm+ : au-dessus des notifications
   if (!open) return (
     <button onClick={() => setOpen(true)} aria-label="Afficher la publicité" className={`${pos} right-3 sm:right-24 inline-flex items-center gap-2 rounded-full bg-surface border border-line shadow-lg px-3.5 py-2 text-xs text-ink-soft hover:text-ink`}><Megaphone size={14} className="text-[#C89A3D]" />{ad.sponsored ? "Sponsorisé" : "H-Company"}</button>
@@ -77,8 +87,8 @@ export default function FloatingPromo() {
       <div className="relative">
         <p className="absolute -top-2 left-3 z-10 rounded-full bg-surface border border-line text-[9px] uppercase tracking-widest text-ink-faint px-2 py-0.5">{ad.sponsored ? "Sponsorisé" : "H-Company"}</p>
         {ext
-          ? <a href={ad.link} target="_blank" rel="noopener noreferrer sponsored" onClick={click} className={cls} style={style}>{body}</a>
-          : <Link to={ad.link} onClick={click} className={cls} style={style}>{body}</Link>}
+          ? <a href={ad.link} target="_blank" rel="noopener noreferrer sponsored" onClick={click} className={cls}>{body}</a>
+          : <Link to={ad.link} onClick={click} className={cls}>{body}</Link>}
         <button onClick={() => setOpen(false)} aria-label="Réduire la publicité" className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/55"><Minus size={14} /></button>
       </div>
     </aside>
