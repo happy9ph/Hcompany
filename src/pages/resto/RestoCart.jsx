@@ -11,6 +11,8 @@ import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
 const ISSUE = { item_unavailable: "unavailableItem", item_not_found: "itemNotFound", vendor_unavailable: "vendorUnavailable", delivery_unavailable: "deliveryUnavailable", address_required: "addressRequired", zone_required: "zoneRequired", zone_unsupported: "zoneUnsupported", fulfilment_missing: "fulfilmentMissing" };
 
+const ISSUE_BY_KEY = { fulfilmentMissing: "fulfilmentMissing", addressRequired: "addressRequired", zoneRequired: "zoneRequired" };
+
 function feeText(v, c, money) {
   if (v.fulfilment !== "delivery") return null;
   if (v.fee_pending) return c.feeToArrange;
@@ -50,6 +52,10 @@ export default function RestoCart() {
     return () => clearTimeout(t);
   }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => { // un vendeur qui ne livre pas : le retrait est le seul choix possible
+    for (const v of quote?.vendors || []) if (!v.offers_delivery && !(foodCart.getState().opts[v.restaurant_id] || {}).fulfilment) foodCart.setOpt(v.restaurant_id, { fulfilment: "pickup" });
+  }, [quote]);
+
   if (!cart.lines.length) return (
     <RestoLayout width="max-w-3xl"><EmptyState icon={ShoppingBag} title={c.empty} hint={c.emptyHint} action={<Link to="/restaurant" className="rounded-full bg-ink text-cream text-sm font-medium px-6 py-3.5">{c.browse}</Link>} /></RestoLayout>
   );
@@ -58,9 +64,20 @@ export default function RestoCart() {
   const qv = (rid) => quote?.vendors?.find((v) => v.restaurant_id === rid);
   const qline = (rid, iid) => qv(rid)?.lines?.find((l) => l.item_id === iid);
   const changes = (quote?.vendors || []).flatMap((v) => (v.issues || []).filter((i) => i.code === "price_changed"));
+  // le devis ne signale pas ces points (ils ne bloquent qu'à l'envoi) : on les contrôle ici pour ne jamais laisser cliquer pour rien
+  const missing = (g) => {
+    const o = cart.opts[g.rid] || {}, v = qv(g.rid), out = [];
+    if (!o.fulfilment) out.push("fulfilmentMissing");
+    else if (o.fulfilment === "delivery") {
+      if ((o.address || "").trim().length < 5) out.push("addressRequired");
+      if (v?.zones?.length && !o.zone) out.push("zoneRequired");
+    }
+    return out;
+  };
+  const incomplete = groups.some((g) => missing(g).length > 0);
   const blocking = !quote || quote.vendors.some((v) => (v.issues || []).some((i) => ISSUE[i.code]));
   const needsPrices = changes.length > 0 && !acceptPrices;
-  const canSend = quote && !checking && !blocking && !needsPrices && contact.name.trim().length > 1 && contact.phone.trim().length >= 6;
+  const canSend = quote && !checking && !blocking && !incomplete && !needsPrices && contact.name.trim().length > 1 && contact.phone.trim().length >= 6;
 
   function accept() { foodCart.enrich(quote, { acceptPrices: true }); setAcceptPrices(true); }
 
@@ -74,7 +91,7 @@ export default function RestoCart() {
       nav(`/restaurant/commandes/${res.code}`, { state: { placed: true } });
     } catch (e) {
       const d = e?.data?.detail;
-      if (e?.status === 409 && d?.code === "cart_changed") { setQuote(d.cart); foodCart.enrich(d.cart); setErr(c.changed); setAcceptPrices(false); } else setErr(errMessage(e, c.error));
+      if (e?.status === 409 && d?.code === "cart_changed") { setQuote(d.cart); foodCart.enrich(d.cart); setErr([...new Set((d.cart?.vendors || []).flatMap((v) => (v.issues || []).map((i) => ISSUE[i.code]).filter(Boolean)))].map((k) => c[k]).join(" ") || c.changed); setAcceptPrices(false); } else setErr(errMessage(e, c.error));
     } finally { setBusy(false); }
   }
 
@@ -142,6 +159,7 @@ export default function RestoCart() {
                 </div>
               )}
               {(v?.issues || []).filter((i) => ["address_required", "zone_required", "zone_unsupported", "fulfilment_missing", "delivery_unavailable"].includes(i.code)).map((i) => <p key={i.code} className="mt-2 text-xs text-red-600">{c[ISSUE[i.code]]}</p>)}
+              {missing(g).map((k) => <p key={k} className="mt-2 text-xs text-amber-800">{c[ISSUE_BY_KEY[k]]}</p>)}
               {(v?.issues || []).some((i) => i.code === "vendor_unavailable") && <p className="mt-2 text-xs text-red-600">{c.vendorUnavailable}</p>}
               <Field label={c.note} htmlFor={`n${g.rid}`} className="mt-3"><input id={`n${g.rid}`} value={o.note || ""} maxLength={300} onChange={(e) => foodCart.setOpt(g.rid, { note: e.target.value })} className={inputCls} /></Field>
 
