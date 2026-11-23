@@ -2,13 +2,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Clock, MapPin, Minus, Plus, Search, Store, Truck, Zap } from "lucide-react";
 import { RestoImage, Rating, useRestoUi } from "./Shared.jsx";
 import { ContactActions, feeLabel } from "./SellerInfo.jsx";
+import { foodCart, useFoodCart } from "../../lib/foodCart.js";
 import { filterMenu, isIndividual, menuAnchor, priceSigns } from "../../lib/resto.js";
 
 /** Carte de plat façon Uber Eats : texte à gauche, image à droite, « + » seulement si la pré-commande est possible. */
-function DishCard({ i, qty, setQty, canOrder, money, ui }) {
+function DishCard({ i, r, money, ui }) {
   const p = ui.page;
   const off = i.is_available === false;
-  const q = qty[i.id] || 0;
+  const cart = useFoodCart();
+  const q = cart.lines.find((l) => l.iid === i.id)?.qty || 0;
+  const canOrder = !off;
+  const setQty = (id, n) => (n <= 0 ? foodCart.setQty(id, 0) : q ? foodCart.setQty(id, n) : foodCart.add({ rid: r.id, iid: id, name: i.name, price: i.price, vname: r.name, vslug: r.slug, image: i.image }, 1));
   return (
     <li data-dish={i.id} data-available={off ? "no" : "yes"} className={`relative flex rounded-xl border border-line bg-surface overflow-hidden min-h-[120px] ${off ? "bg-cream/60" : ""}`}>
       <div className="flex-1 min-w-0 p-4 flex flex-col">
@@ -26,11 +30,11 @@ function DishCard({ i, qty, setQty, canOrder, money, ui }) {
             <div className="absolute bottom-2 right-2">
               {q > 0 ? (
                 <div className="inline-flex items-center gap-1 rounded-full bg-surface border border-line shadow px-1 py-1">
-                  <button type="button" aria-label="−" onClick={() => setQty(i.id, q - 1)} className="w-8 h-8 rounded-full hover:bg-latte-soft flex items-center justify-center"><Minus size={14} /></button>
+                  <button type="button" aria-label={ui.cart.dec} onClick={() => setQty(i.id, q - 1)} className="w-8 h-8 rounded-full hover:bg-latte-soft flex items-center justify-center"><Minus size={14} /></button>
                   <span className="text-sm w-5 text-center" aria-live="polite">{q}</span>
-                  <button type="button" aria-label="+" onClick={() => setQty(i.id, Math.min(20, q + 1))} className="w-8 h-8 rounded-full hover:bg-latte-soft flex items-center justify-center"><Plus size={14} /></button>
+                  <button type="button" aria-label={ui.cart.inc} onClick={() => setQty(i.id, q + 1)} className="w-8 h-8 rounded-full hover:bg-latte-soft flex items-center justify-center"><Plus size={14} /></button>
                 </div>
-              ) : <button type="button" aria-label={`${p.addItem} ${i.name}`} onClick={() => setQty(i.id, 1)} className="w-10 h-10 rounded-full bg-surface border border-line shadow flex items-center justify-center hover:bg-latte-soft"><Plus size={18} /></button>}
+              ) : <button type="button" aria-label={`${ui.cart.add} · ${i.name}`} onClick={() => setQty(i.id, 1)} className="w-10 h-10 rounded-full bg-surface border border-line shadow flex items-center justify-center hover:bg-latte-soft"><Plus size={18} /></button>}
             </div>
           )}
         </div>
@@ -74,7 +78,7 @@ function CategoryNav({ cats, active, title, hours }) {
  * navigation de catégories collante, plats en cartes sur 2 colonnes. Pas de panier : le « + » n'existe que pour la
  * pré-commande d'un restaurant ; un vendeur individuel se contacte directement.
  */
-export default function StoreFront({ r, qty, setQty, canOrder, money, showReserve, onReserve }) {
+export default function StoreFront({ r, money, showReserve, onReserve }) {
   const ui = useRestoUi();
   const p = ui.page;
   const ind = isIndividual(r);
@@ -147,7 +151,7 @@ export default function StoreFront({ r, qty, setQty, canOrder, money, showReserv
             <div key={menuAnchor(c, k)} id={menuAnchor(c, k)} className="scroll-mt-48">
               {c.name && <h3 className="font-display text-2xl text-ink mb-4">{c.name}</h3>}
               <ul className="grid sm:grid-cols-2 gap-4">
-                {c.items.map((i) => <DishCard key={i.id} i={i} qty={qty} setQty={setQty} canOrder={canOrder} money={money} ui={ui} />)}
+                {c.items.map((i) => <DishCard key={i.id} i={i} r={r} money={money} ui={ui} />)}
               </ul>
             </div>
           ))}

@@ -113,7 +113,7 @@ export default function RestoPage() {
   const showDelivery = ind || r.delivery?.offers || r.delivery?.sale_notes;
   return (
     <RestoLayout className={hasContact || bookable ? "pb-28 lg:pb-10" : ""}>
-      <StoreFront r={r} qty={qty} setQty={setQty} canOrder={r.accepts_preorder && bookable} money={money} showReserve={bookable} onReserve={goReserve} />
+      <StoreFront r={r} money={money} showReserve={bookable} onReserve={goReserve} />
 
       <div className="mt-14 space-y-14">
         {showDelivery && <DeliveryBlock r={r} money={money} />}
@@ -160,7 +160,24 @@ export default function RestoPage() {
                 <Field label={p.yourName} htmlFor="rn"><input id="rn" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} autoComplete="name" /></Field>
                 <Field label={p.yourPhone} htmlFor="rt"><input id="rt" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls} inputMode="tel" autoComplete="tel" /></Field>
                 <Field label={p.note} htmlFor="rno"><textarea id="rno" rows={2} maxLength={400} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder={p.notePh} className={inputCls} /></Field>
-                {r.accepts_preorder && <p className="text-xs text-ink-soft">{p.preorderHint}</p>}
+                {r.accepts_preorder && (
+                  <details className="rounded-2xl border border-line p-4 text-sm">
+                    <summary className="cursor-pointer font-medium text-ink">{p.preorder}</summary>
+                    <p className="text-xs text-ink-soft mt-2 mb-3">{p.preorderHint}</p>
+                    <ul className="space-y-2 max-h-64 overflow-auto">
+                      {Object.values(menuIdx).filter((m) => m.is_available !== false).map((m) => (
+                        <li key={m.id} className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 truncate text-ink-soft">{m.name} · {money(m.price)}</span>
+                          <span className="inline-flex items-center gap-1 shrink-0">
+                            <button type="button" aria-label={`− ${m.name}`} onClick={() => setQty(m.id, (qty[m.id] || 0) - 1)} className="w-8 h-8 rounded-full border border-line">−</button>
+                            <span className="w-6 text-center">{qty[m.id] || 0}</span>
+                            <button type="button" aria-label={`+ ${m.name}`} onClick={() => setQty(m.id, Math.min(20, (qty[m.id] || 0) + 1))} className="w-8 h-8 rounded-full border border-line">+</button>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
                 {lines.length > 0 && (
                   <div className="text-sm border-t border-line pt-4">
                     <ul className="space-y-1 mb-2">{lines.map((l) => <li key={l.item_id} className="flex justify-between text-ink-soft"><span>{l.qty} × {menuIdx[l.item_id]?.name}</span><span>{money(menuIdx[l.item_id]?.price * l.qty)}</span></li>)}</ul>
