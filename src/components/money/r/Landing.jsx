@@ -9,7 +9,8 @@ function Feature({ Illo, title, text }) {
 }
 
 /** Page d'accueil H-Money : trois promesses à gauche, offre + taux à droite, puis raccourcis et contacts récents. */
-export default function Landing({ onStart, recent = [], onContact, dueCount = 0, compact = false }) {
+export default function Landing({ onStart, recent = [], onContact, dueCount = 0, compact = false, home = false }) {
+  // home = intégration sur la page d'accueil (AppHome) : mêmes blocs, mais deux actions claires et pas de raccourcis (la page H-Money reste inchangée)
   const [rate, setRate] = useState(null);
   const [promo, setPromo] = useState(true);
   useEffect(() => { api.money.change(1, "USD", "ZMW").then((r) => setRate(r.rate)).catch(() => setRate(null)); }, []);
@@ -22,7 +23,7 @@ export default function Landing({ onStart, recent = [], onContact, dueCount = 0,
           <Feature Illo={IlloRates} title="Taux affichés d'avance" text="Le montant exact reçu et les frais sont visibles avant de payer. Aucune surprise." />
           <Feature Illo={IlloTrack} title="Suivez votre transfert" text="Des mises à jour du début à la fin, par mobile money, entre la Zambie et la RD Congo." />
           <Feature Illo={IlloSafe} title="Sûr et sécurisé" text="Vos informations restent confidentielles et vos fonds sont protégés jusqu'au contrôle." />
-          <div className="text-center"><button onClick={() => onStart("send")} className={btnOutline} style={{ borderColor: NAVY, color: NAVY }}>Commencer</button></div>
+          <div className="text-center"><button onClick={() => onStart(home ? "invoice" : "send")} className={btnOutline} style={{ borderColor: NAVY, color: NAVY }}>{home ? "Facture" : "Commencer"}</button></div>
         </div>
         <div className="space-y-8 order-1 lg:order-2">
           {promo && (
@@ -40,17 +41,22 @@ export default function Landing({ onStart, recent = [], onContact, dueCount = 0,
             <h2 className="font-bold text-2xl text-ink mb-3">Taux de change</h2>
             <div className="rounded-xl border border-line bg-surface p-5">
               <p className="font-bold text-ink flex items-center gap-3"><span className="text-2xl">🇺🇸</span>{rate ? `1 USD = ${rate.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ZMW` : "1 USD = …"}<span className="text-2xl">{FLAG.ZM}</span></p>
-              <button onClick={() => onStart("send")} className="mt-5 w-full rounded-full text-white font-bold h-12" style={{ background: NAVY }}>Envoyer de l'argent</button>
+              {home ? (
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <button onClick={() => onStart("send")} className="rounded-full text-white font-bold h-12 inline-flex items-center justify-center gap-2" style={{ background: NAVY }}><Send size={16} aria-hidden="true" />Envoyer</button>
+                  <button onClick={() => onStart("request")} className="rounded-full border-2 font-bold h-12 inline-flex items-center justify-center gap-2" style={{ borderColor: NAVY, color: NAVY }}><HandCoins size={16} aria-hidden="true" />Demander</button>
+                </div>
+              ) : <button onClick={() => onStart("send")} className="mt-5 w-full rounded-full text-white font-bold h-12" style={{ background: NAVY }}>Envoyer de l'argent</button>}
               <div className="mt-4"><SoonChips /></div>
             </div>
           </div>
         </div>
       </div>
-      <div className={`mt-10 grid gap-3 ${compact ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-5"}`}>
+      {!home && <div className={`mt-10 grid gap-3 ${compact ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-5"}`}>
         {tiles.map(([k, l, Ic]) => (
           <button key={k} onClick={() => onStart(k)} className="rounded-xl border border-line bg-surface p-4 text-left hover:border-[#32465E] transition-colors"><span className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ background: NAVY }}><Ic size={18} /></span><p className="font-bold text-ink mt-3">{l}{k === "change" && <span className="ml-2 text-[10px] font-semibold rounded-full bg-latte-soft text-coffee-dark px-2 py-0.5 align-middle">Bientôt</span>}</p></button>
         ))}
-      </div>
+      </div>}
       {!compact && recent.length > 0 && (
         <div className="mt-10">
           <div className="flex items-center justify-between mb-2"><h2 className="font-bold text-xl text-ink">Contacts récents</h2><button onClick={() => onStart("history")} className="font-bold text-sm" style={{ color: NAVY }}>Tout voir</button></div>

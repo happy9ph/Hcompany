@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import HFoodTeaser from "../../components/app/HFoodTeaser.jsx";
 import Landing from "../../components/money/r/Landing.jsx";
 import { motion } from "framer-motion";
 import { FileText, ArrowRight, BedDouble, Bus, GraduationCap, HandCoins, Languages, Mountain, Package, Send, ShoppingBag, TrendingUp, UtensilsCrossed, Wallet, Ticket } from "lucide-react";
@@ -12,7 +13,6 @@ import { StatusPill, nf } from "../../components/money/parts.jsx";
 
 const ACCESS = [
   { to: "/app/money", Icon: Wallet, fr: "H-Money", en: "H-Money" },
-  { to: "/app/factures", Icon: FileText, fr: "Facture", en: "Invoice" },
   { to: "/app/transport", Icon: Bus, fr: "Bus", en: "Bus" },
   { to: "/app/colis", Icon: Package, fr: "Colis", en: "Parcels" },
   { to: "/app/logement", Icon: BedDouble, fr: "Logement", en: "Stays" },
@@ -91,7 +91,8 @@ export default function AppHome() {
       {/* H-Money : même présentation que la page de transfert */}
       <section aria-label="H-Money" className="rounded-3xl border border-line bg-surface p-5 sm:p-8">
         <h2 className="font-bold text-xl text-ink mb-6">H-Money <span className="text-sm font-normal text-ink-soft">· {fr ? "Zambie ⇄ RD Congo" : "Zambia ⇄ DR Congo"}</span></h2>
-        <Landing compact onStart={(k, sub) => navigate("/app/money", { state: { tab: k, sub } })} />
+        <Landing compact home onStart={(k, sub) => navigate("/app/money", { state: { tab: k, sub } })} />
+        <HFoodTeaser fr={fr} />
       </section>
 
       {/* Performances */}
