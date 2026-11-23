@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Clock, MapPin, Minus, Plus, Search, Store, Truck, Zap } from "lucide-react";
 import { RestoImage, Rating, useRestoUi } from "./Shared.jsx";
 import { ContactActions, feeLabel } from "./SellerInfo.jsx";
+import DishModal from "./DishModal.jsx";
 import { foodCart, useFoodCart } from "../../lib/foodCart.js";
 import { filterMenu, isIndividual, menuAnchor, priceSigns } from "../../lib/resto.js";
 
 /** Carte de plat façon Uber Eats : texte à gauche, image à droite, « + » seulement si la pré-commande est possible. */
-function DishCard({ i, r, money, ui }) {
+function DishCard({ i, r, money, ui, onOpen }) {
   const p = ui.page;
   const off = i.is_available === false;
   const cart = useFoodCart();
@@ -14,7 +15,8 @@ function DishCard({ i, r, money, ui }) {
   const canOrder = !off;
   const setQty = (id, n) => (n <= 0 ? foodCart.setQty(id, 0) : q ? foodCart.setQty(id, n) : foodCart.add({ rid: r.id, iid: id, name: i.name, price: i.price, vname: r.name, vslug: r.slug, image: i.image }, 1));
   return (
-    <li data-dish={i.id} data-available={off ? "no" : "yes"} className={`relative flex rounded-xl border border-line bg-surface overflow-hidden min-h-[120px] ${off ? "bg-cream/60" : ""}`}>
+    <li data-dish={i.id} data-available={off ? "no" : "yes"} className={`relative flex rounded-xl border border-line bg-surface overflow-hidden min-h-[120px] ${off ? "bg-cream/60" : "hover:border-coffee-light transition-colors"}`}>
+      {!off && <button type="button" onClick={() => onOpen(i)} aria-label={i.name} className="absolute inset-0 z-[1] rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink" />}
       <div className="flex-1 min-w-0 p-4 flex flex-col">
         <p className={`font-medium leading-snug ${off ? "text-ink-soft" : "text-ink"}`}>{i.name}</p>
         <p className={`text-sm mt-1 ${off ? "text-ink-faint" : "text-ink"}`}>{money(i.price)}</p>
@@ -27,7 +29,7 @@ function DishCard({ i, r, money, ui }) {
           {i.image ? <RestoImage path={i.image} alt="" ratio="h-full" className={`absolute inset-0 w-full h-full ${off ? "opacity-40 grayscale" : ""}`} /> : <div className="absolute inset-0 bg-latte-soft/60" />}
           {off && <span className="absolute inset-0 flex items-center justify-center"><span className="rounded-full bg-ink/90 text-cream text-[11px] font-medium px-2.5 py-1">{p.unavailable}</span></span>}
           {canOrder && !off && (
-            <div className="absolute bottom-2 right-2">
+            <div className="absolute bottom-2 right-2 z-[2]">
               {q > 0 ? (
                 <div className="inline-flex items-center gap-1 rounded-full bg-surface border border-line shadow px-1 py-1">
                   <button type="button" aria-label={ui.cart.dec} onClick={() => setQty(i.id, q - 1)} className="w-8 h-8 rounded-full hover:bg-latte-soft flex items-center justify-center"><Minus size={14} /></button>
@@ -84,6 +86,7 @@ export default function StoreFront({ r, money, showReserve, onReserve }) {
   const ind = isIndividual(r);
   const [q, setQ] = useState("");
   const [active, setActive] = useState(null);
+  const [open, setOpen] = useState(null);
   const menu = useMemo(() => filterMenu(r.menu, q), [r.menu, q]);
   const cuisine = (r.cuisines || []).map((c) => ui.cuisines[c] || c).join(" · ");
   const hours = ind ? null : `${r.open_time} – ${r.close_time}`;
@@ -151,12 +154,13 @@ export default function StoreFront({ r, money, showReserve, onReserve }) {
             <div key={menuAnchor(c, k)} id={menuAnchor(c, k)} className="scroll-mt-48">
               {c.name && <h3 className="font-display text-2xl text-ink mb-4">{c.name}</h3>}
               <ul className="grid sm:grid-cols-2 gap-4">
-                {c.items.map((i) => <DishCard key={i.id} i={i} r={r} money={money} ui={ui} />)}
+                {c.items.map((i) => <DishCard key={i.id} i={i} r={r} money={money} ui={ui} onOpen={setOpen} />)}
               </ul>
             </div>
           ))}
         </div>
       </section>
+      {open && <DishModal dish={open} vendor={{ id: r.id, name: r.name, slug: r.slug, city: r.city, area: r.area, offers_delivery: !!r.delivery?.offers }} money={money} onClose={() => setOpen(null)} />}
     </div>
   );
 }

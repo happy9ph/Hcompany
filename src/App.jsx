@@ -77,6 +77,7 @@ const RestoSearch = lazy(() => import("./pages/resto/RestoSearch.jsx"));
 const RestoPage = lazy(() => import("./pages/resto/RestoPage.jsx"));
 const MyReservations = lazy(() => import("./pages/resto/MyReservations.jsx"));
 const RestoPro = lazy(() => import("./pages/resto/RestoPro.jsx"));
+const RestoDishes = lazy(() => import("./pages/resto/RestoDishes.jsx"));
 const RestoCart = lazy(() => import("./pages/resto/RestoCart.jsx"));
 const RestoMyOrders = lazy(() => import("./pages/resto/MyOrders.jsx"));
 const RestoOrderDetail = lazy(() => import("./pages/resto/MyOrders.jsx").then((m) => ({ default: m.OrderDetail })));
@@ -231,6 +232,7 @@ export default function App() {
           <Route path="/restaurant/mes-reservations" element={<MyReservations />} />
           <Route path="/restaurant/pro" element={<RestoPro />} />
           <Route path="/restaurant/pro/commandes" element={<SellerOrders />} />
+          <Route path="/restaurant/plats" element={<RestoDishes />} />
           <Route path="/restaurant/panier" element={<RestoCart />} />
           <Route path="/restaurant/commandes" element={<RestoMyOrders />} />
           <Route path="/restaurant/commandes/:code" element={<RestoOrderDetail />} />

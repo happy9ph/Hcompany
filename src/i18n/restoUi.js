@@ -79,6 +79,12 @@ export const RESTO_UI = {
       },
       info: { summary: "Accroche (160 car.)", description: "Description", cuisines: "Cuisines", city: "Ville", area: "Quartier", address: "Adresse", phone: "Téléphone", whatsapp: "WhatsApp", price: "Gamme de prix", open: "Ouverture", close: "Fermeture", closedDays: "Jours de fermeture", slot: "Durée d'une réservation (min)", maxParty: "Convives maximum", instant: "Confirmation immédiate", preorder: "Accepter les pré-commandes", terrace: "Terrasse", photos: "Photos", addPhotos: "Ajouter des photos", uploading: "Téléversement…", mapHelp: "Latitude / longitude (facultatif)" },
     },
+    dishes: {
+      title: "Une petite faim ?", sub: "Tous les plats des restaurants et vendeurs, au même endroit. Touchez un plat pour le voir en détail.", crumb: "Plats", search: "Rechercher un plat, un vendeur…", city: "Ville", allCities: "Toutes les villes", delivery: "Livraison", catalogue: "Catalogue", all: "Tous les plats",
+      count: (n) => (n > 1 ? `${n} plats` : `${n} plat`), vendors: (n) => (n > 1 ? `${n} vendeurs` : `${n} vendeur`), mapLabel: "Carte des vendeurs", mapNote: "Position approximative (ville) quand le vendeur n'a pas indiqué son adresse exacte.", open: "Ouvrir la boutique", only: "Voir ses plats", filteredBy: "Vendeur", clear: "Effacer",
+      none: "Aucun plat ne correspond.", noneHint: "Essayez une autre recherche ou retirez un filtre.", reset: "Réinitialiser", truncated: "Résultats limités : affinez la recherche pour voir le reste.", add: "Ajouter au panier", error: "Impossible de charger les plats.", retry: "Réessayer", feeFree: "Livraison gratuite", feeTbd: "Livraison à convenir", feeAmount: (a) => `Livraison ${a}`, noDelivery: "Retrait", other: "Autres plats", from: "Chez",
+    },
+    dishModal: { close: "Fermer", add: "Ajouter au panier", update: "Mettre à jour le panier", qty: "Quantité", inc: "Augmenter", dec: "Diminuer", soldBy: "Vendu par", delivers: "Livre", pickupOnly: "Retrait uniquement" },
     cart: {
       todo: "Pour envoyer la commande, il manque :", needName: "Votre nom", needPhone: "Votre téléphone (6 caractères minimum)", needPrices: "Acceptez les nouveaux prix (bannière en haut)", needFix: "Retirez les articles ou vendeurs indisponibles",
       title: "Mon panier", empty: "Votre panier est vide.", emptyHint: "Ajoutez des plats depuis la boutique d'un restaurant ou d'un vendeur.", browse: "Découvrir les vendeurs", link: "Panier", add: "Ajouter au panier", inCart: "Dans le panier", remove: "Retirer", clear: "Vider le panier", clearConfirm: "Vider tout le panier ?", clearVendor: "Retirer ce vendeur",
@@ -179,6 +185,12 @@ export const RESTO_UI = {
       },
       info: { summary: "Tagline (160 chars)", description: "Description", cuisines: "Cuisines", city: "City", area: "Area", address: "Address", phone: "Phone", whatsapp: "WhatsApp", price: "Price range", open: "Opens", close: "Closes", closedDays: "Closed days", slot: "Booking length (min)", maxParty: "Max party size", instant: "Instant confirmation", preorder: "Accept pre-orders", terrace: "Terrace", photos: "Photos", addPhotos: "Add photos", uploading: "Uploading…", mapHelp: "Latitude / longitude (optional)" },
     },
+    dishes: {
+      title: "Feeling hungry?", sub: "Every dish from restaurants and sellers in one place. Tap a dish to see the details.", crumb: "Dishes", search: "Search a dish, a seller…", city: "City", allCities: "All cities", delivery: "Delivery", catalogue: "Catalogue", all: "All dishes",
+      count: (n) => (n > 1 ? `${n} dishes` : `${n} dish`), vendors: (n) => (n > 1 ? `${n} sellers` : `${n} seller`), mapLabel: "Sellers map", mapNote: "Approximate position (city) when the seller has not given an exact address.", open: "Open shop", only: "See their dishes", filteredBy: "Seller", clear: "Clear",
+      none: "No dish matches.", noneHint: "Try another search or remove a filter.", reset: "Reset", truncated: "Results are limited: refine your search to see the rest.", add: "Add to cart", error: "Could not load the dishes.", retry: "Retry", feeFree: "Free delivery", feeTbd: "Delivery to be agreed", feeAmount: (a) => `Delivery ${a}`, noDelivery: "Pick-up", other: "Other dishes", from: "From",
+    },
+    dishModal: { close: "Close", add: "Add to cart", update: "Update cart", qty: "Quantity", inc: "Increase", dec: "Decrease", soldBy: "Sold by", delivers: "Delivers", pickupOnly: "Pick-up only" },
     cart: {
       todo: "To send your order, you still need:", needName: "Your name", needPhone: "Your phone (6 characters minimum)", needPrices: "Accept the new prices (banner above)", needFix: "Remove unavailable items or sellers",
       title: "My cart", empty: "Your cart is empty.", emptyHint: "Add dishes from a restaurant or seller's shop.", browse: "Browse sellers", link: "Cart", add: "Add to cart", inCart: "In cart", remove: "Remove", clear: "Empty cart", clearConfirm: "Empty the whole cart?", clearVendor: "Remove this seller",
