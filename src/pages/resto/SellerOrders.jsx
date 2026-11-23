@@ -16,7 +16,16 @@ export default function SellerOrders() {
   const [declining, setDeclining] = useState(null), [reason, setReason] = useState(""), [busy, setBusy] = useState(false);
   usePageMeta({ title: `${t.title} · H-Restaurant` });
   const { data, error, loading, reload } = useLoad(() => withAuth((tk) => api.resto.sellerOrders(tk, f)), [f]);
-  const rows = Array.isArray(data) ? data : data?.items || [];
+  const rows = data?.orders || [];
+  const [cancelling, setCancelling] = useState(null), [rej, setRej] = useState(null);
+  const NEXT = { accepted: ["preparing", "ready", "completed"], preparing: ["ready", "completed"], ready: ["completed"] };
+  async function run(fn) {
+    setBusy(true);
+    try { await withAuth(fn); toast?.success?.(t.updated); setCancelling(null); setRej(null); setReason(""); reload(); }
+    catch (e) { toast?.error?.(errMessage(e, ui.common.error)); reload(); } finally { setBusy(false); }
+  }
+  const setStatus = (code, status) => run((tk) => api.resto.sellerStatus(tk, code, { status, reason: status === "cancelled" ? reason : "" }));
+  const payAct = (code, action) => run((tk) => api.resto.sellerPay(tk, code, { action, note: action === "reject" ? reason : "" }));
   async function decide(code, action) {
     setBusy(true);
     try { await withAuth((tk) => api.resto.sellerDecide(tk, code, { action, reason: action === "decline" ? reason : "" })); toast?.success?.(action === "accept" ? t.accepted : t.declined); setDeclining(null); setReason(""); reload(); }
@@ -37,7 +46,24 @@ export default function SellerOrders() {
               <p className="text-xs text-ink-soft">{s.fulfilment === "delivery" ? `${o.delivery} · ${s.delivery_address}${s.delivery_zone ? ` (${s.delivery_zone})` : ""} · ${s.fee_pending ? o.feeToArrange : s.delivery_fee ? money(s.delivery_fee) : o.feeFree}` : o.pickup}</p>
               {s.note && <p className="text-sm text-ink-soft">{o.note} : {s.note}</p>}
               <p className="flex justify-between text-sm font-medium text-ink border-t border-line pt-2"><span>{o.total}</span><span>{money(s.total_known)}</span></p>
-              <p className="text-xs text-ink-faint">{t.noPayment}</p>
+              <p className="text-xs text-ink-faint">{t.noPayment} · {o.payment[s.payment_status]}{s.payment_method || s.payment_ref ? ` (${s.payment_method || ""}${s.payment_ref ? ` ${o.pay.ref} ${s.payment_ref}` : ""})` : ""}</p>
+              {["accepted", "preparing", "ready", "completed"].includes(s.status) && s.payment_status !== "confirmed" && (
+                <div className="flex flex-wrap gap-2">
+                  {s.payment_status === "declared" && <p className="w-full text-xs text-ink-soft">{t.payDeclared}</p>}
+                  <button disabled={busy} onClick={() => payAct(s.code, "confirm")} className="rounded-full bg-emerald-700 text-white text-sm px-4 py-2 disabled:opacity-45">{t.confirmPay}</button>
+                  {s.payment_status === "declared" && (rej === s.code
+                    ? <div className="w-full space-y-2"><textarea rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t.rejectReason} className={inputCls} /><button disabled={busy || reason.trim().length < 2} onClick={() => payAct(s.code, "reject")} className="rounded-full bg-red-700 text-white text-sm px-4 py-2 disabled:opacity-45">{t.rejectPay}</button></div>
+                    : <button onClick={() => { setRej(s.code); setReason(""); }} className="rounded-full border border-line text-sm px-4 py-2">{t.rejectPay}</button>)}
+                </div>
+              )}
+              {NEXT[s.status] && (
+                <div className="flex flex-wrap gap-2 border-t border-line pt-3">
+                  {NEXT[s.status].map((n) => <button key={n} disabled={busy} onClick={() => setStatus(s.code, n)} className="rounded-full bg-ink text-cream text-sm px-4 py-2 disabled:opacity-45">{t.next[n]}</button>)}
+                  {cancelling === s.code
+                    ? <div className="w-full space-y-2"><textarea rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t.cancelReason} className={inputCls} /><button disabled={busy || reason.trim().length < 2} onClick={() => setStatus(s.code, "cancelled")} className="rounded-full bg-red-700 text-white text-sm px-4 py-2 disabled:opacity-45">{t.cancelOrder}</button></div>
+                    : <button onClick={() => { setCancelling(s.code); setReason(""); }} className="rounded-full border border-line text-sm px-4 py-2">{t.cancelOrder}</button>}
+                </div>
+              )}
               {s.status === "pending" && (declining === s.code ? (
                 <div className="space-y-2"><textarea rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t.reasonPrompt} className={inputCls} />
                   <div className="flex gap-2"><button disabled={busy || reason.trim().length < 2} onClick={() => decide(s.code, "decline")} className="rounded-full bg-red-700 text-white text-sm px-5 py-2.5 disabled:opacity-45">{t.decline}</button><button onClick={() => setDeclining(null)} className="rounded-full border border-line text-sm px-5 py-2.5">{ui.common.close}</button></div></div>
