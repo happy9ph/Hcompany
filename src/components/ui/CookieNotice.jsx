@@ -12,7 +12,7 @@ const COPY = {
     short: "Un cookie de session indispensable et, si vous acceptez, vos préférences. Aucun suivi publicitaire.",
     more: "En savoir plus", accept: "Tout accepter", essential: "Essentiels seulement", customize: "Personnaliser", save: "Enregistrer mes choix", hide: "Masquer",
     region: "Votre région", regionHelp: "Estimée d'après votre réseau ou votre fuseau horaire. Aucune position précise n'est demandée.", country: "Pays", currency: "Devise",
-    essTitle: "Essentiels", essText: "Session sécurisée et protection de votre compte.", always: "Toujours actifs",
+    essTitle: "Essentiels", essText: "Session sécurisée, protection de votre compte et panier (identifiants des plats et quantités, 7 jours).", always: "Toujours actifs",
     prefTitle: "Préférences", prefText: "Mémorise la langue, le thème, le pays et la devise pour votre prochaine visite.",
   },
   en: {
@@ -21,7 +21,7 @@ const COPY = {
     short: "One essential session cookie and, if you accept, your preferences. No ad tracking.",
     more: "Learn more", accept: "Accept all", essential: "Essential only", customize: "Customize", save: "Save my choices", hide: "Hide",
     region: "Your region", regionHelp: "Estimated from your network or time zone. We never ask for your precise location.", country: "Country", currency: "Currency",
-    essTitle: "Essential", essText: "Secure session and account protection.", always: "Always on",
+    essTitle: "Essential", essText: "Secure session, account protection and your cart (dish ids and quantities, 7 days).", always: "Always on",
     prefTitle: "Preferences", prefText: "Remembers your language, theme, country and currency for your next visit.",
   },
 };
