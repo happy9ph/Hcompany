@@ -1,3 +1,4 @@
+import { locate, km } from "../../lib/locate.js";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, CalendarCheck, Crosshair, MapPin, Store, UtensilsCrossed, Box, Zap } from "lucide-react";
@@ -31,10 +32,10 @@ function Cloche() {
 }
 
 const copy = {
-  fr: { title: "Les meilleures tables, réservées en 3D.", sub: "Restaurants, cafés et bonnes adresses de RD Congo et de Zambie.", where: "Quelle est votre ville ?", loc: "Ma position", go: "Voir",
+  fr: { title: "Les meilleures tables, réservées en 3D.", sub: "Restaurants, cafés et bonnes adresses de RD Congo et de Zambie.", where: "Quelle est votre ville ?", loc: "Ma position", locating: "Localisation…", far: "Aucun vendeur près de vous pour le moment : choisissez une ville.", timeout: "Position trop longue à obtenir : réessayez ou choisissez une ville.", unavailable: "Position indisponible : choisissez une ville.", unsupported: "Votre appareil ne permet pas la localisation : choisissez une ville.", insecure: "La localisation exige une connexion sécurisée (HTTPS).", go: "Voir",
         top: "Top restaurants dans H-Company", topSub: "Confismila et tous les restaurants qui rejoignent le réseau.", anything: "Tout pour un bon repas", a1: ["Les meilleures adresses de votre ville", "Cuisine locale, grillades, cafés : choisissez parmi les restaurants du réseau, avec photos, menu et avis."], a2: ["Réservation immédiate", "Choisissez votre table, confirmez, et recevez un rappel. Sans appel ni attente."], a3: ["Salle en 3D & commande à l'avance", "Promenez-vous dans la salle, touchez la table qui vous plaît et passez votre commande avant d'arriver."],
         countries: "Pays où nous sommes présents", soon: "Bientôt", book: "Réserver une table", empty: "Aucun restaurant n'est encore en ligne.", emptyHint: "Les premiers restaurants arrivent.", denied: "Position indisponible : choisissez votre ville.", none: "Aucune ville proche avec des restaurants pour l'instant." },
-  en: { title: "The best tables, booked in 3D.", sub: "Restaurants, cafés and great spots in DR Congo and Zambia.", where: "What's your city?", loc: "Use current location", go: "Go",
+  en: { title: "The best tables, booked in 3D.", sub: "Restaurants, cafés and great spots in DR Congo and Zambia.", where: "What's your city?", loc: "Use current location", locating: "Locating…", far: "No seller near you yet: pick a city.", timeout: "Getting your position took too long: retry or pick a city.", unavailable: "Position unavailable: pick a city.", unsupported: "Your device cannot locate you: pick a city.", insecure: "Location requires a secure (HTTPS) connection.", go: "Go",
         top: "Top restaurants on H-Company", topSub: "Confismila and every restaurant joining the network.", anything: "Everything for a great meal", a1: ["Your city's best places", "Local food, grills, cafés: pick from the network's restaurants, with photos, menu and reviews."], a2: ["Instant booking", "Pick your table, confirm, get a reminder. No phone calls, no waiting."], a3: ["3D room & pre-order", "Walk around the room, tap the table you like and order before you arrive."],
         countries: "Countries where we operate", soon: "Coming soon", book: "Book a table", empty: "No restaurant is live yet.", emptyHint: "The first restaurants are on their way.", denied: "Location unavailable: pick your city.", none: "No nearby city with restaurants yet." },
 };
@@ -43,8 +44,8 @@ const SOON = [["🇳🇦", "Namibie", "Namibia"], ["🇹🇿", "Tanzanie", "Tanz
 
 function nearest(lat, lng, names) {
   let best = null, bd = Infinity;
-  names.forEach((n) => { const c = coordOf(n); if (!c) return; const d = (c[0] - lat) ** 2 + (c[1] - lng) ** 2; if (d < bd) { bd = d; best = n; } });
-  return best;
+  names.forEach((n) => { const c = coordOf(n); if (!c) return; const d = km([lat, lng], c); if (d < bd) { bd = d; best = n; } });
+  return best ? { name: best, km: bd } : null;
 }
 
 export default function RestoHome() {
@@ -58,14 +59,19 @@ export default function RestoHome() {
   const [city, setCity] = useState("");
   const cityNames = useMemo(() => (data?.cities || []).map((x) => x.city), [data]);
   const goCity = (e) => { e?.preventDefault(); navigate(`/restaurant/recherche${city.trim() ? `?city=${encodeURIComponent(city.trim())}` : ""}`); };
-  const locate = () => {
-    if (!navigator.geolocation) { toast?.error?.(c.denied); return; }
-    navigator.geolocation.getCurrentPosition((p) => {
+  const [locating, setLocating] = useState(false);
+  const goNear = async () => {
+    if (locating) return;
+    setLocating(true);
+    try {
+      const me = await locate({ timeout: 10000 });
       const pool = cityNames.length ? cityNames : Object.keys(CITY_COORDS);
-      const n = nearest(p.coords.latitude, p.coords.longitude, pool);
-      if (!n) { toast?.error?.(c.none); return; }
-      navigate(`/restaurant/recherche?city=${encodeURIComponent(n)}`);
-    }, () => toast?.error?.(c.denied), { timeout: 8000, maximumAge: 600000 });
+      const n = nearest(me.lat, me.lng, pool);
+      if (!n || n.km > 120) { toast?.error?.(c.far); return; }  // trop loin de toute ville desservie : on le dit au lieu d'envoyer ailleurs
+      navigate(`/restaurant/recherche?city=${encodeURIComponent(n.name)}`);
+    } catch (e) {
+      toast?.error?.(c[e?.code] || c.denied);
+    } finally { setLocating(false); }
   };
   const top = useMemo(() => [...(data?.featured || [])].sort((a, b) => (/confismila/i.test(b.name) ? 1 : 0) - (/confismila/i.test(a.name) ? 1 : 0)).slice(0, 8), [data]);
 
@@ -83,10 +89,10 @@ export default function RestoHome() {
               <MapPin size={18} className="ml-3 text-neutral-500 shrink-0" />
               <input list="rh-cities" value={city} onChange={(e) => setCity(e.target.value)} placeholder={c.where} aria-label={c.where} className="flex-1 min-w-0 px-2 py-3 text-neutral-900 placeholder:text-neutral-500 outline-none !shadow-none !ring-0 !border-0 bg-transparent" />
               <datalist id="rh-cities">{(cityNames.length ? cityNames : Object.keys(CITY_COORDS)).map((n) => <option key={n} value={n} />)}</datalist>
-              <button type="button" onClick={locate} className="hidden sm:inline-flex items-center gap-2 rounded-md bg-[#E6F2EC] text-[#0B5B45] font-bold text-sm px-4 py-3 whitespace-nowrap"><Crosshair size={16} />{c.loc}</button>
+              <button type="button" onClick={goNear} disabled={locating} className="hidden sm:inline-flex items-center gap-2 rounded-md bg-[#E6F2EC] text-[#0B5B45] font-bold text-sm px-4 py-3 whitespace-nowrap"><Crosshair size={16} className={locating ? "animate-pulse" : ""} />{locating ? c.locating : c.loc}</button>
               <button className="inline-flex items-center rounded-md bg-[#2A1A10] text-white font-bold text-sm px-4 py-3 whitespace-nowrap">{c.go}</button>
             </form>
-            <button type="button" onClick={locate} className="sm:hidden mt-3 inline-flex items-center gap-2 rounded-md bg-[#E6F2EC] text-[#0B5B45] font-bold text-sm px-4 py-3"><Crosshair size={16} />{c.loc}</button>
+            <button type="button" onClick={goNear} disabled={locating} className="sm:hidden mt-3 inline-flex items-center gap-2 rounded-md bg-[#E6F2EC] text-[#0B5B45] font-bold text-sm px-4 py-3"><Crosshair size={16} className={locating ? "animate-pulse" : ""} />{locating ? c.locating : c.loc}</button>
           </div>
         </div>
         <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="block w-full h-10 sm:h-16 -mb-px" aria-hidden="true"><path d="M0 80V40C240 0 480 0 720 24s480 40 720 0v56z" className="fill-cream" /></svg>

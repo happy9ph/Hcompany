@@ -59,6 +59,19 @@ describe("page plats H-Food", () => {
     view("/restaurant/plats?plat=11");
     expect(await screen.findByRole("dialog", { name: "Kimbrekete" })).toBeInTheDocument();
   });
+  it("« Près de moi » : distance affichée sur les plats, position sur la carte ; refus de la localisation expliqué", async () => {
+    Object.defineProperty(globalThis.navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (ok) => ok({ coords: { latitude: -15.41, longitude: 28.29, accuracy: 15 } }) } });
+    view();
+    fireEvent.click(await screen.findByRole("button", { name: "Près de moi" }));
+    expect(await screen.findByRole("button", { name: "Triés par distance" })).toBeInTheDocument();
+    expect(screen.getAllByText(/· (à|≈) /).length).toBeGreaterThan(0);
+    expect(screen.getByText("pin-● Vous êtes ici")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Triés par distance" }));
+    await screen.findByRole("button", { name: "Près de moi" });
+    Object.defineProperty(globalThis.navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (_, ko) => ko({ code: 1 }) } });
+    fireEvent.click(screen.getByRole("button", { name: "Près de moi" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Localisation refusée");
+  });
   it("aucun résultat : message et réinitialisation", async () => {
     api.resto.dishes.mockResolvedValue({ ...DATA, dishes: [], restaurants: [], total: 0, categories: [] });
     view("/restaurant/plats?q=zzz");
