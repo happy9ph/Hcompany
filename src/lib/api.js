@@ -425,6 +425,13 @@ export const api = {
     reviews: (id) => request(`/api/v1/restaurant/restaurants/${id}/reviews`),
     reserve: (token, body) => request("/api/v1/restaurant/reservations", { method: "POST", token, body }),
     mine: (token) => request("/api/v1/restaurant/me/reservations", { token }),
+    quote: (vendors) => request("/api/v1/restaurant/cart/quote", { method: "POST", body: { vendors } }),
+    checkout: (token, body, key) => request("/api/v1/restaurant/orders/checkout", { method: "POST", token, body, headers: { "Idempotency-Key": key } }),
+    orders: (token) => request("/api/v1/restaurant/me/orders", { token }),
+    order: (token, code) => request(`/api/v1/restaurant/me/orders/${code}`, { token }),
+    cancelSub: (token, code) => request(`/api/v1/restaurant/me/suborders/${code}/cancel`, { method: "POST", token }),
+    sellerOrders: (token, status) => request(`/api/v1/restaurant/seller/orders${qs(status ? { status } : {})}`, { token }),
+    sellerDecide: (token, code, body) => request(`/api/v1/restaurant/seller/orders/${code}/decision`, { method: "POST", token, body }),
     cancel: (token, code) => request(`/api/v1/restaurant/me/reservations/${code}/cancel`, { method: "POST", token }),
     review: (token, code, body) => request(`/api/v1/restaurant/me/reservations/${code}/review`, { method: "POST", token, body }),
     owner: {

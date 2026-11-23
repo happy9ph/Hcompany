@@ -1,7 +1,7 @@
 import { PageBack } from "../ui/BackButton.jsx";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { CalendarDays, ImageIcon, Loader2, Search, Star, Store, Truck, Utensils, Zap } from "lucide-react";
+import { ShoppingBag, CalendarDays, ImageIcon, Loader2, Search, Star, Store, Truck, Utensils, Zap } from "lucide-react";
 import NavBar from "../layout/NavBar.jsx";
 import Footer from "../layout/Footer.jsx";
 import { RESTO_UI } from "../../i18n/restoUi.js";
@@ -9,6 +9,7 @@ import { useLanguage } from "../../context/LanguageContext.jsx";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { api } from "../../lib/api.js";
+import { foodCart, useFoodCart, cartCount } from "../../lib/foodCart.js";
 import { isIndividual, priceSigns, resTone, restoTone } from "../../lib/resto.js";
 import { LodgeImage as RestoImage, Spinner, ErrorState, EmptyState, Pagination } from "../lodge/Shared.jsx";
 import { Card, Field, Modal, inputCls } from "../lodge/HostUi.jsx";
@@ -39,20 +40,23 @@ export function Rating({ value, count, className = "" }) {
   );
 }
 
-function BarLink({ to, icon: Icon, label }) {
+function BarLink({ to, icon: Icon, label, badge = 0 }) {
   return (
     <NavLink to={to} className={({ isActive }) => `inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors ${isActive ? "bg-latte-soft text-coffee" : "text-ink-soft hover:text-ink"}`} aria-label={label}>
-      <Icon size={18} /><span className="hidden lg:inline">{label}</span>
+      <span className="relative"><Icon size={18} />{badge > 0 && <span data-cart-badge className="absolute -top-2 -right-2 min-w-[16px] h-4 rounded-full bg-ink text-cream text-[10px] leading-4 text-center px-1">{badge}</span>}</span><span className="hidden lg:inline">{label}</span>
     </NavLink>
   );
 }
 
 export function RestoBar() {
-  const ui = useRestoUi().bar;
+  const all = useRestoUi();
+  const ui = all.bar;
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
+  const cart = useFoodCart();
+  useEffect(() => { foodCart.restore(); }, []);
   useEffect(() => { if (location.pathname !== "/restaurant/recherche") setQ(""); }, [location.pathname]);
   const submit = (e) => { e.preventDefault(); navigate(`/restaurant/recherche${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`); };
   return (
@@ -64,6 +68,8 @@ export function RestoBar() {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={ui.where} aria-label={ui.where} className="w-full rounded-full border border-line bg-surface pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-coffee focus:ring-2 focus:ring-coffee/15" />
         </form>
         <nav className="flex items-center gap-0.5" aria-label="H-Restaurant">
+          <BarLink to="/restaurant/panier" icon={ShoppingBag} label={all.cart.link} badge={cartCount(cart)} />
+          <BarLink to="/restaurant/commandes" icon={Truck} label={all.orders.title} />
           <BarLink to="/restaurant/mes-reservations" icon={CalendarDays} label={ui.mine} />
           <BarLink to="/restaurant/pro" icon={Store} label={ui.pro} />
         </nav>

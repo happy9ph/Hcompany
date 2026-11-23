@@ -1,3 +1,4 @@
+import { foodCart } from "../lib/foodCart.js";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -25,18 +26,18 @@ const base = {
 const wrap = (ui) => render(<MemoryRouter><LanguageProvider>{ui}</LanguageProvider></MemoryRouter>);
 
 describe("vitrine boutique (façon Uber Eats)", () => {
-  it("vendeur individuel : contact direct, jamais de « + » ni de réservation", () => {
-    wrap(<StoreFront r={{ ...base, seller_type: "individual" }} qty={{}} setQty={() => {}} canOrder={false} money={money} showReserve={false} onReserve={() => {}} />);
+  it("vendeur individuel : contact direct, panier disponible, jamais de réservation", () => {
+    wrap(<StoreFront r={{ ...base, seller_type: "individual" }} money={money} showReserve={false} onReserve={() => {}} />);
     expect(screen.getByText("Vendeur individuel")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /WhatsApp/ }).getAttribute("href")).toMatch(/^https:\/\/wa\.me\/260971000222\?text=/);
     expect(screen.getByRole("link", { name: /Appeler/ }).getAttribute("href")).toBe("tel:+260971000111");
     expect(screen.queryByText(/Réserver une table/)).toBeNull();
-    expect(screen.queryByRole("button", { name: /Ajouter/ })).toBeNull();
+    expect(screen.getAllByRole("button", { name: /Ajouter au panier/ }).length).toBeGreaterThan(0);
     expect(screen.getByText("Livraison gratuite")).toBeInTheDocument();
   });
 
   it("plats indisponibles : badge « Indisponible », image atténuée, pas de « + » ; catégorie 100 % indisponible conservée", () => {
-    wrap(<StoreFront r={{ ...base, seller_type: "restaurant", accepts_preorder: true }} qty={{}} setQty={() => {}} canOrder money={money} showReserve onReserve={() => {}} />);
+    wrap(<StoreFront r={{ ...base, seller_type: "restaurant", accepts_preorder: true }} money={money} showReserve onReserve={() => {}} />);
     const off = document.querySelector('[data-dish="2"]');
     expect(off.getAttribute("data-available")).toBe("no");
     expect(within(off).getAllByText("Indisponible").length).toBeGreaterThan(0);
@@ -44,7 +45,7 @@ describe("vitrine boutique (façon Uber Eats)", () => {
     const on = document.querySelector('[data-dish="1"]');
     expect(on.getAttribute("data-available")).toBe("yes");
     expect(within(on).queryByText("Indisponible")).toBeNull();
-    expect(within(on).getByRole("button", { name: /Ajouter Poulet braisé/ })).toBeInTheDocument();
+    expect(within(on).getByRole("button", { name: /Ajouter au panier · Poulet braisé/ })).toBeInTheDocument();
     const allOff = document.querySelector('[data-dish="3"]');
     expect(allOff).not.toBeNull();
     expect(within(allOff).queryByRole("button")).toBeNull();
@@ -53,10 +54,11 @@ describe("vitrine boutique (façon Uber Eats)", () => {
   });
 
   it("stepper à la place du « + » quand la quantité > 0 ; recherche dans la boutique", () => {
-    const setQty = vi.fn();
-    wrap(<StoreFront r={{ ...base, seller_type: "restaurant", accepts_preorder: true }} qty={{ 1: 2 }} setQty={setQty} canOrder money={money} showReserve={false} onReserve={() => {}} />);
-    fireEvent.click(screen.getAllByRole("button", { name: "+" })[0]);
-    expect(setQty).toHaveBeenCalledWith(1, 3);
+    foodCart._reset(); foodCart.add({ rid: base.id, iid: 1, name: "Poulet braisé", price: 1 }, 2);
+    wrap(<StoreFront r={{ ...base, seller_type: "restaurant", accepts_preorder: true }} money={money} showReserve={false} onReserve={() => {}} />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Augmenter" })[0]);
+    expect(foodCart.getState().lines.find((l) => l.iid === 1).qty).toBe(3);
+    foodCart._reset();
     fireEvent.change(screen.getByPlaceholderText("Rechercher dans Chez Mado"), { target: { value: "zzz" } });
     expect(screen.getByRole("status")).toHaveTextContent("Aucun plat ne correspond");
     fireEvent.change(screen.getByPlaceholderText("Rechercher dans Chez Mado"), { target: { value: "capit" } });
