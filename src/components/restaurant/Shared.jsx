@@ -1,7 +1,7 @@
 import { PageBack } from "../ui/BackButton.jsx";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ShoppingBag, CalendarDays, ImageIcon, Loader2, Search, Star, Store, Truck, Utensils, Zap } from "lucide-react";
+import { UtensilsCrossed, ShoppingBag, CalendarDays, ImageIcon, Loader2, Search, Star, Store, Truck, Utensils, Zap } from "lucide-react";
 import NavBar from "../layout/NavBar.jsx";
 import Footer from "../layout/Footer.jsx";
 import { RESTO_UI } from "../../i18n/restoUi.js";
@@ -68,6 +68,7 @@ export function RestoBar() {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={ui.where} aria-label={ui.where} className="w-full rounded-full border border-line bg-surface pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-coffee focus:ring-2 focus:ring-coffee/15" />
         </form>
         <nav className="flex items-center gap-0.5" aria-label="H-Restaurant">
+          <BarLink to="/restaurant/plats" icon={UtensilsCrossed} label={all.dishes.crumb} />
           <BarLink to="/restaurant/panier" icon={ShoppingBag} label={all.cart.link} badge={cartCount(cart)} />
           <BarLink to="/restaurant/commandes" icon={Truck} label={all.orders.title} />
           <BarLink to="/restaurant/mes-reservations" icon={CalendarDays} label={ui.mine} />

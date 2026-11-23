@@ -19,7 +19,7 @@ export default function HFoodTeaser({ fr = true }) {
     return () => { on = false; };
   }, []);
   return (
-    <Link to="/restaurant" aria-label={t.aria} className="group mt-8 flex items-center gap-4 sm:gap-6 rounded-2xl border border-line bg-latte-soft/60 hover:bg-latte-soft transition-colors p-4 sm:p-5">
+    <Link to="/restaurant/plats" aria-label={t.aria} className="group mt-8 flex items-center gap-4 sm:gap-6 rounded-2xl border border-line bg-latte-soft/60 hover:bg-latte-soft transition-colors p-4 sm:p-5">
       <span className="hidden sm:flex w-12 h-12 shrink-0 rounded-full bg-ink text-[#C89A3D] items-center justify-center"><UtensilsCrossed size={20} aria-hidden="true" /></span>
       <span className="min-w-0 flex-1">
         <span className="block text-[11px] font-semibold uppercase tracking-widest text-coffee">{t.kicker}</span>

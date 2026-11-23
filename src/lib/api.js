@@ -418,6 +418,7 @@ export const api = {
   // H-Logement : hébergements (recherche, réservation, hôtes, admin)
   resto: {
     home: () => request("/api/v1/restaurant/home"),
+    dishes: (params = {}) => request(`/api/v1/restaurant/dishes${qs(params)}`),
     search: (params = {}) => request(`/api/v1/restaurant/search${qs(params)}`),
     detail: (slug) => request(`/api/v1/restaurant/restaurants/${slug}`),
     tables: (id, params = {}) => request(`/api/v1/restaurant/restaurants/${id}/tables${qs(params)}`),
