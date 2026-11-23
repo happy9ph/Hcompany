@@ -79,6 +79,15 @@ export default function RestoCart() {
   const needsPrices = changes.length > 0 && !acceptPrices;
   const canSend = quote && !checking && !blocking && !incomplete && !needsPrices && contact.name.trim().length > 1 && contact.phone.trim().length >= 6;
 
+  // pourquoi le bouton est grisé : toujours dit clairement, vendeur par vendeur
+  const todo = [
+    ...groups.flatMap((g) => missing(g).map((k) => `${g.name || qv(g.rid)?.name || ""} : ${c[ISSUE_BY_KEY[k]]}`)),
+    ...(blocking && quote ? [c.needFix] : []),
+    ...(needsPrices ? [c.needPrices] : []),
+    ...(contact.name.trim().length > 1 ? [] : [c.needName]),
+    ...(contact.phone.trim().length >= 6 ? [] : [c.needPhone]),
+  ];
+
   function accept() { foodCart.enrich(quote, { acceptPrices: true }); setAcceptPrices(true); }
 
   async function place() {
@@ -186,6 +195,7 @@ export default function RestoCart() {
         </dl>}
         <p className="text-xs text-ink-faint">{c.pay}</p>
         {!isAuthenticated && <p className="text-xs text-ink-soft">{c.needSignin}</p>}
+        {isAuthenticated && !checking && todo.length > 0 && <div role="status" className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900"><p className="font-medium">{c.todo}</p><ul className="list-disc pl-5 mt-1">{todo.map((x) => <li key={x}>{x}</li>)}</ul></div>}
         <button onClick={place} disabled={busy || (isAuthenticated && !canSend)} className="w-full rounded-full bg-ink text-cream text-sm font-medium py-3.5 disabled:opacity-45">{busy ? c.placing : checking ? c.checking : isAuthenticated ? c.place : c.signin}</button>
       </Card>
     </RestoLayout>

@@ -61,6 +61,23 @@ describe("panier multi-vendeurs", () => {
     expect(screen.getByText("Choisissez votre zone.")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /Passer la commande/ })).toBeDisabled();
   });
+  it("deux vendeurs (retrait + livraison à domicile) : dit précisément ce qui manque, puis la commande part une fois adresse/zone/contact remplis", async () => {
+    foodCart.add({ rid: 1, iid: 5, price: 10 }, 1); foodCart.add({ rid: 2, iid: 6, price: 20 }, 1);
+    const q = Q(); q.vendors.push({ ...q.vendors[0], restaurant_id: 2, name: "Chez B", slug: "b", offers_delivery: true, zones: [], fulfilment: "delivery", fee_pending: true, lines: [{ item_id: 6, name: "Pizza", qty: 1, unit_price: 20, line_total: 20, available: true }] });
+    q.vendors[0].offers_delivery = false;
+    api.resto.quote.mockResolvedValue(q); api.resto.checkout.mockResolvedValue({ code: "HF-XYZ" });
+    view();
+    await screen.findByText("Pour envoyer la commande, il manque :");
+    fireEvent.click(screen.getAllByLabelText(/^Livraison/).find((el) => !el.disabled));
+    expect(await screen.findByText(/Indiquez votre adresse de livraison/, { selector: "li" })).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText("Rue, quartier, repère"), { target: { value: "12 rue des Fleurs, Roma" } });
+    const btn = await screen.findByRole("button", { name: /Passer la commande/ });
+    await waitFor(() => expect(btn).not.toBeDisabled());
+    fireEvent.click(btn);
+    await waitFor(() => expect(api.resto.checkout).toHaveBeenCalled());
+    const body = api.resto.checkout.mock.calls[0][1];
+    expect(body.vendors.map((v) => v.fulfilment).sort()).toEqual(["delivery", "pickup"]);
+  });
   it("checkout : clé d'idempotence, panier vidé au succès", async () => {
     foodCart.add({ rid: 1, iid: 5, price: 10 }, 1); foodCart.setOpt(1, { fulfilment: "pickup" });
     api.resto.quote.mockResolvedValue(Q()); api.resto.checkout.mockResolvedValue({ code: "HF-ABC" });
