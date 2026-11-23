@@ -50,6 +50,17 @@ describe("panier multi-vendeurs", () => {
     fireEvent.click(screen.getByText("Accepter les nouveaux prix"));
     await waitFor(() => expect(screen.getByRole("button", { name: /Passer la commande/ })).not.toBeDisabled());
   });
+  it("sans mode de réception, ou livraison sans adresse/zone : commande bloquée avec explication (le devis ne le signale pas)", async () => {
+    foodCart.add({ rid: 1, iid: 5, price: 10 }, 1);
+    api.resto.quote.mockResolvedValue(Q({ offers_delivery: true, zones: ["Roma"], fulfilment: null }));
+    view();
+    await screen.findByText("Choisissez livraison ou retrait.");
+    expect(await screen.findByRole("button", { name: /Passer la commande/ })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText("Livraison"));
+    await screen.findByText("Indiquez votre adresse de livraison.");
+    expect(screen.getByText("Choisissez votre zone.")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Passer la commande/ })).toBeDisabled();
+  });
   it("checkout : clé d'idempotence, panier vidé au succès", async () => {
     foodCart.add({ rid: 1, iid: 5, price: 10 }, 1); foodCart.setOpt(1, { fulfilment: "pickup" });
     api.resto.quote.mockResolvedValue(Q()); api.resto.checkout.mockResolvedValue({ code: "HF-ABC" });
