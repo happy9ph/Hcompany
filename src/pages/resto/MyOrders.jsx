@@ -6,6 +6,7 @@ import { useLoad, useShopMoney, errMessage } from "../../data/shop.js";
 import { useUser } from "../../context/Usercontext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { api } from "../../lib/api.js";
+import { ClientProposal } from "../../components/restaurant/Proposals.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
 const TONE = { pending: "bg-amber-100 text-amber-900", accepted: "bg-emerald-100 text-emerald-900", preparing: "bg-emerald-100 text-emerald-900", ready: "bg-emerald-100 text-emerald-900", completed: "bg-emerald-100 text-emerald-900", declined: "bg-red-100 text-red-800", cancelled: "bg-stone-200 text-stone-700", partial: "bg-amber-100 text-amber-900" };
@@ -42,6 +43,7 @@ function Sub({ s, onCancel, onChanged }) {
       <ul className="text-sm text-ink-soft space-y-1">{s.items.map((i, k) => <li key={k} className="flex justify-between"><span>{i.qty} × {i.name}</span><span>{money(i.line_total)}</span></li>)}</ul>
       <p className="text-xs text-ink-soft">{s.fulfilment === "delivery" ? `${o.delivery} · ${s.delivery_address}${s.delivery_zone ? ` (${s.delivery_zone})` : ""} · ${s.fee_pending ? o.feeToArrange : s.delivery_fee ? money(s.delivery_fee) : o.feeFree}` : o.pickup}</p>
       {s.status === "declined" && s.decline_reason && <p className="text-sm text-red-700">{o.reason} : {s.decline_reason}</p>}
+      <ClientProposal s={s} onDone={onChanged} />
       <div className="flex justify-between text-sm font-medium text-ink border-t border-line pt-2"><span>{o.total}</span><span>{money(s.total_known)}</span></div>
       <p className="text-xs text-ink-faint">{o.payment[s.payment_status] || s.payment_status} · {o.paymentHint}</p>
       {s.status === "cancelled" && s.status_note && <p className="text-sm text-red-700">{o.statusNote} : {s.status_note}</p>}
@@ -96,6 +98,7 @@ export default function MyOrders() {
             <li key={x.code}><Link to={`/restaurant/commandes/${x.code}`} className="block rounded-2xl border border-line bg-surface p-4 hover:border-coffee-light">
               <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-mono text-ink">{x.code}</span><Pill s={x.status} label={o.status[x.status] || x.status} /></div>
               <p className="text-sm text-ink-soft mt-1">{x.suborders.map((s) => s.restaurant_name).join(" · ")}</p>
+              {x.suborders.some((s) => s.open_proposal) && <span className="mt-2 inline-flex rounded-full bg-amber-100 text-amber-900 text-xs font-medium px-2.5 py-1">{o.prop.badge}</span>}
               <p className="text-sm text-ink mt-1">{money(x.grand_total)}</p>
             </Link></li>))}</ul>
         )}
