@@ -89,6 +89,7 @@ function Inner() {
         <div className="flex flex-wrap gap-2">
           {list.length > 1 && <select aria-label={t.mine} value={r.id} onChange={(e) => setParam("r", e.target.value)} className={`${inputCls} !w-auto`}>{list.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>}
           <Link to="/restaurant/pro/commandes" className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm">{ui.sellerOrders.link}</Link>
+          <Link to="/restaurant/pro/avis" className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm">{ui.sellerOrders.reviewsLink}</Link>
           {r.status === "active" && <Link to={`/restaurant/r/${r.slug}`} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm"><Eye size={15} />{T.viewPublic}</Link>}
           {["draft", "rejected"].includes(r.status) && <button disabled={busy} onClick={() => act("submit")} className="inline-flex items-center gap-2 rounded-full bg-ink text-cream px-5 py-2.5 text-sm disabled:opacity-50"><Send size={15} />{t.submit}</button>}
           {r.status === "active" && <button disabled={busy} onClick={() => act("pause")} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm"><Pause size={15} />{t.pause}</button>}
