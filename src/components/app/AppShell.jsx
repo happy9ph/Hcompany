@@ -182,8 +182,7 @@ export default function AppShell() {
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink-soft" title={fr ? "Modifiable en bas du site" : "Change it in the site footer"}>{region.info.flag} {region.currency}</span>
           <Link to="/infos#rejoindre" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-[#2F6B3F] text-white text-sm font-medium px-4 py-2 hover:bg-[#265733] transition-colors"><Handshake size={15} />{fr ? "Devenir partenaire" : "Become a partner"}</Link>
           {isAuthenticated ? (<><NotificationBell /><AccountMenu /></>) : (<>
-            <Link to="/connexion" state={{ redirectTo: location.pathname }} className="inline-flex items-center rounded-full border border-line text-sm font-medium px-4 py-2 hover:bg-latte-soft">{fr ? "Se connecter" : "Sign in"}</Link>
-            <Link to="/connexion" state={{ redirectTo: location.pathname }} className="inline-flex items-center rounded-full bg-ink text-cream text-sm font-medium px-4 py-2 hover:bg-coffee-dark">{fr ? "Créer un compte" : "Create account"}</Link>
+            <Link to="/connexion" state={{ redirectTo: location.pathname }} className="inline-flex items-center rounded-full bg-ink text-cream text-sm font-medium px-4 py-2 hover:bg-coffee-dark">{fr ? "Se connecter" : "Sign in"}</Link>
           </>)}
         </header>
         <main id="app-main" className="flex-1 min-w-0 pb-24 md:pb-10"><Outlet context={{ first }} /></main>
