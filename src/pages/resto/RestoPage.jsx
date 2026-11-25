@@ -219,7 +219,7 @@ function ReviewsBlock({ id }) {
       <h2 id="reviews" className="font-display text-2xl text-ink mb-4">{ui.page.reviews}</h2>
       {!data?.length ? <p className="text-sm text-ink-soft">{ui.page.reviewsEmpty}</p> : (
         <ul className="space-y-4">{data.map((x) => (
-          <li key={x.id} className="rounded-2xl border border-line bg-surface p-4"><div className="flex items-center justify-between mb-1"><span className="font-medium text-ink text-sm">{x.author}</span><Rating value={x.rating} count={1} /></div>{x.comment && <p className="text-sm text-ink-soft">{x.comment}</p>}</li>
+          <li key={x.id} className="rounded-2xl border border-line bg-surface p-4"><div className="flex items-center justify-between mb-1"><span className="font-medium text-ink text-sm">{x.author}{x.verified_order && <span className="ml-2 text-[11px] font-normal text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">{ui.orders.rev.verified}</span>}</span><Rating value={x.rating} count={1} /></div>{x.comment && <p className="text-sm text-ink-soft">{x.comment}</p>}</li>
         ))}</ul>
       )}
     </section>

@@ -7,6 +7,7 @@ import { useUser } from "../../context/Usercontext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { api } from "../../lib/api.js";
 import { ClientProposal } from "../../components/restaurant/Proposals.jsx";
+import ClientReview from "../../components/restaurant/OrderReview.jsx";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 
 const TONE = { pending: "bg-amber-100 text-amber-900", accepted: "bg-emerald-100 text-emerald-900", preparing: "bg-emerald-100 text-emerald-900", ready: "bg-emerald-100 text-emerald-900", completed: "bg-emerald-100 text-emerald-900", declined: "bg-red-100 text-red-800", cancelled: "bg-stone-200 text-stone-700", partial: "bg-amber-100 text-amber-900" };
@@ -44,6 +45,7 @@ function Sub({ s, onCancel, onChanged }) {
       <p className="text-xs text-ink-soft">{s.fulfilment === "delivery" ? `${o.delivery} · ${s.delivery_address}${s.delivery_zone ? ` (${s.delivery_zone})` : ""} · ${s.fee_pending ? o.feeToArrange : s.delivery_fee ? money(s.delivery_fee) : o.feeFree}` : o.pickup}</p>
       {s.status === "declined" && s.decline_reason && <p className="text-sm text-red-700">{o.reason} : {s.decline_reason}</p>}
       <ClientProposal s={s} onDone={onChanged} />
+      <ClientReview s={s} onDone={onChanged} />
       <div className="flex justify-between text-sm font-medium text-ink border-t border-line pt-2"><span>{o.total}</span><span>{money(s.total_known)}</span></div>
       <p className="text-xs text-ink-faint">{o.payment[s.payment_status] || s.payment_status} · {o.paymentHint}</p>
       {s.status === "cancelled" && s.status_note && <p className="text-sm text-red-700">{o.statusNote} : {s.status_note}</p>}
