@@ -1,4 +1,4 @@
-import HeroPhoto from "../ui/HeroPhoto.jsx";
+import HeroPhoto, { HeroPhotoCard } from "../ui/HeroPhoto.jsx";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -180,6 +180,7 @@ export default function Hero() {
                 {t("hero.more")}<ArrowRight />
               </Link>
             </div>
+            <HeroPhotoCard />
           </motion.div>
 
           <motion.div
