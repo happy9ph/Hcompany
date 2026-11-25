@@ -1,0 +1,1 @@
+Déposez ici hero.jpg : photo du hero de /infos (paysage, 1920x1080 min, < 400 Ko). Absente = hero inchangé.
