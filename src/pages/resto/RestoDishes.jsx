@@ -47,7 +47,7 @@ function Tile({ dish, vendor, money, ui, onOpen, dist }) {
 
 export default function RestoDishes() {
   const ui = useRestoUi(); const d = ui.dishes;
-  usePageMeta({ title: `${d.title} · H-Restaurant`, description: d.sub });
+  usePageMeta({ title: `${d.title} · H-Food`, description: d.sub });
   const { money } = useShopMoney();
   const [sp, setSp] = useSearchParams();
   const [q, setQ] = useState(sp.get("q") || "");
@@ -104,6 +104,14 @@ export default function RestoDishes() {
     return all[day % all.length];
   }, [data]);
 
+  // bandeau photo : vraies photos de plats de la plateforme (tournent chaque jour), jamais d'image inventée
+  const photos = useMemo(() => {
+    const seen = new Set(), pool = (data?.dishes || []).filter((x) => x.image && !seen.has(x.image) && seen.add(x.image));
+    if (!pool.length) return [];
+    const day = Math.floor(Date.now() / 864e5);
+    return Array.from({ length: Math.min(4, pool.length) }, (_, i) => pool[(day + i) % pool.length]);
+  }, [data]);
+  const hero = photos.length > 0;
   const [open, setOpen] = useState(null);
   useEffect(() => { // lien direct ?plat=ID
     if (platId && data && !open) { const x = data.dishes.find((z) => z.id === platId); if (x) setOpen(x); }
@@ -126,10 +134,19 @@ export default function RestoDishes() {
 
   return (
     <RestoLayout>
-      <section aria-labelledby="dishes-title">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-coffee">H-Food</p>
-        <h1 id="dishes-title" className="font-display text-3xl sm:text-5xl text-ink leading-tight mt-1">{d.title}</h1>
-        <p className="text-ink-soft mt-2 max-w-xl">{d.sub}</p>
+      <section aria-labelledby="dishes-title" className={`relative overflow-hidden rounded-3xl ${hero ? "p-5 sm:p-8 text-white" : ""}`}>
+        {hero && (
+          <>
+            <div aria-hidden="true" className={`absolute inset-0 grid ${photos.length > 1 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-1"}`}>
+              {photos.map((x, i) => <RestoImage key={x.id} path={x.image} alt="" ratio="h-full" className={`w-full h-full ${i > 1 ? "hidden sm:block" : ""}`} />)}
+            </div>
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/35" />
+          </>
+        )}
+        <div className="relative">
+        <p className={`text-[11px] font-semibold uppercase tracking-widest ${hero ? "text-amber-300" : "text-coffee"}`}>H-Food</p>
+        <h1 id="dishes-title" className={`font-display text-3xl sm:text-5xl leading-tight mt-1 ${hero ? "text-white" : "text-ink"}`}>{d.title}</h1>
+        <p className={`mt-2 max-w-xl ${hero ? "text-white/90" : "text-ink-soft"}`}>{d.sub}</p>
         <form role="search" onSubmit={(e) => e.preventDefault()} className="mt-5 flex flex-col sm:flex-row gap-2 max-w-3xl">
           <label className="relative flex-1">
             <span className="sr-only">{d.search}</span>
@@ -145,10 +162,11 @@ export default function RestoDishes() {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button type="button" onClick={goNear} disabled={locating} aria-pressed={!!near} className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium ${near ? "bg-ink text-cream border-ink" : "border-line text-ink bg-surface hover:border-coffee-light"}`}><Crosshair size={14} className={locating ? "animate-pulse" : ""} aria-hidden="true" />{locating ? d.locating : near ? d.nearOn : d.near}</button>
           <button type="button" aria-pressed={deliv} onClick={() => set({ delivery: deliv ? "" : "1" })} className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm ${deliv ? "bg-ink text-cream border-ink" : "border-line text-ink-soft bg-surface"}`}><Truck size={14} aria-hidden="true" />{d.delivery}</button>
-          {data && <span className="text-sm text-ink-soft px-1">{d.vendors(data.restaurants.length)} · {d.count(data.total)}</span>}
+          {data && <span className={`text-sm px-1 ${hero ? "text-white/90" : "text-ink-soft"}`}>{d.vendors(data.restaurants.length)} · {d.count(data.total)}</span>}
         </div>
-        {geoMsg && <p role="alert" className="mt-2 text-sm text-red-600">{geoMsg}</p>}
-        {near && closest && closest[1].km > 120 && <p role="status" className="mt-2 text-sm text-amber-800">{d.farAway(fmtKm(closest[1].km))}</p>}
+        {geoMsg && <p role="alert" className={`mt-2 text-sm ${hero ? "text-red-200" : "text-red-600"}`}>{geoMsg}</p>}
+        {near && closest && closest[1].km > 120 && <p role="status" className={`mt-2 text-sm ${hero ? "text-amber-200" : "text-amber-800"}`}>{d.farAway(fmtKm(closest[1].km))}</p>}
+        </div>
       </section>
 
       <div className="mt-6 grid lg:grid-cols-[1fr_1.15fr] gap-5">

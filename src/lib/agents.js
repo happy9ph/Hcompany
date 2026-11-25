@@ -1,7 +1,7 @@
 export const DEPARTMENTS = ["partnerships", "learning", "lodging", "transport", "shopping", "restaurant", "tourism"];
 export const DEPT_LABEL = {
-  fr: { partnerships: "Partenariats", learning: "H-Learning", lodging: "H-Logement", transport: "H-Transport", shopping: "H-Shopping", restaurant: "H-Restaurant", tourism: "H-Tourisme" },
-  en: { partnerships: "Partnerships", learning: "H-Learning", lodging: "H-Lodging", transport: "H-Transport", shopping: "H-Shopping", restaurant: "H-Restaurant", tourism: "H-Tourism" },
+  fr: { partnerships: "Partenariats", learning: "H-Learning", lodging: "H-Logement", transport: "H-Transport", shopping: "H-Shopping", restaurant: "H-Food", tourism: "H-Tourisme" },
+  en: { partnerships: "Partnerships", learning: "H-Learning", lodging: "H-Lodging", transport: "H-Transport", shopping: "H-Shopping", restaurant: "H-Food", tourism: "H-Tourism" },
 };
 export const deptLabel = (lang, k) => (DEPT_LABEL[lang] || DEPT_LABEL.fr)[k] || k;
 /** Points d'une sparkline SVG (largeur w, hauteur h) à partir des valeurs. */

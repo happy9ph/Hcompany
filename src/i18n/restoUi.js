@@ -14,7 +14,7 @@ export const RESTO_UI = {
     common: { loading: "Chargement…", error: "Une erreur est survenue. Réessayez.", signInRequired: "Connectez-vous pour continuer.", signIn: "Se connecter", createAccount: "Créer un compte", save: "Enregistrer", cancel: "Annuler", delete: "Supprimer", edit: "Modifier", add: "Ajouter", close: "Fermer", back: "Retour", price: "Prix", people: "personnes", person: "personne", seats: "places", free: "libre", saved: "Enregistré", retry: "Réessayer" },
     bar: { where: "Restaurant, quartier ou cuisine…", mine: "Mes réservations", pro: "Espace pro" },
     home: {
-      eyebrow: "H-Restaurant", title: "Choisissez votre table, en vrai.", lead: "Entrez dans la salle en 3D, repérez les tables libres et réservez la vôtre — avec, si vous voulez, votre commande déjà passée.",
+      eyebrow: "H-Food", title: "Choisissez votre table, en vrai.", lead: "Entrez dans la salle en 3D, repérez les tables libres et réservez la vôtre — avec, si vous voulez, votre commande déjà passée.",
       when: "Quand ?", date: "Date", time: "Heure", party: "Convives", city: "Ville", allCities: "Toutes les villes", search: "Trouver une table",
       featured: "À la une", byCuisine: "Par cuisine", cities: "Par ville", empty: "Aucun restaurant n'est encore en ligne.", emptyHint: "Revenez bientôt — les premiers restaurants arrivent.",
       steps: [{ t: "Cherchez", d: "Ville, cuisine, budget, date et nombre de convives." }, { t: "Visitez la salle", d: "Promenez-vous en 3D et touchez la table qui vous plaît." }, { t: "Réservez", d: "Confirmation immédiate ou sous peu, rappel par notification." }],
@@ -43,7 +43,7 @@ export const RESTO_UI = {
       pastSlot: "Heure déjà passée",
       searchIn: (n) => `Rechercher dans ${n}`, noMatch: "Aucun plat ne correspond à votre recherche.", catalog: "Catalogue", categories: "Catégories", sellerIndividual: "Vendeur individuel", deliveryPill: "Livraison", unavailableLong: "Indisponible pour le moment",
       delivery: { title: "Livraison et conditions de vente", offers: "Livraison proposée", none: "Pas de livraison : retrait ou arrangement direct avec le vendeur.", zones: "Zones desservies", terms: "Conditions de livraison", sale: "Conditions de vente", manual: "HFood ne livre pas et n'encaisse pas : paiement et livraison se règlent directement avec le vendeur.", fee: { free: "Livraison gratuite", tbd: "Frais de livraison à convenir", amount: (m) => `${m} de frais de livraison`, short: { free: "Livraison gratuite", tbd: "Frais à convenir", amount: (m) => `${m} de frais`, none: "Pas de livraison" } } },
-      contact: { title: "Contacter", whatsapp: "WhatsApp", call: "Appeler", reserveTable: "Réserver une table", hint: "Contact direct : le paiement se fait avec le vendeur, hors HFood.", message: (n) => `Bonjour, je vous contacte depuis H-Restaurant au sujet de « ${n} »`, bar: "Contact" },
+      contact: { title: "Contacter", whatsapp: "WhatsApp", call: "Appeler", reserveTable: "Réserver une table", hint: "Contact direct : le paiement se fait avec le vendeur, hors HFood.", message: (n) => `Bonjour, je vous contacte depuis H-Food au sujet de « ${n} »`, bar: "Contact" },
       where: "Où nous trouver", place: "Localisation", reservationsOff: "Les réservations ne sont pas encore ouvertes pour cet établissement.", sellerNoBooking: "Ce vendeur ne prend pas de réservations : contactez-le directement.", menuHours: "Horaires",
     },
     mine: {
@@ -51,8 +51,8 @@ export const RESTO_UI = {
       cancel: "Annuler", cancelConfirm: "Annuler cette réservation ?", cancelled: "Réservation annulée.", review: "Donner mon avis", rate: "Votre note", comment: "Votre commentaire (facultatif)", send: "Publier", thanks: "Merci pour votre avis !", reviewed: "Avis publié", table: "Table", declined: "Motif",
     },
     pro: {
-      eyebrow: "H-Restaurant · Espace pro", title: "Votre restaurant, en ligne.", lead: "Dessinez votre salle, publiez votre menu, gérez les réservations en direct.",
-      needModule: "Débloquez le module H-Restaurant dans votre espace partenaire pour créer votre restaurant.", openModules: "Ouvrir mes modules", becomePartner: "Devenir partenaire",
+      eyebrow: "H-Food · Espace pro", title: "Votre restaurant, en ligne.", lead: "Dessinez votre salle, publiez votre menu, gérez les réservations en direct.",
+      needModule: "Débloquez le module H-Food dans votre espace partenaire pour créer votre restaurant.", openModules: "Ouvrir mes modules", becomePartner: "Devenir partenaire",
       newTitle: "Créer un restaurant", name: "Nom du restaurant", create: "Créer", mine: "Mes restaurants", noneYet: "Vous n'avez pas encore de restaurant.", manage: "Gérer",
       tabs: { overview: "Vue d'ensemble", reservations: "Réservations", menu: "Menu", room: "Salle & tables", info: "Informations" },
       submit: "Envoyer pour validation", pause: "Mettre en pause", resume: "Remettre en ligne", submitted: "Envoyé pour validation.", checklistTitle: "Avant de publier", checklist: { photo: "Au moins une photo", menu: "Au moins un plat", tables: "Au moins une table", info: "Ville, adresse et téléphone" },
@@ -107,7 +107,7 @@ export const RESTO_UI = {
       next: { preparing: "En préparation", ready: "Prête", completed: "Terminée" }, cancelOrder: "Annuler", cancelReason: "Motif d'annulation (le client le recevra)", confirmPay: "Confirmer le paiement reçu", rejectPay: "Paiement non reçu", rejectReason: "Pourquoi le paiement n'est pas reçu", payDeclared: "Le client a déclaré avoir payé", payConfirmed: "Paiement confirmé", updated: "Commande mise à jour", close: "Fermer",
       title: "Commandes reçues", empty: "Aucune commande pour le moment.", filter: { all: "Toutes", pending: "En attente", accepted: "Acceptées", declined: "Refusées", cancelled: "Annulées" }, accept: "Accepter", decline: "Refuser", reasonPrompt: "Motif du refus (le client le recevra)", accepted: "Commande acceptée", declined: "Commande refusée", customer: "Client", back: "Retour à mon espace", link: "Commandes reçues", noPayment: "Le paiement se règle directement avec le client.",
     },
-    admin: { title: "H-Restaurant", restaurants: "Restaurants", reservations30: "Réservations (30 j)", covers30: "Couverts (30 j)", noShow30: "Non honorées (30 j)", filter: "Statut", search: "Rechercher…", approve: "Approuver", reject: "Refuser", suspend: "Suspendre", feature: "Mettre à la une", unfeature: "Retirer de la une", reason: "Motif", owner: "Propriétaire", type: "Type", individual: "Vendeur individuel", restaurant: "Restaurant", tables: "tables", dishes: "plats", none: "Aucun restaurant.", done: "Mis à jour." },
+    admin: { title: "H-Food", restaurants: "Restaurants", reservations30: "Réservations (30 j)", covers30: "Couverts (30 j)", noShow30: "Non honorées (30 j)", filter: "Statut", search: "Rechercher…", approve: "Approuver", reject: "Refuser", suspend: "Suspendre", feature: "Mettre à la une", unfeature: "Retirer de la une", reason: "Motif", owner: "Propriétaire", type: "Type", individual: "Vendeur individuel", restaurant: "Restaurant", tables: "tables", dishes: "plats", none: "Aucun restaurant.", done: "Mis à jour." },
   },
   en: {
     cuisines: cuisinesEn,
@@ -121,7 +121,7 @@ export const RESTO_UI = {
     common: { loading: "Loading…", error: "Something went wrong. Try again.", signInRequired: "Sign in to continue.", signIn: "Sign in", createAccount: "Create account", save: "Save", cancel: "Cancel", delete: "Delete", edit: "Edit", add: "Add", close: "Close", back: "Back", price: "Price", people: "guests", person: "guest", seats: "seats", free: "free", saved: "Saved", retry: "Retry" },
     bar: { where: "Restaurant, area or cuisine…", mine: "My bookings", pro: "Pro space" },
     home: {
-      eyebrow: "H-Restaurant", title: "Pick your table, for real.", lead: "Walk into the dining room in 3D, spot the free tables and book yours — with your order placed ahead if you like.",
+      eyebrow: "H-Food", title: "Pick your table, for real.", lead: "Walk into the dining room in 3D, spot the free tables and book yours — with your order placed ahead if you like.",
       when: "When?", date: "Date", time: "Time", party: "Guests", city: "City", allCities: "All cities", search: "Find a table",
       featured: "Featured", byCuisine: "By cuisine", cities: "By city", empty: "No restaurant is live yet.", emptyHint: "Check back soon — the first restaurants are on their way.",
       steps: [{ t: "Search", d: "City, cuisine, budget, date and party size." }, { t: "Tour the room", d: "Walk around in 3D and tap the table you like." }, { t: "Book", d: "Instant or quick confirmation, with notifications." }],
@@ -150,7 +150,7 @@ export const RESTO_UI = {
       pastSlot: "Time already passed",
       searchIn: (n) => `Search in ${n}`, noMatch: "No dish matches your search.", catalog: "Catalogue", categories: "Categories", sellerIndividual: "Individual seller", deliveryPill: "Delivery", unavailableLong: "Currently unavailable",
       delivery: { title: "Delivery and terms of sale", offers: "Delivery offered", none: "No delivery: pick-up or direct arrangement with the seller.", zones: "Areas served", terms: "Delivery terms", sale: "Terms of sale", manual: "HFood does not deliver or collect payments: payment and delivery are settled directly with the seller.", fee: { free: "Free delivery", tbd: "Delivery fee to be agreed", amount: (m) => `${m} delivery fee`, short: { free: "Free delivery", tbd: "Fee to be agreed", amount: (m) => `${m} fee`, none: "No delivery" } } },
-      contact: { title: "Contact", whatsapp: "WhatsApp", call: "Call", reserveTable: "Book a table", hint: "Direct contact: you pay the seller directly, outside HFood.", message: (n) => `Hello, I'm contacting you from H-Restaurant about "${n}"`, bar: "Contact" },
+      contact: { title: "Contact", whatsapp: "WhatsApp", call: "Call", reserveTable: "Book a table", hint: "Direct contact: you pay the seller directly, outside HFood.", message: (n) => `Hello, I'm contacting you from H-Food about "${n}"`, bar: "Contact" },
       where: "Where to find us", place: "Location", reservationsOff: "Bookings are not open yet for this venue.", sellerNoBooking: "This seller does not take bookings: contact them directly.", menuHours: "Hours",
     },
     mine: {
@@ -158,8 +158,8 @@ export const RESTO_UI = {
       cancel: "Cancel", cancelConfirm: "Cancel this booking?", cancelled: "Booking cancelled.", review: "Leave a review", rate: "Your rating", comment: "Your comment (optional)", send: "Post", thanks: "Thanks for your review!", reviewed: "Review posted", table: "Table", declined: "Reason",
     },
     pro: {
-      eyebrow: "H-Restaurant · Pro space", title: "Your restaurant, online.", lead: "Draw your dining room, publish your menu, manage bookings live.",
-      needModule: "Unlock the H-Restaurant module in your partner space to create your restaurant.", openModules: "Open my modules", becomePartner: "Become a partner",
+      eyebrow: "H-Food · Pro space", title: "Your restaurant, online.", lead: "Draw your dining room, publish your menu, manage bookings live.",
+      needModule: "Unlock the H-Food module in your partner space to create your restaurant.", openModules: "Open my modules", becomePartner: "Become a partner",
       newTitle: "Create a restaurant", name: "Restaurant name", create: "Create", mine: "My restaurants", noneYet: "You have no restaurant yet.", manage: "Manage",
       tabs: { overview: "Overview", reservations: "Bookings", menu: "Menu", room: "Room & tables", info: "Details" },
       submit: "Submit for review", pause: "Pause", resume: "Go live again", submitted: "Submitted for review.", checklistTitle: "Before publishing", checklist: { photo: "At least one photo", menu: "At least one dish", tables: "At least one table", info: "City, address and phone" },
@@ -214,6 +214,6 @@ export const RESTO_UI = {
       next: { preparing: "Preparing", ready: "Ready", completed: "Completed" }, cancelOrder: "Cancel", cancelReason: "Cancellation reason (the customer will see it)", confirmPay: "Confirm payment received", rejectPay: "Payment not received", rejectReason: "Why the payment was not received", payDeclared: "The customer says they paid", payConfirmed: "Payment confirmed", updated: "Order updated", close: "Close",
       title: "Orders received", empty: "No orders yet.", filter: { all: "All", pending: "Pending", accepted: "Accepted", declined: "Declined", cancelled: "Cancelled" }, accept: "Accept", decline: "Decline", reasonPrompt: "Reason for declining (the customer will see it)", accepted: "Order accepted", declined: "Order declined", customer: "Customer", back: "Back to my space", link: "Orders received", noPayment: "Payment is settled directly with the customer.",
     },
-    admin: { title: "H-Restaurant", restaurants: "Restaurants", reservations30: "Bookings (30d)", covers30: "Covers (30d)", noShow30: "No-shows (30d)", filter: "Status", search: "Search…", approve: "Approve", reject: "Reject", suspend: "Suspend", feature: "Feature", unfeature: "Unfeature", reason: "Reason", owner: "Owner", type: "Type", individual: "Individual seller", restaurant: "Restaurant", tables: "tables", dishes: "dishes", none: "No restaurants.", done: "Updated." },
+    admin: { title: "H-Food", restaurants: "Restaurants", reservations30: "Bookings (30d)", covers30: "Covers (30d)", noShow30: "No-shows (30d)", filter: "Status", search: "Search…", approve: "Approve", reject: "Reject", suspend: "Suspend", feature: "Feature", unfeature: "Unfeature", reason: "Reason", owner: "Owner", type: "Type", individual: "Individual seller", restaurant: "Restaurant", tables: "tables", dishes: "dishes", none: "No restaurants.", done: "Updated." },
   },
 };

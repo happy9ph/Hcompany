@@ -38,7 +38,7 @@ export default function RestoPage() {
   const [sp] = useSearchParams();
 
   const { data: r, error, loading, reload } = useLoad(() => api.resto.detail(slug), [slug]);
-  usePageMeta(r ? { title: `${r.name} · H-Restaurant`, description: r.summary } : null);
+  usePageMeta(r ? { title: `${r.name} · H-Food`, description: r.summary } : null);
 
   const [day, setDay] = useState(sp.get("day") || isoToday());
   const [time, setTime] = useState(sp.get("time") || "");

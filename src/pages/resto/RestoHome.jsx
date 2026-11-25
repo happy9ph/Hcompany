@@ -54,7 +54,7 @@ export default function RestoHome() {
   const c = copy[lang === "en" ? "en" : "fr"];
   const navigate = useNavigate();
   const toast = useToast();
-  usePageMeta({ title: "H-Restaurant", description: c.sub });
+  usePageMeta({ title: "H-Food", description: c.sub });
   const { data, error, loading } = useLoad(() => api.resto.home(), []);
   const [city, setCity] = useState("");
   const cityNames = useMemo(() => (data?.cities || []).map((x) => x.city), [data]);

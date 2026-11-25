@@ -133,8 +133,8 @@ const KB = [
   {
     id: "services_list",
     kw: ["services", "service", "que proposez", "proposez vous", "offrez", "what do you offer", "catalogue", "catalog", "liste des services", "tous vos services", "what services"],
-    fr: "Nos huit services :\n- H-Transport (Bus) et H-Transport (Colis)\n- H-Logement\n- H-Restaurant\n- H-Learning\n- H-Shopping (H-Commerce)\n- Bientôt : H-Money, H-Translate\nCliquez sur « Explorer les services » pour ouvrir la page de chacun.",
-    en: "Our eight services:\n- H-Transport (Bus) and H-Transport (Parcels)\n- H-Lodging\n- H-Restaurant\n- H-Learning\n- H-Shopping (H-Commerce)\n- Coming soon: H-Money, H-Translate\nTap “Explore the services” to open each page.",
+    fr: "Nos huit services :\n- H-Transport (Bus) et H-Transport (Colis)\n- H-Logement\n- H-Food\n- H-Learning\n- H-Shopping (H-Commerce)\n- Bientôt : H-Money, H-Translate\nCliquez sur « Explorer les services » pour ouvrir la page de chacun.",
+    en: "Our eight services:\n- H-Transport (Bus) and H-Transport (Parcels)\n- H-Lodging\n- H-Food\n- H-Learning\n- H-Shopping (H-Commerce)\n- Coming soon: H-Money, H-Translate\nTap “Explore the services” to open each page.",
     to: ["explore"], follow: ["trades", "pricing"],
   },
   {
@@ -159,7 +159,7 @@ const KB = [
     to: ["lukondo", "confismila"], follow: ["join"],
   },
   { id: "lukondo", kw: ["lukondo"], fr: "Lukondo est notre partenaire pour le transport en bus, l'envoi de colis, le lodge et le transfert d'argent entre la RDC et la Zambie.", en: "Lukondo is our partner for bus transport, parcels, lodging and money transfer between the DRC and Zambia.", to: ["lukondo"], follow: ["bus", "colis"] },
-  { id: "confismila", kw: ["confismila", "galette"], fr: "Confismila est notre partenaire restaurant : vous pouvez commander ou réserver une table via H-Restaurant.", en: "Confismila is our restaurant partner: you can order or book a table through H-Restaurant.", to: ["confismila"], follow: ["restaurant"] },
+  { id: "confismila", kw: ["confismila", "galette"], fr: "Confismila est notre partenaire restaurant : vous pouvez commander ou réserver une table via H-Food.", en: "Confismila is our restaurant partner: you can order or book a table through H-Food.", to: ["confismila"], follow: ["restaurant"] },
   { id: "ustudy", kw: ["u-study", "ustudy", "u study", "application mobile", "mobile app"], fr: "U-Study est une application mobile du réseau H-Company. Sa page présente ce qu'elle apporte aux étudiants.", en: "U-Study is a mobile app of the H-Company network. Its page shows what it offers students.", to: ["ustudy"] },
 
   /* ── Devenir partenaire ── */

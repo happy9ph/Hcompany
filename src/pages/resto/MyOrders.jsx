@@ -59,7 +59,7 @@ export function OrderDetail() {
   const { code } = useParams(); const loc = useLocation();
   const { withAuth } = useUser(); const toast = useToast(); const { money } = useShopMoney();
   const { data, error, loading, reload } = useLoad(() => withAuth((t) => api.resto.order(t, code)), [code]);
-  usePageMeta({ title: `${o.code} ${code} · H-Restaurant` });
+  usePageMeta({ title: `${o.code} ${code} · H-Food` });
   async function cancel(sc) {
     if (!window.confirm(o.cancelConfirm)) return;
     try { await withAuth((t) => api.resto.cancelSub(t, sc)); toast?.success?.(o.cancelled); reload(); } catch (e) { toast?.error?.(errMessage(e, ui.common.error)); }
@@ -84,7 +84,7 @@ export function OrderDetail() {
 export default function MyOrders() {
   const ui = useRestoUi(); const o = ui.orders;
   const { withAuth } = useUser(); const { money } = useShopMoney();
-  usePageMeta({ title: `${o.title} · H-Restaurant` });
+  usePageMeta({ title: `${o.title} · H-Food` });
   const { data, error, loading, reload } = useLoad(() => withAuth((t) => api.resto.orders(t)), []);
   const rows = data?.orders || [];
   return (

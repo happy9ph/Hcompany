@@ -4,7 +4,7 @@ import { CART_COOKIE, MAX_QTY, cartCount, decode, encode, foodCart, groupByVendo
 const dish = (rid, iid, extra = {}) => ({ rid, iid, name: `P${iid}`, price: 10, vname: `V${rid}`, vslug: `v${rid}`, ...extra });
 beforeEach(() => { document.cookie = `${CART_COOKIE}=; Max-Age=0; Path=/`; foodCart._reset(); });
 
-describe("panier H-Restaurant", () => {
+describe("panier H-Food", () => {
   it("ajoute, cumule et plafonne les quantités", () => {
     foodCart.add(dish(1, 11)); foodCart.add(dish(1, 11), 2);
     expect(foodCart.getState().lines).toHaveLength(1);

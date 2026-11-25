@@ -8,7 +8,6 @@ const THEME = { coffee: "linear-gradient(135deg,#4A3020,#2A1A10)", gold: "linear
 const SHOW_ON = ["/app", "/shopping", "/transport", "/logement", "/restaurant", "/tourisme", "/formations", "/interpretation", "/money"];
 const REAPPEAR_MS = 45000; // une pub réduite revient d'elle-même, avec l'annonce suivante
 const FIRST_MS = 1200;
-const MOBILE_OPEN_MS = 6000; // mobile (V8) : l'annonce se réduit seule après quelques secondes pour ne pas masquer formulaires et boutons
 const HOUSE = [
   { id: "h1", theme: "gold", title: "Votre pub ici", body: "Touchez des clients à Lusaka et Kinshasa.", cta_label: "Devenir partenaire", link: "/infos#rejoindre" },
   { id: "h2", theme: "coffee", title: "Facturez et soyez payé", body: "Générez une facture, payez en mobile money.", cta_label: "H-Money", link: "/app/factures" },
@@ -20,6 +19,18 @@ function placementFor(path) {
   if (path.startsWith("/app/logement") || path.startsWith("/logement")) return "app_logement";
   if (path.startsWith("/app/money") || path.startsWith("/money")) return "app_money";
   return "app_home";
+}
+
+function AdLine({ ad }) {
+  return (
+    <>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[10px] uppercase tracking-widest text-ink-faint leading-none mb-0.5">{ad.sponsored ? "Sponsorisé" : "H-Company"}</span>
+        <span className="block truncate text-sm font-semibold text-ink">{ad.title}</span>
+      </span>
+      <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-ink text-cream text-xs font-semibold px-3.5 py-2">{ad.cta_label}<ArrowUpRight size={12} /></span>
+    </>
+  );
 }
 
 /** Pub flottante, toujours là : on peut la réduire (petite pastille), elle réapparaît seule et passe à l'annonce suivante. */
@@ -41,12 +52,26 @@ export default function FloatingPromo() {
     return () => { on = false; clearTimeout(t); };
   }, [eligible, placement, answered]);
 
-  // mobile : réduction automatique (la pastille reste là, la pub revient plus tard) — on ne retire rien
+  // mobile : l'annonce est une barre fine ancrée en bas (jamais par-dessus le contenu) ; la page réserve sa hauteur
+  const [mobile, setMobile] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.("(max-width: 639px)").matches);
   useEffect(() => {
-    if (!open || typeof window === "undefined" || !window.matchMedia?.("(max-width: 639px)").matches) return undefined;
-    const t = setTimeout(() => setOpen(false), MOBILE_OPEN_MS);
-    return () => clearTimeout(t);
-  }, [open, idx]);
+    const mq = window.matchMedia?.("(max-width: 639px)");
+    if (!mq) return undefined;
+    const on = () => setMobile(mq.matches);
+    mq.addEventListener?.("change", on);
+    return () => mq.removeEventListener?.("change", on);
+  }, []);
+  const barRef = useRef(null);
+  const showBar = mobile && open && eligible && ready;
+  useEffect(() => { // --hc-ad : hauteur de la barre, pour que la bulle de chat se place au-dessus
+    const root = document.documentElement;
+    if (!showBar || !barRef.current) { root.style.removeProperty("--hc-ad"); return undefined; }
+    const el = barRef.current, sync = () => root.style.setProperty("--hc-ad", `${el.offsetHeight}px`);
+    sync();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    ro?.observe(el);
+    return () => { ro?.disconnect(); root.style.removeProperty("--hc-ad"); };
+  }, [showBar, idx]);
 
   // réduite → revient après un moment, avec la pub suivante
   useEffect(() => {
@@ -78,8 +103,22 @@ export default function FloatingPromo() {
   );
   const cls = "relative block rounded-2xl border border-line bg-surface p-3.5 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,.14)] hover:shadow-[0_10px_34px_rgba(0,0,0,.18)] transition-shadow";
   const pos = "fixed z-[45] bottom-[calc(var(--hc-bar,0px)+76px)] sm:bottom-[calc(var(--hc-bar,0px)+96px)]"; // au-dessus de la bulle de chat et de la barre de contact (--hc-bar) ; sm+ : au-dessus des notifications
+  if (mobile && open) return (
+    <>
+      <div aria-hidden="true" className="h-16" />
+      <aside ref={barRef} aria-label="Publicité" role="complementary" className="fixed inset-x-0 z-[45] bottom-[var(--hc-bar,0px)] border-t border-line bg-surface shadow-[0_-6px_24px_rgba(0,0,0,.10)]">
+        <div className="relative flex items-center gap-3 pl-4 pr-12 py-2.5 min-h-[56px]">
+          <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5" style={{ background: accent }} />
+          {ext
+            ? <a href={ad.link} target="_blank" rel="noopener noreferrer sponsored" onClick={click} className="flex min-w-0 flex-1 items-center gap-3"><AdLine ad={ad} /></a>
+            : <Link to={ad.link} onClick={click} className="flex min-w-0 flex-1 items-center gap-3"><AdLine ad={ad} /></Link>}
+          <button onClick={() => setOpen(false)} aria-label="Réduire la publicité" className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/10 text-ink flex items-center justify-center"><Minus size={14} /></button>
+        </div>
+      </aside>
+    </>
+  );
   if (!open) return (
-    <button onClick={() => setOpen(true)} aria-label="Afficher la publicité" className={`${pos} right-3 sm:right-24 inline-flex items-center gap-2 rounded-full bg-surface border border-line shadow-lg px-3.5 py-2 text-xs text-ink-soft hover:text-ink`}><Megaphone size={14} className="text-[#C89A3D]" />{ad.sponsored ? "Sponsorisé" : "H-Company"}</button>
+    <button onClick={() => setOpen(true)} aria-label="Afficher la publicité" className={`${pos} left-3 sm:left-auto sm:right-24 inline-flex items-center gap-2 rounded-full bg-surface border border-line shadow-lg px-3.5 py-2 text-xs text-ink-soft hover:text-ink`}><Megaphone size={14} className="text-[#C89A3D]" />{ad.sponsored ? "Sponsorisé" : "H-Company"}</button>
   );
   return (
     <aside aria-label="Publicité" role="complementary" className={`${pos} right-3 left-3 sm:left-auto sm:right-24 sm:w-80 animate-[hcfloat_.35s_ease-out]`}>

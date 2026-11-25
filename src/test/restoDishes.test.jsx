@@ -43,7 +43,7 @@ describe("page plats H-Food", () => {
   });
   it("Échap ferme la fiche", async () => {
     view();
-    fireEvent.click(await screen.findByText("Kimbrekete"));
+    fireEvent.click((await screen.findAllByText("Kimbrekete")).at(-1));
     await screen.findByRole("dialog");
     fireEvent.keyDown(window, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -53,7 +53,7 @@ describe("page plats H-Food", () => {
     fireEvent.click(await screen.findByText("pin-Bob Food"));
     fireEvent.click(screen.getByText("Voir ses plats"));
     await waitFor(() => expect(screen.queryByText("Poulet mayo")).toBeNull());
-    expect(screen.getByText("Kimbrekete")).toBeInTheDocument();
+    expect(screen.getAllByText("Kimbrekete").length).toBeGreaterThan(0);
   });
   it("lien direct ?plat= ouvre la fiche", async () => {
     view("/restaurant/plats?plat=11");

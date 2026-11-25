@@ -15,7 +15,7 @@ export default function RestoSearch() {
   const [params, setParams] = useSearchParams();
   const type = params.get("seller_type") || "";
   const kind = searchKind(type);
-  usePageMeta({ title: `${s.titles[kind]} · H-Restaurant` });
+  usePageMeta({ title: `${s.titles[kind]} · H-Food` });
   const page = Number(params.get("page") || 1);
   const query = {}; KEYS.forEach((k) => { if (params.get(k)) query[k] = params.get(k); });
   const { data, error, loading, reload } = useLoad(() => api.resto.search({ ...query, page, per_page: 12 }), [params.toString()]);
