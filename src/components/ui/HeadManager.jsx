@@ -10,6 +10,7 @@ const ROUTE_META = [
   { pattern: "/", key: "home" },
   { pattern: "/dashboard", key: "dashboard" },
   { pattern: "/settings", key: "settings" },
+  { pattern: "/compte", key: "settings" },
   { pattern: "/admin", key: "admin" },
   { pattern: "/agent", key: "agent" },
   { pattern: "/services/:slug", key: "services" },

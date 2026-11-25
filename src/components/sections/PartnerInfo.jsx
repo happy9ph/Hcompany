@@ -3,6 +3,15 @@ import { Link } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, Lightbulb, Mail, MailCheck, MessageSquareText } from "lucide-react";
 import Reveal from "../ui/Reveal.jsx";
 import ContactModal from "./ContactModal.jsx";
+import { HServiceArt } from "../art/ServiceArt.jsx";
+
+const SHOWCASE = [
+  { key: "h_logement", l: "Logement" },
+  { key: "h_restaurant", l: "Restaurant" },
+  { key: "h_transport_bus", l: "Transport" },
+  { key: "h_tourisme", l: "Tourisme" },
+  { key: "h_shopping", l: "Boutique" },
+];
 
 const STEPS = [
   { Icon: MessageSquareText, t: "1. Parlez-nous de votre entreprise", d: "Un message suffit : qui vous êtes, ce que vous proposez, où." },
@@ -21,6 +30,16 @@ export default function PartnerInfo() {
           <p className="text-sm font-medium text-coffee mb-4">Devenir partenaire</p>
           <h2 className="font-display text-3xl sm:text-4xl leading-tight text-ink max-w-xl">Parlez-nous de votre entreprise</h2>
           <p className="mt-5 text-stone leading-relaxed max-w-xl">Hébergement, transport, boutique, restaurant, tourisme, formation : un seul partenariat, un seul dashboard, jusqu'à 2 apps en plan Standard et davantage en Pro.</p>
+        </Reveal>
+        <Reveal delay={0.05}>
+          <ul className="mt-10 grid grid-cols-2 lg:grid-cols-5 gap-3" aria-label="Domaines ouverts aux partenaires">
+            {SHOWCASE.map(({ key, l }) => (
+              <li key={key} className="relative aspect-[4/3] last:col-span-2 lg:last:col-span-1 overflow-hidden rounded-2xl border border-line">
+                <HServiceArt name={key} className="absolute inset-0 w-full h-full" />
+                <span className="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1 text-xs font-medium text-white">{l}</span>
+              </li>
+            ))}
+          </ul>
         </Reveal>
         <div className="mt-10 grid md:grid-cols-3 gap-5">
           {STEPS.map(({ Icon, t, d }, i) => (
