@@ -438,6 +438,8 @@ export const api = {
     sellerPropose: (token, code, body) => request(`/api/v1/restaurant/seller/orders/${code}/proposals`, { method: "POST", token, body }),
     sellerCancelProposal: (token, code) => request(`/api/v1/restaurant/seller/orders/${code}/proposals/cancel`, { method: "POST", token }),
     decideProposal: (token, code, pid, body) => request(`/api/v1/restaurant/me/suborders/${code}/proposals/${pid}/decision`, { method: "POST", token, body }),
+    reviewSub: (token, code, body) => request(`/api/v1/restaurant/me/suborders/${code}/review`, { method: "POST", token, body }),
+    sellerReviews: (token) => request("/api/v1/restaurant/seller/reviews", { token }),
     sellerDecide: (token, code, body) => request(`/api/v1/restaurant/seller/orders/${code}/decision`, { method: "POST", token, body }),
     cancel: (token, code) => request(`/api/v1/restaurant/me/reservations/${code}/cancel`, { method: "POST", token }),
     review: (token, code, body) => request(`/api/v1/restaurant/me/reservations/${code}/review`, { method: "POST", token, body }),
@@ -462,6 +464,9 @@ export const api = {
     admin: {
       overview: (token) => request("/api/v1/restaurant/admin/overview", { token }),
       list: (token, params = {}) => request(`/api/v1/restaurant/admin/restaurants${qs(params)}`, { token }),
+      ordersSummary: (token) => request("/api/v1/restaurant/admin/orders/summary", { token }),
+      reviews: (token, params = {}) => request(`/api/v1/restaurant/admin/reviews${qs(params)}`, { token }),
+      moderateReview: (token, id, action, reason = "") => request(`/api/v1/restaurant/admin/reviews/${id}/${action}`, { method: "POST", token, body: { reason } }),
       decide: (token, id, what, reason = "") => request(`/api/v1/restaurant/admin/restaurants/${id}/${what}`, { method: "POST", token, body: ["reject", "suspend"].includes(what) ? { reason } : undefined }),
     },
   },

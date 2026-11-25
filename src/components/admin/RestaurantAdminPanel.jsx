@@ -33,6 +33,44 @@ function Row({ r, busy, onAct }) {
   );
 }
 
+const ST = { pending: "En attente", accepted: "Acceptées", preparing: "En préparation", ready: "Prêtes", completed: "Terminées", declined: "Refusées", cancelled: "Annulées" };
+
+function OrdersAndReviews({ withAuth, api }) {
+  const [sum, setSum] = useState(null), [revs, setRevs] = useState(null), [err, setErr] = useState(""), [busy, setBusy] = useState(false), [reason, setReason] = useState({});
+  const load = useCallback(async () => {
+    try { const [a, b] = await Promise.all([withAuth((t) => api.resto.admin.ordersSummary(t)), withAuth((t) => api.resto.admin.reviews(t))]); setSum(a); setRevs(b); setErr(""); } catch (e) { setErr(msgOf(e)); }
+  }, [withAuth, api]);
+  useEffect(() => { load(); }, [load]);
+  async function mod(x, action) {
+    setBusy(true);
+    try { await withAuth((t) => api.resto.admin.moderateReview(t, x.id, action, reason[x.id] || "")); await load(); } catch (e) { setErr(msgOf(e)); } finally { setBusy(false); }
+  }
+  return (
+    <section aria-labelledby="hf-orders" className="space-y-4">
+      <h3 id="hf-orders" className="font-display text-xl text-ink">Commandes et avis</h3>
+      {err && <p role="alert" className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5"><AlertCircle size={15} />{err}</p>}
+      {sum && <>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{Object.entries(sum.by_status).map(([k, v]) => <div key={k} className="bg-surface border border-line rounded-2xl p-4"><p className="text-xs text-ink-faint mb-1">{ST[k] || k} ({sum.days} j)</p><p className="font-display text-2xl text-ink">{v}</p></div>)}</div>
+        <p className="text-sm text-ink-soft">Paiements ({sum.days} j) : {sum.by_payment.unpaid} à régler · {sum.by_payment.declared} déclarés · {sum.by_payment.confirmed} confirmés</p>
+        {(sum.problems.pending_over_48h > 0 || sum.problems.payment_declared_over_48h > 0) && <p role="status" className="text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-2.5">À surveiller : {sum.problems.pending_over_48h} commande(s) sans réponse du vendeur depuis plus de 48 h · {sum.problems.payment_declared_over_48h} paiement(s) déclaré(s) non confirmé(s) depuis plus de 48 h.</p>}
+      </>}
+      {!revs ? null : revs.length === 0 ? <p className="text-sm text-ink-soft">Aucun avis de commande.</p> : (
+        <ul className="space-y-3">{revs.map((x) => (
+          <li key={x.id} className="bg-surface border border-line rounded-2xl p-4 space-y-2">
+            <p className="text-sm text-ink"><b>{x.restaurant_name}</b> · {x.rating}/5 · {x.author || "—"}{x.hidden && <span className="ml-2 text-[11px] rounded-md border border-red-200 bg-red-50 text-red-700 px-2 py-0.5">Masqué</span>}</p>
+            {x.comment && <p className="text-sm text-ink-soft">{x.comment}</p>}
+            {x.hidden && x.hidden_reason && <p className="text-xs text-red-700">Motif : {x.hidden_reason}</p>}
+            <div className="flex flex-wrap items-center gap-2">
+              {x.hidden ? <button disabled={busy} onClick={() => mod(x, "unhide")} className={`${btn} border border-line text-ink-soft`}>Réafficher</button> : <>
+                <input value={reason[x.id] || ""} onChange={(e) => setReason({ ...reason, [x.id]: e.target.value })} placeholder="Motif du masquage" aria-label="Motif du masquage" className="rounded-lg border border-line bg-cream px-3 py-2 text-xs w-56" />
+                <button disabled={busy || !(reason[x.id] || "").trim()} onClick={() => mod(x, "hide")} className={`${btn} border border-red-200 text-red-700`}>Masquer</button></>}
+            </div>
+          </li>))}</ul>
+      )}
+    </section>
+  );
+}
+
 export default function RestaurantAdminPanel({ withAuth, api, onCount }) {
   const [ov, setOv] = useState(null);
   const [list, setList] = useState(null);
@@ -61,6 +99,7 @@ export default function RestaurantAdminPanel({ withAuth, api, onCount }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher…" aria-label="Rechercher" className="ml-auto rounded-lg border border-line bg-cream px-3 py-2 text-xs" />
       </div>
       {!list ? <p className="flex items-center gap-2 text-sm text-ink-soft"><Loader2 className="animate-spin" size={16} />Chargement…</p> : list.length === 0 ? <p className="text-sm text-ink-soft">Aucun restaurant.</p> : <div className="space-y-4">{list.map((r) => <Row key={r.id} r={r} busy={busy} onAct={act} />)}</div>}
+      <OrdersAndReviews withAuth={withAuth} api={api} />
     </div>
   );
 }
