@@ -61,7 +61,7 @@ function Row({ x, onCancel, onReview }) {
 function Inner() {
   const ui = useRestoUi();
   const m = ui.mine;
-  usePageMeta({ title: `${m.title} · H-Restaurant` });
+  usePageMeta({ title: `${m.title} · H-Food` });
   const { withAuth } = useUser();
   const toast = useToast();
   const { data, error, loading, reload } = useLoad(() => withAuth((t) => api.resto.mine(t)), []);

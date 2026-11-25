@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { key: "shopping", label: "H-Shopping", icon: ShoppingBag },
   { key: "lodging", label: "H-Logement", icon: BedDouble },
   { key: "transport", label: "H-Transport", icon: Bus },
-  { key: "restaurant", label: "H-Restaurant", icon: UtensilsCrossed },
+  { key: "restaurant", label: "H-Food", icon: UtensilsCrossed },
   { key: "tourism", label: "H-Tourisme", icon: Mountain },
   { key: "trainingRequests", label: "Formations d'équipe", icon: GraduationCap },
   { key: "agents", label: "Agents", icon: ShieldCheck },

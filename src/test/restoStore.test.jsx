@@ -88,7 +88,7 @@ describe("vitrine boutique (façon Uber Eats)", () => {
   });
 });
 
-describe("textes H-Restaurant FR/EN", () => {
+describe("textes H-Food FR/EN", () => {
   const keys = (o, p = "") => Object.entries(o).flatMap(([k, v]) => (typeof v === "function" ? [p + k + "()"] : v && typeof v === "object" && !Array.isArray(v) ? keys(v, p + k + ".") : [p + k]));
   it("mêmes clés en français et en anglais", () => {
     const fr = keys(RESTO_UI.fr), en = new Set(keys(RESTO_UI.en));

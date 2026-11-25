@@ -22,7 +22,7 @@ function feeText(v, c, money) {
 export default function RestoCart() {
   const ui = useRestoUi();
   const c = ui.cart;
-  usePageMeta({ title: `${c.title} · H-Restaurant` });
+  usePageMeta({ title: `${c.title} · H-Food` });
   const { money } = useShopMoney();
   const { isAuthenticated, withAuth, user } = useUser();
   const toast = useToast();

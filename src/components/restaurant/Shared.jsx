@@ -62,12 +62,12 @@ export function RestoBar() {
   return (
     <div className="sticky top-[68px] z-40 bg-cream/95 backdrop-blur border-b border-line">
       <div className="max-w-content mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-        <Link to="/restaurant" className="font-display text-lg text-ink hidden sm:block whitespace-nowrap pr-1">H-Restaurant</Link>
+        <Link to="/restaurant" className="font-display text-lg text-ink hidden sm:block whitespace-nowrap pr-1">H-Food</Link>
         <form onSubmit={submit} role="search" className="flex-1 relative">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint" aria-hidden="true" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={ui.where} aria-label={ui.where} className="w-full rounded-full border border-line bg-surface pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-coffee focus:ring-2 focus:ring-coffee/15" />
         </form>
-        <nav className="flex items-center gap-0.5" aria-label="H-Restaurant">
+        <nav className="flex items-center gap-0.5" aria-label="H-Food">
           <BarLink to="/restaurant/plats" icon={UtensilsCrossed} label={all.dishes.crumb} />
           <BarLink to="/restaurant/panier" icon={ShoppingBag} label={all.cart.link} badge={cartCount(cart)} />
           <BarLink to="/restaurant/commandes" icon={Truck} label={all.orders.title} />

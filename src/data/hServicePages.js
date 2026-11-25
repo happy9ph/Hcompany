@@ -357,10 +357,10 @@ export const SERVICE_PAGES = {
     secondaryTo: "/restaurant/pro",
     partner: "confismila",
     fr: {
-      name: "H-Restaurant",
+      name: "H-Food",
       category: "Restauration",
       tagline: "Commandez ou réservez une table chez nos restaurants partenaires.",
-      lead: "Du repas à emporter à la table réservée pour la famille : H-Restaurant vous met en relation avec les restaurants du réseau, comme Confismila.",
+      lead: "Du repas à emporter à la table réservée pour la famille : H-Food vous met en relation avec les restaurants du réseau, comme Confismila.",
       cta: "Commander ou réserver",
       secondaryCta: "Voir les options",
       facts: [
@@ -399,10 +399,10 @@ export const SERVICE_PAGES = {
       closingText: "Envoyez votre demande au restaurant en quelques secondes.",
     },
     en: {
-      name: "H-Restaurant",
+      name: "H-Food",
       category: "Dining",
       tagline: "Order or book a table at our partner restaurants.",
-      lead: "From takeaway to a table booked for the family: H-Restaurant connects you with the network's restaurants, such as Confismila.",
+      lead: "From takeaway to a table booked for the family: H-Food connects you with the network's restaurants, such as Confismila.",
       cta: "Order or book",
       secondaryCta: "See the options",
       facts: [

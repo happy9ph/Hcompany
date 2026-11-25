@@ -501,7 +501,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-ink-faint mb-2">Espace admin <span className="mx-1">/</span> Abonnements clients</p>
                 <Title className="text-3xl">Abonnements clients</Title>
                 <p className="text-sm text-ink-soft mt-1">
-                  Demandes d'abonnement à H-Restaurant, H-Transport, H-Learning, H-Money, H-Translate et autres services, tous clients confondus.
+                  Demandes d'abonnement à H-Food, H-Transport, H-Learning, H-Money, H-Translate et autres services, tous clients confondus.
                 </p>
               </div>
               <ServiceSubscriptionsPanel withAuth={withAuth} api={api} />
@@ -553,8 +553,8 @@ export default function AdminDashboard() {
           ) : view === "restaurant" ? (
             <>
               <div className="mb-8">
-                <p className="text-xs text-ink-faint mb-2">Espace admin <span className="mx-1">/</span> H-Restaurant</p>
-                <Title className="text-3xl">H-Restaurant</Title>
+                <p className="text-xs text-ink-faint mb-2">Espace admin <span className="mx-1">/</span> H-Food</p>
+                <Title className="text-3xl">H-Food</Title>
                 <p className="text-sm text-ink-soft mt-1">Restaurants à valider, mise à la une, suspension et activité des réservations.</p>
               </div>
               <RestaurantAdminPanel withAuth={withAuth} api={api} onCount={setRestaurantCount} />

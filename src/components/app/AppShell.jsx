@@ -27,7 +27,7 @@ const GROUPS = [
   ] },
   { fr: "Services", en: "Services", items: [
     { to: "/shopping", Icon: ShoppingBag, fr: "H-Shopping", en: "H-Shopping" },
-    { to: "/restaurant", Icon: UtensilsCrossed, fr: "H-Restaurant", en: "H-Restaurant" },
+    { to: "/restaurant", Icon: UtensilsCrossed, fr: "H-Food", en: "H-Food" },
     { to: "/tourisme", Icon: Mountain, fr: "H-Tourisme", en: "H-Tourism" },
     { to: "/formations", Icon: GraduationCap, fr: "H-Learning", en: "H-Learning" },
     { to: "/interpretation", Icon: Languages, fr: "H-Translate", en: "H-Translate" },

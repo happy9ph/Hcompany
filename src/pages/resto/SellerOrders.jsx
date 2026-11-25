@@ -15,7 +15,7 @@ export default function SellerOrders() {
   const { withAuth } = useUser(); const toast = useToast(); const { money } = useShopMoney();
   const [f, setF] = useState("");
   const [declining, setDeclining] = useState(null), [reason, setReason] = useState(""), [busy, setBusy] = useState(false);
-  usePageMeta({ title: `${t.title} · H-Restaurant` });
+  usePageMeta({ title: `${t.title} · H-Food` });
   const { data, error, loading, reload } = useLoad(() => withAuth((tk) => api.resto.sellerOrders(tk, f)), [f]);
   const rows = data?.orders || [];
   const [cancelling, setCancelling] = useState(null), [rej, setRej] = useState(null);

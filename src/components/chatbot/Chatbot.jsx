@@ -80,7 +80,7 @@ export default function Chatbot() {
   return (
     <>
       <motion.button onClick={() => setOpen((v) => !v)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-        className="fixed bottom-[calc(1.25rem+max(var(--hc-bar,0px),var(--hc-cookie,0px)))] right-5 z-[190] w-14 h-14 rounded-full bg-ink-fixed text-cream-fixed shadow-xl flex items-center justify-center"
+        className="fixed bottom-[calc(1.25rem+max(var(--hc-bar,0px),var(--hc-cookie,0px))+var(--hc-ad,0px))] right-5 z-[190] w-14 h-14 rounded-full bg-ink-fixed text-cream-fixed shadow-xl flex items-center justify-center"
         aria-label={open ? (fr ? "Fermer l'assistante" : "Close assistant") : (fr ? "Ouvrir l'assistante" : "Open assistant")} aria-expanded={open}>
         <AnimatePresence mode="wait" initial={false}>
           {open ? <motion.span key="x" initial={{ rotate: -80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 80, opacity: 0 }} transition={{ duration: 0.15 }}><X size={22} /></motion.span>

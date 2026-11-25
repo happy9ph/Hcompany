@@ -14,7 +14,7 @@ export const SERVICE_PRESENTATION = {
   h_transport_bus: { Icon: Bus, fallbackLabel: "H-Transport (Bus)" },
   h_transport_colis: { Icon: Package, fallbackLabel: "H-Transport (Colis)" },
   h_logement: { Icon: BedDouble, fallbackLabel: "H-Logement" },
-  h_restaurant: { Icon: UtensilsCrossed, fallbackLabel: "H-Restaurant" },
+  h_restaurant: { Icon: UtensilsCrossed, fallbackLabel: "H-Food" },
   h_tourisme: { Icon: Mountain, fallbackLabel: "H-Tourisme" },
   h_learning: { Icon: GraduationCap, fallbackLabel: "H-Learning" },
   h_money: { Icon: Banknote, fallbackLabel: "H-Money" },
