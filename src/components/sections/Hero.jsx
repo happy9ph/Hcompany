@@ -1,3 +1,4 @@
+import HeroPhoto from "../ui/HeroPhoto.jsx";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -122,7 +123,8 @@ export default function Hero() {
         style={{ background: "radial-gradient(circle, rgba(111,74,52,0.06) 0%, transparent 65%)" }}
       />
 
-      <section className="relative px-6 pt-32 pb-16 lg:pt-40 lg:pb-20">
+      <section className="relative isolate px-6 pt-32 pb-16 lg:pt-40 lg:pb-20">
+        <HeroPhoto />
         <div className="max-w-content mx-auto grid lg:grid-cols-[1fr_1.3fr_1fr] gap-10 items-center">
           <motion.div
             className="hidden lg:flex justify-center"
