@@ -169,7 +169,7 @@ export default function RestoDishes() {
         </div>
       </section>
 
-      <div className="mt-6 grid lg:grid-cols-[1fr_1.15fr] gap-5">
+      <div className={`${feat ? "mt-6" : "sm:mt-6"} grid lg:grid-cols-[1fr_1.15fr] gap-5`}>
         {feat && (
           <button type="button" onClick={() => setOpen(feat)} className="group relative text-left rounded-3xl overflow-hidden border border-line bg-latte-soft min-h-[260px] sm:min-h-[320px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink">
             {feat.image ? <RestoImage path={feat.image} alt="" ratio="h-full" className="absolute inset-0 w-full h-full group-hover:scale-[1.03] transition-transform duration-500" /> : <span className="absolute inset-0 bg-gradient-to-br from-latte-soft to-[#E4D3B3]" aria-hidden="true" />}
@@ -182,7 +182,7 @@ export default function RestoDishes() {
             </span>
           </button>
         )}
-        <div className={`relative rounded-3xl overflow-hidden border border-line min-h-[280px] sm:min-h-[320px] bg-latte-soft ${feat ? "" : "lg:col-span-2"}`} aria-label={d.mapLabel}>
+        <div className={`hidden sm:block relative rounded-3xl overflow-hidden border border-line min-h-[280px] sm:min-h-[320px] bg-latte-soft ${feat ? "" : "lg:col-span-2"}`} aria-label={d.mapLabel}>
           {markers.length > 0 ? <MapView markers={markers} onSelect={onPin} height="100%" className="absolute inset-0" /> : <div className="absolute inset-0 flex items-center justify-center text-sm text-ink-soft p-4 text-center">{state.loading ? "…" : d.mapLabel}</div>}
           {pickedR && (
             <div className="absolute z-[500] left-3 right-3 bottom-3 sm:right-auto sm:w-80 rounded-2xl bg-cream text-ink shadow-xl border border-line p-3 flex gap-3" role="group" aria-label={pickedR.name}>
@@ -201,7 +201,7 @@ export default function RestoDishes() {
           )}
         </div>
       </div>
-      {approx && markers.length > 0 && <p className="mt-2 text-xs text-ink-faint">{d.mapNote}</p>}
+      {approx && markers.length > 0 && <p className="hidden sm:block mt-2 text-xs text-ink-faint">{d.mapNote}</p>}
 
       {rid > 0 && vById[rid] && <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-latte-soft text-coffee text-sm pl-4 pr-2 py-1.5">{d.filteredBy} : <b>{vById[rid].name}</b><button type="button" onClick={() => set({ rid: "" })} aria-label={d.clear} className="w-6 h-6 rounded-full hover:bg-cream flex items-center justify-center"><X size={13} /></button></p>}
 
