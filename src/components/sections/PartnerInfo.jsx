@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, Lightbulb, Mail, MailCheck, MessageSquareText } from "lucide-react";
 import Reveal from "../ui/Reveal.jsx";
 import ContactModal from "./ContactModal.jsx";
-import { HServiceArt } from "../art/ServiceArt.jsx";
+import ServicePhoto from "../art/ServicePhoto.jsx";
 
 const SHOWCASE = [
   { key: "h_logement", l: "Logement" },
@@ -35,7 +35,7 @@ export default function PartnerInfo() {
           <ul className="mt-10 grid grid-cols-2 lg:grid-cols-5 gap-3" aria-label="Domaines ouverts aux partenaires">
             {SHOWCASE.map(({ key, l }) => (
               <li key={key} className="relative aspect-[4/3] last:col-span-2 lg:last:col-span-1 overflow-hidden rounded-2xl border border-line">
-                <HServiceArt name={key} className="absolute inset-0 w-full h-full" />
+                <ServicePhoto name={key} className="absolute inset-0 w-full h-full" />
                 <span className="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1 text-xs font-medium text-white">{l}</span>
               </li>
             ))}

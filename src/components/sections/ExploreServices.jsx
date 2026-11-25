@@ -1,4 +1,5 @@
-import { HServiceArt, H_SERVICE_THEME } from "../art/ServiceArt.jsx";
+import { H_SERVICE_THEME } from "../art/ServiceArt.jsx";
+import ServicePhoto from "../art/ServicePhoto.jsx";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
@@ -61,7 +62,7 @@ export default function ExploreServices() {
               <>
                 {H_SERVICE_THEME[item.key] && (
                   <div className="relative aspect-[16/9] -mx-1 -mt-1 mb-5 overflow-hidden rounded-xl">
-                    <HServiceArt name={item.key} className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105" />
+                    <ServicePhoto name={item.key} className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105" />
                   </div>
                 )}
                 <div className="flex items-center justify-between mb-5">
