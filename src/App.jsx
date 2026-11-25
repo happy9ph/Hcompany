@@ -23,6 +23,7 @@ const MoneyRequestPay = lazy(() => import("./pages/money/MoneyRequestPay.jsx"));
 const MoneyAgent = lazy(() => import("./pages/money/MoneyAgent.jsx"));
 const PartnerApply = lazy(() => import("./pages/PartnerApply.jsx"));
 const Settings = lazy(() => import("./pages/Settings.jsx"));
+const Account = lazy(() => import("./pages/Account.jsx"));
 const AdminConfirmGate = lazy(() => import("./components/admin/AdminConfirmGate.jsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
 const AgentDashboard = lazy(() => import("./pages/AgentDashboard.jsx"));
@@ -168,6 +169,7 @@ export default function App() {
           <Route path="/money/agent" element={<MoneyAgent />} />
           <Route path="/demande-partenariat" element={<PartnerApply />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/compte" element={<Account />} />
           <Route path="/admin" element={<AdminConfirmGate><AdminDashboard /></AdminConfirmGate>} />
           <Route path="/agent" element={<AgentDashboard />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />

@@ -75,7 +75,7 @@ export default function AccountMenu({ onPartner = true }) {
               </Link>
             )}
             {[
-              { to: "/settings", Icon: Settings, l: fr ? "Paramètres du compte" : "Account settings" },
+              { to: "/compte", Icon: Settings, l: fr ? "Gérer mon compte" : "Manage my account" },
               { to: "/app/money", Icon: Wallet, l: "H-Money" },
             ].map(({ to, Icon, l }) => (
               <Link key={to} to={to} role="menuitem" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-ink hover:bg-latte-soft/60"><Icon size={16} className="text-ink-soft" />{l}</Link>

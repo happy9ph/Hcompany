@@ -64,7 +64,7 @@ function NavItems({ lang, rail, onNavigate }) {
 
 function SearchPalette({ fr, onClose, onGo }) {
   const [q, setQ] = useState("");
-  const all = [...GROUPS.flatMap((g) => g.items.map((i) => ({ to: i.to, l: fr ? i.fr : i.en, Icon: i.Icon }))), ...H_APPS.map((a) => ({ to: a.to, l: fr ? a.fr : a.en, app: a })), { to: "/settings", l: fr ? "Paramètres" : "Settings", Icon: Settings }, { to: "/infos#rejoindre", l: fr ? "Devenir partenaire" : "Become a partner", Icon: Handshake }];
+  const all = [...GROUPS.flatMap((g) => g.items.map((i) => ({ to: i.to, l: fr ? i.fr : i.en, Icon: i.Icon }))), ...H_APPS.map((a) => ({ to: a.to, l: fr ? a.fr : a.en, app: a })), { to: "/compte", l: fr ? "Mon compte" : "My account", Icon: Settings }, { to: "/infos#rejoindre", l: fr ? "Devenir partenaire" : "Become a partner", Icon: Handshake }];
   const seen = new Set();
   const norm = (x) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const list = all.filter((i) => (seen.has(i.l) ? false : seen.add(i.l))).filter((i) => norm(i.l).includes(norm(q)));
@@ -149,7 +149,7 @@ export default function AppShell() {
         <div className="p-3 border-t border-line space-y-0.5">
           <button onClick={() => setInteg(true)} title={fr ? "Intégrations" : "Integrations"} className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><LayoutGrid size={18} />{!prefs.rail && (fr ? "Intégrations" : "Integrations")}</button>
           {prefs.rail && <button onClick={() => set({ rail: false })} aria-label={fr ? "Agrandir la barre latérale" : "Expand sidebar"} className="w-full flex justify-center rounded-xl py-2.5 text-ink-soft hover:bg-latte-soft"><ChevronsRight size={18} /></button>}
-          <Link to="/settings" title={fr ? "Paramètres" : "Settings"} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><Settings size={18} />{!prefs.rail && (fr ? "Paramètres" : "Settings")}</Link>
+          <Link to="/compte" title={fr ? "Mon compte" : "My account"} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><Settings size={18} />{!prefs.rail && (fr ? "Mon compte" : "My account")}</Link>
           {isAuthenticated && <button onClick={() => signOut()} title={fr ? "Se déconnecter" : "Sign out"} className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-latte-soft ${prefs.rail ? "justify-center" : ""}`}><LogOut size={18} />{!prefs.rail && (fr ? "Se déconnecter" : "Sign out")}</button>}
         </div>
         {/* Poignée d'étirement */}

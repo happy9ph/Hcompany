@@ -1,3 +1,4 @@
+import { HServiceArt, H_SERVICE_THEME } from "../art/ServiceArt.jsx";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
@@ -58,7 +59,12 @@ export default function ExploreServices() {
             const hasPage = Boolean(SERVICE_PAGES[item.key]);
             const body = (
               <>
-                <div className="flex items-center justify-between mb-8">
+                {H_SERVICE_THEME[item.key] && (
+                  <div className="relative aspect-[16/9] -mx-1 -mt-1 mb-5 overflow-hidden rounded-xl">
+                    <HServiceArt name={item.key} className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                )}
+                <div className="flex items-center justify-between mb-5">
                   <span className="text-xs font-semibold tabular-nums tracking-widest text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
                   <span className={`text-[0.65rem] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${item.disabled ? "bg-latte-soft text-ink-soft" : "bg-coffee/10 text-coffee-dark"}`}>
                     {item.disabled ? copy.soon : ui.available}

@@ -97,7 +97,7 @@ export default function NavBar({ onDark = false }) {
                         {user?.role === "admin" ? t("nav.adminSpace") : user?.role === "agent" ? t("nav.agentSpace") : user?.role === "partner" ? t("nav.dashboard") : (t("nav.myApp") !== "nav.myApp" ? t("nav.myApp") : "Mon espace")}
                       </Link>
                       <Link
-                        to="/settings"
+                        to="/compte"
                         role="menuitem"
                         onClick={() => setMenuOpen(false)}
                         className="flex items-center gap-2.5 w-full text-left text-sm text-ink px-4 py-2.5 hover:bg-ink/[0.04] transition-colors"
