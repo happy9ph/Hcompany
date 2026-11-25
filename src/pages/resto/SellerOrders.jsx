@@ -8,6 +8,7 @@ import { useToast } from "../../context/ToastContext.jsx";
 import { api } from "../../lib/api.js";
 import { usePageMeta } from "../../components/ui/HeadManager.jsx";
 import { Pill } from "./MyOrders.jsx";
+import { SellerProposal } from "../../components/restaurant/Proposals.jsx";
 
 export default function SellerOrders() {
   const ui = useRestoUi(); const t = ui.sellerOrders; const o = ui.orders;
@@ -45,6 +46,7 @@ export default function SellerOrders() {
               <ul className="text-sm text-ink-soft space-y-1">{s.items.map((i, k) => <li key={k} className="flex justify-between"><span>{i.qty} × {i.name}</span><span>{money(i.line_total)}</span></li>)}</ul>
               <p className="text-xs text-ink-soft">{s.fulfilment === "delivery" ? `${o.delivery} · ${s.delivery_address}${s.delivery_zone ? ` (${s.delivery_zone})` : ""} · ${s.fee_pending ? o.feeToArrange : s.delivery_fee ? money(s.delivery_fee) : o.feeFree}` : o.pickup}</p>
               {s.note && <p className="text-sm text-ink-soft">{o.note} : {s.note}</p>}
+              <SellerProposal s={s} onDone={reload} />
               <p className="flex justify-between text-sm font-medium text-ink border-t border-line pt-2"><span>{o.total}</span><span>{money(s.total_known)}</span></p>
               <p className="text-xs text-ink-faint">{t.noPayment} · {o.payment[s.payment_status]}{s.payment_method || s.payment_ref ? ` (${s.payment_method || ""}${s.payment_ref ? ` ${o.pay.ref} ${s.payment_ref}` : ""})` : ""}</p>
               {["accepted", "preparing", "ready", "completed"].includes(s.status) && s.payment_status !== "confirmed" && (
@@ -58,7 +60,7 @@ export default function SellerOrders() {
               )}
               {NEXT[s.status] && (
                 <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-                  {NEXT[s.status].map((n) => <button key={n} disabled={busy} onClick={() => setStatus(s.code, n)} className="rounded-full bg-ink text-cream text-sm px-4 py-2 disabled:opacity-45">{t.next[n]}</button>)}
+                  {NEXT[s.status].map((n) => <button key={n} disabled={busy || (!!s.open_proposal && n !== "preparing")} title={s.open_proposal && n !== "preparing" ? ui.orders.prop.waiting : undefined} onClick={() => setStatus(s.code, n)} className="rounded-full bg-ink text-cream text-sm px-4 py-2 disabled:opacity-45">{t.next[n]}</button>)}
                   {cancelling === s.code
                     ? <div className="w-full space-y-2"><textarea rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t.cancelReason} className={inputCls} /><button disabled={busy || reason.trim().length < 2} onClick={() => setStatus(s.code, "cancelled")} className="rounded-full bg-red-700 text-white text-sm px-4 py-2 disabled:opacity-45">{t.cancelOrder}</button></div>
                     : <button onClick={() => { setCancelling(s.code); setReason(""); }} className="rounded-full border border-line text-sm px-4 py-2">{t.cancelOrder}</button>}
