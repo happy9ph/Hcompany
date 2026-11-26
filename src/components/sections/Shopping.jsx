@@ -1,3 +1,4 @@
+import ServicePhoto from "../art/ServicePhoto.jsx";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ShoppingBag } from "lucide-react";
@@ -60,12 +61,7 @@ export default function Shopping() {
                 className="w-full h-full rounded-2xl overflow-hidden shadow-[0_24px_50px_-20px_rgba(30,26,23,0.35)] border-4 border-surface"
                 style={{ transform: `rotate(${p.rotate}deg)` }}
               >
-                <img
-                  src={`https://loremflickr.com/400/500/${p.photo}`}
-                  alt=""
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
+                <ServicePhoto name={["h_shopping", "h_restaurant", "h_logement", "h_tourisme"][i % 4]} className="w-full h-full" />
               </motion.div>
             </motion.div>
           ))}

@@ -1,0 +1,4 @@
+Déposez ici vos vraies photos, une par service, au format JPG (paysage 16:9, ~1600x900, < 300 Ko) :
+h_transport_bus.jpg  h_transport_colis.jpg  h_logement.jpg  h_restaurant.jpg
+h_tourisme.jpg  h_learning.jpg  h_money.jpg  h_translate.jpg  h_shopping.jpg
+Une photo présente remplace automatiquement l'illustration du service sur /infos ; sans photo, l'illustration reste.

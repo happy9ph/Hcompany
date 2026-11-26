@@ -1,3 +1,4 @@
+import ServicePhoto from "../components/art/ServicePhoto.jsx";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -82,11 +83,7 @@ export default function ShoppingDetail() {
 
       {/* --- Hero --- */}
       <section className="relative h-[46vh] min-h-[380px] overflow-hidden pt-16">
-        <img
-          src="https://loremflickr.com/1600/900/marketplace,shop,products"
-          alt="Vitrine de produits en vente sur le réseau H-Company"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <ServicePhoto name="h_shopping" className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-fixed via-ink-fixed/50 to-ink-fixed/20" />
         <div className="relative h-full max-w-content mx-auto px-6 flex flex-col justify-end pb-12">
           <Link to="/infos#explorer" className="inline-flex items-center gap-1.5 text-cream-fixed/70 text-sm hover:text-cream-fixed transition-colors mb-4 w-fit">
