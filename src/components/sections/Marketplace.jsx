@@ -187,7 +187,7 @@ export default function Marketplace() {
                   onEnded={closeDemo}
                   onError={closeDemo}
                   className="w-full h-full object-cover"
-                  aria-label={lang === "en" ? "H-Company demo, 15 seconds, illustrative example" : "Démo H-Company, 15 secondes, exemple illustratif"}
+                  aria-label={lang === "en" ? "H-Company demo, 15 seconds, screen capture of the real site (payments in demo mode)" : "Démo H-Company, 15 secondes, capture du vrai site (paiements en mode démonstration)"}
                 />
                 <button
                   type="button"
