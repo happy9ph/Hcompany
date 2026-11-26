@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Play, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { TradeArt } from "../art/ServiceArt.jsx";
@@ -46,7 +47,7 @@ const STEP_ICONS = [IconSearch, IconLink, IconHandshake, IconCheckBadge];
 const STEP_KEYS = ["step1", "step2", "step3", "step4"];
 
 export default function Marketplace() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const STEPS = STEP_KEYS.map((key, i) => ({
     Icon: STEP_ICONS[i],
     title: t(`marketplace.${key}Title`),
@@ -54,6 +55,8 @@ export default function Marketplace() {
   }));
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [demo, setDemo] = useState(false);
+  const closeDemo = () => { setDemo(false); setPaused(false); };
 
   useEffect(() => {
     if (paused) return;
@@ -162,6 +165,40 @@ export default function Marketplace() {
                 </div>
               </motion.div>
             </AnimatePresence>
+            {!demo && (
+              <button
+                type="button"
+                onClick={() => { setDemo(true); setPaused(true); }}
+                className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/95 text-ink text-xs font-medium px-3.5 py-2 shadow-lg hover:bg-white"
+              >
+                <Play size={13} fill="currentColor" />
+                {lang === "en" ? "Watch the 15 s demo" : "Voir la démo en 15 s"}
+              </button>
+            )}
+            {demo && (
+              <div className="absolute inset-0 z-20 bg-ink-fixed">
+                <video
+                  src="/videos/h-company-demo.mp4"
+                  poster="/videos/h-company-demo.jpg"
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="metadata"
+                  onEnded={closeDemo}
+                  onError={closeDemo}
+                  className="w-full h-full object-cover"
+                  aria-label={lang === "en" ? "H-Company demo, 15 seconds, illustrative example" : "Démo H-Company, 15 secondes, exemple illustratif"}
+                />
+                <button
+                  type="button"
+                  onClick={closeDemo}
+                  aria-label={lang === "en" ? "Close the demo" : "Fermer la démo"}
+                  className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
