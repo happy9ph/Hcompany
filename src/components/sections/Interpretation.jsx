@@ -3,6 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Languages, ArrowRight } from "lucide-react";
 import Reveal from "../ui/Reveal.jsx";
+import SectionPhoto from "../ui/SectionPhoto.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
 export default function Interpretation() {
@@ -17,7 +18,8 @@ export default function Interpretation() {
   const features = [t("interpretation.feature1"), t("interpretation.feature2"), t("interpretation.feature3")];
 
   return (
-    <section id="interpretation" className="px-6 py-28 md:py-32 border-t border-line bg-cream/40 overflow-hidden">
+    <section id="interpretation" className="relative isolate px-6 py-28 md:py-32 border-t border-line bg-cream/40 overflow-hidden">
+      <SectionPhoto src="/images/interpretation.jpg" />
       <div className="max-w-content mx-auto grid md:grid-cols-2 gap-14 items-center">
         <Reveal>
           <p className="text-sm font-medium text-coffee mb-4">{t("interpretation.eyebrow")}</p>

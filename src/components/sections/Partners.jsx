@@ -105,7 +105,8 @@ export default function Partners() {
 
       <div className="hc-partners-banner">
         <img
-          src="https://loremflickr.com/1200/440/teamwork,network"
+          src="/images/partners.jpg"
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
           alt="Équipe travaillant ensemble, illustrant le réseau de partenaires"
           loading="lazy"
         />
