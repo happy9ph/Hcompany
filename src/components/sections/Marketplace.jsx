@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
-import { Play, X } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { TradeArt } from "../art/ServiceArt.jsx";
 import { SERVICES_META } from "../../data/services.js";
 import Reveal from "../ui/Reveal.jsx";
-import StepVideo from "./StepVideo.jsx";
+import DemoPlayer from "./DemoPlayer.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
 function IconSearch() {
@@ -47,23 +46,13 @@ const STEP_ICONS = [IconSearch, IconLink, IconHandshake, IconCheckBadge];
 const STEP_KEYS = ["step1", "step2", "step3", "step4"];
 
 export default function Marketplace() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const STEPS = STEP_KEYS.map((key, i) => ({
     Icon: STEP_ICONS[i],
     title: t(`marketplace.${key}Title`),
     text: t(`marketplace.${key}Text`),
   }));
   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [demo, setDemo] = useState(false);
-  const closeDemo = () => { setDemo(false); setPaused(false); };
-
-  useEffect(() => {
-    if (paused) return;
-    const timer = setInterval(() => setActive((a) => (a + 1) % STEPS.length), 3200);
-    return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paused, t]);
 
   return (
     <section id="marketplace" className="px-6 py-28 md:py-32 border-t border-line bg-cream/40">
@@ -80,8 +69,6 @@ export default function Marketplace() {
 
         <div
           className="grid md:grid-cols-[1fr_1.3fr] gap-10 md:gap-16 items-center"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
         >
           {/* Colonne de gauche : liste des étapes cliquables */}
           <div className="space-y-2">
@@ -120,86 +107,10 @@ export default function Marketplace() {
                 </button>
               );
             })}
-            {/* barre de progression du cycle automatique */}
-            <div className="flex gap-1.5 px-4 pt-2">
-              {STEPS.map((_, i) => (
-                <div key={i} className="h-1 flex-1 rounded-full bg-line/60 overflow-hidden">
-                  {i === active && !paused && (
-                    <motion.div
-                      key={active}
-                      className="h-full bg-coffee"
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ duration: 3.2, ease: "linear" }}
-                      style={{ transformOrigin: "0% 50%" }}
-                    />
-                  )}
-                  {i < active && <div className="h-full bg-coffee" />}
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Colonne de droite : "vidéo" de 15s illustrant l'étape active */}
-          <div className="relative aspect-[4/3] rounded-3xl bg-ink-fixed overflow-hidden">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.02 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-0"
-              >
-                <StepVideo step={active} />
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                  <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-coffee-light">
-                    {(() => {
-                      const Icon = STEPS[active].Icon;
-                      return <Icon />;
-                    })()}
-                  </div>
-                  <span className="text-[0.65rem] font-medium text-white bg-black/70 rounded-full px-2.5 py-1">
-                    {String(active + 1).padStart(2, "0")}/04
-                  </span>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-            {!demo && (
-              <button
-                type="button"
-                onClick={() => { setDemo(true); setPaused(true); }}
-                className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/95 text-ink text-xs font-medium px-3.5 py-2 shadow-lg hover:bg-white"
-              >
-                <Play size={13} fill="currentColor" />
-                {lang === "en" ? "Watch the 15 s demo" : "Voir la démo en 15 s"}
-              </button>
-            )}
-            {demo && (
-              <div className="absolute inset-0 z-20 bg-ink-fixed">
-                <video
-                  src="/videos/h-company-demo.mp4"
-                  poster="/videos/h-company-demo.jpg"
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="metadata"
-                  onEnded={closeDemo}
-                  onError={closeDemo}
-                  className="w-full h-full object-cover"
-                  aria-label={lang === "en" ? "H-Company demo, 15 seconds, screen capture of the real site (payments in demo mode)" : "Démo H-Company, 15 secondes, capture du vrai site (paiements en mode démonstration)"}
-                />
-                <button
-                  type="button"
-                  onClick={closeDemo}
-                  aria-label={lang === "en" ? "Close the demo" : "Fermer la démo"}
-                  className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Colonne de droite : la démo de 15 s (captures réelles du site) */}
+          <DemoPlayer />
         </div>
 
         {/* Les cinq métiers en images : chaque tuile ouvre la page du métier */}
