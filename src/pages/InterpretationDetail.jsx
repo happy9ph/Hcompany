@@ -1,3 +1,4 @@
+import ServicePhoto from "../components/art/ServicePhoto.jsx";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Languages, CheckCircle2 } from "lucide-react";
@@ -23,11 +24,7 @@ export default function InterpretationDetail() {
 
       {/* --- Hero --- */}
       <section className="relative h-[46vh] min-h-[380px] overflow-hidden pt-16">
-        <img
-          src="https://loremflickr.com/1600/900/interpreter,conference,meeting"
-          alt="Interprète accompagnant une réunion professionnelle"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <ServicePhoto name="h_translate" className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-fixed via-ink-fixed/50 to-ink-fixed/20" />
         <div className="relative h-full max-w-content mx-auto px-6 flex flex-col justify-end pb-12">
           <Link to="/infos#interpretation" className="inline-flex items-center gap-1.5 text-cream-fixed/70 text-sm hover:text-cream-fixed transition-colors mb-4 w-fit">
@@ -106,12 +103,11 @@ export default function InterpretationDetail() {
               className="rounded-2xl border border-line bg-surface overflow-hidden"
             >
               <div className="relative h-48 overflow-hidden">
-                <img
-                  src={`https://loremflickr.com/400/480/${interp.photo}`}
-                  alt={t(`interpretation.${interp.key}Name`)}
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
+                <div className="w-full h-full flex items-center justify-center bg-latte-soft" aria-hidden="true">
+                  <span className="w-20 h-20 rounded-full bg-[#F4C9C0] text-[#7A2E22] font-display text-2xl flex items-center justify-center">
+                    {t(`interpretation.${interp.key}Name`).split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+                  </span>
+                </div>
                 <span className="absolute top-3 right-3 flex items-center gap-1.5 text-[0.65rem] font-medium bg-surface/90 text-emerald-700 px-2.5 py-1 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   {t("interpretation.availableNow")}

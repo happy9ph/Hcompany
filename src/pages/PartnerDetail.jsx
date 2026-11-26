@@ -1,3 +1,7 @@
+import ServicePhoto from "../components/art/ServicePhoto.jsx";
+
+const PARTNER_ART = { lukondo: "h_transport_bus", confismila: "h_restaurant", "h-learning": "h_learning", "u-study": "h_learning" };
+const partnerArt = (slug) => PARTNER_ART[slug] || "h_shopping";
 import { useState } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -41,7 +45,7 @@ export default function PartnerDetail() {
       <NavBar />
 
       <DetailHero
-        image={`https://loremflickr.com/1600/1000/${encodeURIComponent(meta.heroImage)}`}
+        art={<ServicePhoto name={partnerArt(meta.slug)} className="w-full h-full" />}
         overlay={`linear-gradient(0deg, ${gradientHex}f0 5%, ${gradientHex}90 45%, rgba(30,26,23,0.2) 100%)`}
         backTo="/infos#partenaires"
         backLabel={t("partners.heading")}
@@ -168,7 +172,7 @@ export default function PartnerDetail() {
         items={others.map((p) => ({
           key: p.slug,
           to: `/partenaires/${p.slug}`,
-          image: `https://loremflickr.com/500/360/${encodeURIComponent(p.heroImage)}`,
+          art: <ServicePhoto name={partnerArt(p.slug)} className="w-full h-full" />,
           title: p.name,
         }))}
       />
