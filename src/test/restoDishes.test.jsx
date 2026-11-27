@@ -24,7 +24,7 @@ describe("page plats H-Food", () => {
   beforeEach(() => { foodCart._reset(); vi.clearAllMocks(); api.resto.dishes.mockResolvedValue(DATA); });
   it("catalogue groupé par catégorie, avec catégories à gauche et le vendeur sur chaque plat", async () => {
     view();
-    expect(await screen.findByText("Poulet mayo")).toBeInTheDocument();
+    expect((await screen.findAllByText("Poulet mayo")).length).toBeGreaterThan(0); // la « recette du moment » change chaque jour : le plat peut apparaître 2 fois
     expect(screen.getByRole("heading", { name: "Chef" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Fast Food" })).toBeInTheDocument();
     expect(screen.getAllByText(/Chez Mado/, { selector: "span" }).length).toBe(2);
@@ -32,7 +32,7 @@ describe("page plats H-Food", () => {
   });
   it("clic sur un plat : la fiche s'ouvre, on règle la quantité et on ajoute au panier (total affiché)", async () => {
     view();
-    fireEvent.click(await screen.findByText("Poulet mayo"));
+    fireEvent.click((await screen.findAllByText("Poulet mayo"))[0]);
     const dlg = await screen.findByRole("dialog", { name: "Poulet mayo" });
     expect(dlg).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("Augmenter"));
@@ -52,7 +52,7 @@ describe("page plats H-Food", () => {
     view();
     fireEvent.click(await screen.findByText("pin-Bob Food"));
     fireEvent.click(screen.getByText("Voir ses plats"));
-    await waitFor(() => expect(screen.queryByText("Poulet mayo")).toBeNull());
+    await waitFor(() => expect(screen.queryAllByText("Poulet mayo")).toHaveLength(0));
     expect(screen.getAllByText("Kimbrekete").length).toBeGreaterThan(0);
   });
   it("lien direct ?plat= ouvre la fiche", async () => {
