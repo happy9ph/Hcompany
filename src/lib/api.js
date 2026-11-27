@@ -733,10 +733,6 @@ export const api = {
   },
 
   // Plateforme e-learning H-learning
-  learning: {
-    courses: () => request("/api/v1/learning/courses"),
-  },
-
   // Espace admin — gestion des candidatures partenaires et de leurs contrats
   admin: {
     listApplications: (token) => request("/api/v1/partners/admin", { token }),
