@@ -52,7 +52,7 @@ describe("page plats H-Food", () => {
     view();
     fireEvent.click(await screen.findByText("pin-Bob Food"));
     fireEvent.click(screen.getByText("Voir ses plats"));
-    await waitFor(() => expect(screen.queryAllByText("Poulet mayo")).toHaveLength(0));
+    await waitFor(() => expect(screen.queryByRole("heading", { name: "Chef" })).toBeNull()); // le catalogue est filtré (la « recette du moment » peut rester affichée)
     expect(screen.getAllByText("Kimbrekete").length).toBeGreaterThan(0);
   });
   it("lien direct ?plat= ouvre la fiche", async () => {
