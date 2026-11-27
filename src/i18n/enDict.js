@@ -141,4 +141,9 @@ export const EN = {
   "Enregistrer": "Save", "Supprimer": "Delete", "Modifier": "Edit", "Fermer": "Close", "Retour": "Back", "Chargement…": "Loading…", "Envoyer": "Send", "Demander": "Request", "Historique": "History", "Copier": "Copy", "Accueil": "Home",
   "Il paie depuis": "They pay from", "Vers": "To", "De": "From", "Référence": "Reference", "Nom complet": "Full name", "Message (facultatif)": "Message (optional)", "Motif (facultatif)": "Reason (optional)", "Opérateur du bénéficiaire": "Beneficiary's operator",
   "Utile ?": "Helpful?", "Bonjour": "Hello", "Question": "Question", "Refuser cette demande": "Decline this request", "Refuser": "Refuse", "Approuver": "Approve", "Valider": "Validate", "Suspendre": "Suspend", "Rejeter": "Reject",
+  "Touchez un prix sur la carte pour voir le logement, faire la visite 3D de l'intérieur, puis réserver.": "Tap a price on the map to see the stay, take the 3D tour of the interior, then book.",
+  "Comment ça marche ?": "How does it work?", "Comment ça marche": "How it works", "Fermer le tutoriel": "Close the tutorial", "Fermer la fiche": "Close the card", "Passer": "Skip", "Suivant": "Next", "J'ai compris": "Got it", "Sur demande": "On request",
+  "1. Touchez un prix sur la carte": "1. Tap a price on the map", "Chaque étiquette de prix est un logement. Zoomez avec + / − ou changez de ville en haut.": "Each price tag is a stay. Zoom with + / − or switch city at the top.",
+  "2. Découvrez le logement": "2. Discover the stay", "Sa fiche s'affiche sur la carte : photo, quartier, chambres. Lancez la visite 3D pour voir l'intérieur.": "Its card appears on the map: photo, area, bedrooms. Start the 3D tour to see the inside.",
+  "3. Réservez": "3. Book", "Touchez « Voir et réserver » pour choisir vos dates. Le prix est affiché avant de payer.": "Tap “View and book” to pick your dates. The price is shown before you pay.",
 };
